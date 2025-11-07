@@ -32,7 +32,7 @@
     <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
     <!-- Confirmation Modal -->
-    <div id="confirmModal" class="hidden fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm bg-white/20">
+    <div id="confirmModal" class="hidden fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm bg-black/50">
         <div class="bg-white rounded-lg shadow-xl max-w-sm w-full mx-4 p-6">
             <h3 class="text-lg font-bold text-gray-900 mb-2" id="confirmTitle">Konfirmasi</h3>
             <p class="text-gray-600 mb-6" id="confirmMessage">Apakah Anda yakin?</p>

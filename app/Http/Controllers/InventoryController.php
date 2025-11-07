@@ -36,8 +36,19 @@ class InventoryController extends Controller
             'stok' => 'required|numeric|min:0'
         ]);
 
-        Inventory::create($validated);
-        return redirect()->route('inventory.index')->with('success', 'Inventory berhasil ditambahkan');
+        // Check if inventory already exists for this material
+        $existingInventory = Inventory::where('material_id', $validated['material_id'])->first();
+
+        if ($existingInventory) {
+            // Add to existing inventory (increment stok)
+            $newStok = $existingInventory->stok + $validated['stok'];
+            $existingInventory->update(['stok' => $newStok]);
+            return redirect()->route('inventory.index')->with('info', "Stok ditambahkan. Total stok sekarang: {$newStok}");
+        } else {
+            // Create new inventory
+            Inventory::create($validated);
+            return redirect()->route('inventory.index')->with('success', 'Inventory berhasil ditambahkan');
+        }
     }
 
     /**
@@ -63,7 +74,7 @@ class InventoryController extends Controller
     public function update(Request $request, Inventory $inventory)
     {
         $validated = $request->validate([
-            'material_id' => 'required|exists:materials,id',
+            'material_id' => 'required|exists:materials,id|unique:inventories,material_id,' . $inventory->id,
             'stok' => 'required|numeric|min:0'
         ]);
 
