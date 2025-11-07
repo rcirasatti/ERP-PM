@@ -32,8 +32,12 @@
 
             <!-- User Dropdown -->
             <div class="relative group">
-                <button class="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
-                    <img src="https://ui-avatars.com/api/?name=User&background=3B82F6&color=fff" alt="User" class="w-8 h-8 rounded-full">
+                <button class="flex items-center space-x-3 text-gray-700 hover:text-gray-900 px-2 py-1">
+                    <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name ?? 'User') }}&background=3B82F6&color=fff" alt="User" class="w-8 h-8 rounded-full">
+                    <div class="flex-1 text-left hidden md:block">
+                        <p class="text-sm font-medium text-gray-900">{{ auth()->user()->name ?? 'User' }}</p>
+                        <p class="text-xs text-gray-500">{{ auth()->user()->email ?? 'user@example.com' }}</p>
+                    </div>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
                     </svg>

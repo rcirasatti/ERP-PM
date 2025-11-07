@@ -2,6 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\MaterialController;
+use App\Http\Controllers\InventoryController;
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -40,6 +44,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports', function () {
         return view('reports.index');
     })->name('reports.index');
+
+    // CRUD Master Data
+    Route::resource('client', ClientController::class);
+    Route::resource('supplier', SupplierController::class);
+    Route::resource('material', MaterialController::class);
+    Route::resource('inventory', InventoryController::class);
 
     // Logout route
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
