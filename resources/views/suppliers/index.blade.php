@@ -57,36 +57,37 @@
     <!-- Suppliers Table -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
         @if ($suppliers->count() > 0)
-            <table class="w-full">
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-max">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Nama</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Telepon</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Alamat</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Kontak</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Aksi</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Nama</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Email</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Telepon</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Alamat</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Kontak</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200" id="supplierTable">
                     @foreach ($suppliers as $supplier)
                         <tr class="hover:bg-gray-50 transition supplier-row">
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="font-medium text-gray-900">{{ $supplier->nama }}</div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600">{{ $supplier->email }}</div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600">{{ $supplier->telepon }}</div>
                             </td>
                             <td class="px-6 py-4">
-                                <div class="text-sm text-gray-600">{{ \Illuminate\Support\Str::limit($supplier->alamat, 30) }}</div>
+                                <div class="text-sm text-gray-600 max-w-xs">{{ \Illuminate\Support\Str::limit($supplier->alamat, 30) }}</div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600">{{ $supplier->kontak }}</div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex gap-2">
                                     <a href="{{ route('supplier.show', $supplier->id) }}" class="text-blue-600 hover:text-blue-800 font-medium text-sm">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,6 +115,7 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
             <!-- No search results message -->
             <div id="noResultsMessage" class="hidden p-8 text-center">
                 <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

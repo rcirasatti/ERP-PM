@@ -6,6 +6,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\PenawaranController;
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -26,9 +27,10 @@ Route::middleware('auth')->group(function () {
     })->name('projects.index');
 
     // Quotations
-    Route::get('/quotations', function () {
-        return view('quotations.index');
-    })->name('quotations.index');
+    Route::resource('quotations', PenawaranController::class)->parameters([
+        'quotations' => 'penawaran'
+    ]);
+    Route::put('quotations/{penawaran}/update-status', [PenawaranController::class, 'updateStatus'])->name('quotations.updateStatus');
 
     // Tasks
     Route::get('/tasks', function () {

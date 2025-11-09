@@ -14,7 +14,7 @@ class MaterialController extends Controller
      */
     public function index()
     {
-        $materials = Material::with('supplier')->get();
+        $materials = Material::with('supplier', 'inventory')->get();
         $materialsNoStock = $materials->whereNotIn('id', DB::table('inventories')->pluck('material_id'))->count();
         return view('materials.index', compact('materials', 'materialsNoStock'));
     }

@@ -11,14 +11,27 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Disable foreign key constraints
+        Schema::disableForeignKeyConstraints();
+        
+        // Drop dependent tables first
+        Schema::dropIfExists('item_penawaran');
+        
+        // Drop the corrupted table if it exists
+        Schema::dropIfExists('penawaran');
+        
+        // Re-enable foreign key constraints
+        Schema::enableForeignKeyConstraints();
+        
+        // Recreate it with proper schema
         Schema::create('penawaran', function (Blueprint $table) {
             $table->id();
-            $table->text('no_penawaran');
+            $table->string('no_penawaran')->unique();
             $table->foreignId('client_id')->references('id')->on('clients')->onDelete('cascade');
             $table->date('tanggal');
             $table->enum('status', ['draft', 'disetujui', 'ditolak', 'dibatalkan'])->default('draft');
-            $table->decimal('total_margin', 15, 2);
-            $table->decimal('total_biaya', 15, 2);
+            $table->decimal('total_margin', 15, 2)->default(0);
+            $table->decimal('total_biaya', 15, 2)->default(0);
             $table->timestamps();
         });
     }

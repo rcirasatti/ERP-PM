@@ -51,32 +51,50 @@
     <!-- Materials Table -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
         @if ($materials->count() > 0)
-            <table class="w-full">
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-max">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Nama</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Supplier</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Satuan</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Harga</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Aksi</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Nama</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Supplier</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Satuan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Harga</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200" id="materialTable">
                     @foreach ($materials as $material)
+                        @php
+                            $stok = $material->inventory?->stok ?? 0;
+                            $hasStok = $stok > 0;
+                        @endphp
                         <tr class="hover:bg-gray-50 transition material-row">
-                            <td class="px-6 py-4">
-                                <div class="font-medium text-gray-900">{{ $material->nama }}</div>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center gap-3">
+                                    <div>
+                                        <div class="font-medium text-gray-900">{{ $material->nama }}</div>
+                                        @if ($hasStok)
+                                            <div class="inline-block mt-1 px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
+                                                Stok: {{ number_format($stok, 2) }}
+                                            </div>
+                                        @else
+                                            <div class="inline-block mt-1 px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
+                                                Stok: 0 - Tidak Tersedia
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600">{{ $material->supplier->nama ?? '-' }}</div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">{{ $material->satuan }}</div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm font-semibold text-green-600">Rp {{ number_format($material->harga, 0, ',', '.') }}</div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex gap-2">
                                     <a href="{{ route('material.show', $material->id) }}" class="text-blue-600 hover:text-blue-800 font-medium text-sm">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,6 +122,7 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
             <!-- No search results message -->
             <div id="noResultsMessage" class="hidden p-8 text-center">
                 <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

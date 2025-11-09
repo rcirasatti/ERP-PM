@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Inventory;
 use App\Models\Material;
+use App\Models\LogInventory;
 use Illuminate\Http\Request;
 
 class InventoryController extends Controller
@@ -14,7 +15,8 @@ class InventoryController extends Controller
     public function index()
     {
         $inventories = Inventory::with('material')->get();
-        return view('inventories.index', compact('inventories'));
+        $logs = LogInventory::with('material', 'user')->orderBy('tanggal', 'DESC')->limit(20)->get();
+        return view('inventories.index', compact('inventories', 'logs'));
     }
 
     /**
