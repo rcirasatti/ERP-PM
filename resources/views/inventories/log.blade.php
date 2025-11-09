@@ -55,7 +55,7 @@
                     @foreach ($logs as $log)
                         <tr class="hover:bg-gray-50 transition log-row">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <p class="text-sm text-gray-600">{{ $log->tanggal ? \Carbon\Carbon::parse($log->tanggal)->format('d M Y H:i') : '-' }}</p>
+                                <p class="text-sm text-gray-600">{{ $log->created_at ? $log->created_at->format('d M Y H:i:s') : '-' }}</p>
                             </td>
                             <td class="px-6 py-4">
                                 <p class="text-sm font-medium text-gray-900">{{ $log->material->nama ?? '-' }}</p>

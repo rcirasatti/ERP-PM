@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('inventories')) {
-            Schema::create('inventories', function (Blueprint $table) {
-                $table->id();
-                $table->timestamps();
-            });
-        }
+        Schema::create('inventories', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('material_id')->references('id')->on('materials')->onDelete('cascade');
+            $table->decimal('stok', 15, 2);
+            $table->timestamps();
+        });
     }
 
     /**
@@ -24,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('inventories');
-        Schema::enableForeignKeyConstraints();
     }
 };

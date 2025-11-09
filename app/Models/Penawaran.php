@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Penawaran extends Model
 {
@@ -31,6 +32,14 @@ class Penawaran extends Model
     public function items(): HasMany
     {
         return $this->hasMany(ItemPenawaran::class, 'penawaran_id');
+    }
+
+    /**
+     * Get the project created from this penawaran (1 penawaran = 1 project)
+     */
+    public function proyek(): HasOne
+    {
+        return $this->hasOne(Proyek::class, 'penawaran_id');
     }
 
     /**

@@ -11,7 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('materials', function (Blueprint $table) {
+        Schema::create('proyek_budget', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('proyek_id')->references('id')->on('proyek')->onDelete('cascade');
+            $table->decimal('jumlah_rencana', 15, 2);
+            $table->decimal('jumlah_realisasi', 15, 2);
             $table->timestamps();
         });
     }
@@ -21,10 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasTable('materials')) {
-            Schema::table('materials', function (Blueprint $table) {
-                $table->dropTimestamps();
-            });
-        }
+        Schema::dropIfExists('proyek_budget');
     }
 };

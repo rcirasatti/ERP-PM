@@ -8,12 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class LogInventory extends Model
 {
     protected $table = 'log_inventory';
-    protected $fillable = ['material_id', 'jenis', 'jumlah', 'tanggal', 'proyek_id', 'catatan', 'dibuat_oleh'];
+    protected $fillable = ['material_id', 'jenis', 'jumlah', 'tanggal', 'proyek_id', 'catatan', 'dibuat_oleh', 'created_at', 'updated_at'];
     protected $casts = [
         'tanggal' => 'date',
         'jumlah' => 'decimal:2',
     ];
-    public $timestamps = false;
+    public $timestamps = true;
 
     /**
      * Get the material that owns the log

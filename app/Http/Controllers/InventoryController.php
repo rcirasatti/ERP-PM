@@ -41,7 +41,7 @@ class InventoryController extends Controller
             $query->where('jenis', $request->input('jenis'));
         }
 
-        $logs = $query->orderBy('tanggal', 'DESC')->paginate(15);
+        $logs = $query->orderBy('created_at', 'DESC')->paginate(15);
         
         return view('inventories.log', compact('logs'));
     }

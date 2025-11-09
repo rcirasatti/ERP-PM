@@ -7,6 +7,8 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PenawaranController;
+use App\Http\Controllers\ProyekController;
+use App\Http\Controllers\TugasController;
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -26,11 +28,18 @@ Route::middleware('auth')->group(function () {
         return view('projects.index');
     })->name('projects.index');
 
-    // Quotations
-    Route::resource('quotations', PenawaranController::class)->parameters([
-        'quotations' => 'penawaran'
-    ]);
-    Route::put('quotations/{penawaran}/update-status', [PenawaranController::class, 'updateStatus'])->name('quotations.updateStatus');
+    // Projects Management (dari Penawaran yang disetujui)
+    Route::resource('proyek', ProyekController::class);
+    Route::put('proyek/{proyek}/update-status', [ProyekController::class, 'updateStatus'])->name('proyek.updateStatus');
+    Route::get('proyek-search', [ProyekController::class, 'search'])->name('proyek.search');
+
+    // Tasks Management (untuk setiap project)
+    Route::resource('proyek.tugas', TugasController::class);
+    Route::post('proyek/{proyek}/tugas/{tugas}/status', [TugasController::class, 'updateStatus'])->name('tugas.updateStatus');
+
+    // Penawaran (Quotations)
+    Route::resource('penawaran', PenawaranController::class);
+    Route::put('penawaran/{penawaran}/update-status', [PenawaranController::class, 'updateStatus'])->name('penawaran.updateStatus');
 
     // Tasks
     Route::get('/tasks', function () {

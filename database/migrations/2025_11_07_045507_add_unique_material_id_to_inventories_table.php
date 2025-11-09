@@ -33,8 +33,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('inventories', function (Blueprint $table) {
-            $table->dropUnique(['material_id']);
-        });
+        if (Schema::hasTable('inventories') && Schema::hasColumn('inventories', 'material_id')) {
+            Schema::table('inventories', function (Blueprint $table) {
+                $table->dropUnique(['material_id']);
+            });
+        }
     }
 };

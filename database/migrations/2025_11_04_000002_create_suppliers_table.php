@@ -11,7 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('materials', function (Blueprint $table) {
+        Schema::create('suppliers', function (Blueprint $table) {
+            $table->id();
+            $table->text('nama');
+            $table->text('kontak');
+            $table->text('email');
+            $table->text('telepon');
+            $table->text('alamat');
             $table->timestamps();
         });
     }
@@ -21,10 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasTable('materials')) {
-            Schema::table('materials', function (Blueprint $table) {
-                $table->dropTimestamps();
-            });
-        }
+        Schema::dropIfExists('suppliers');
     }
 };

@@ -24,7 +24,7 @@ class PenawaranController extends Controller
         $totalValue = $penawaran->sum('total_biaya');
         $pendingPenawaran = $penawaran->where('status', 'draft')->count();
 
-        return view('quotations.index', compact('penawaran', 'totalPenawaran', 'totalValue', 'pendingPenawaran'));
+        return view('penawaran.index', compact('penawaran', 'totalPenawaran', 'totalValue', 'pendingPenawaran'));
     }
 
     /**
@@ -36,7 +36,7 @@ class PenawaranController extends Controller
         $materials = Material::with('inventory')->get();
         $noPenawaran = Penawaran::generateNoPenawaran();
         
-        return view('quotations.create', compact('clients', 'materials', 'noPenawaran'));
+        return view('penawaran.create', compact('clients', 'materials', 'noPenawaran'));
     }
 
     /**
@@ -99,7 +99,7 @@ class PenawaranController extends Controller
             'total_margin' => $totalMargin,
         ]);
 
-        return redirect()->route('quotations.show', $penawaran->id)->with('success', 'Penawaran berhasil dibuat');
+        return redirect()->route('penawaran.show', $penawaran->id)->with('success', 'Penawaran berhasil dibuat');
     }
 
     /**
@@ -108,7 +108,7 @@ class PenawaranController extends Controller
     public function show(Penawaran $penawaran)
     {
         $penawaran->load('client', 'items.material');
-        return view('quotations.show', compact('penawaran'));
+        return view('penawaran.show', compact('penawaran'));
     }
 
     /**
@@ -120,7 +120,7 @@ class PenawaranController extends Controller
         $clients = Client::all();
         $materials = Material::with('inventory')->get();
         
-        return view('quotations.edit', compact('penawaran', 'clients', 'materials'));
+        return view('penawaran.edit', compact('penawaran', 'clients', 'materials'));
     }
 
     /**
@@ -139,6 +139,15 @@ class PenawaranController extends Controller
             'items.*.persentase_margin' => 'required|numeric|min:0|max:100',
         ]);
 
+        // Jika penawaran status disetujui, restore inventory barang lama terlebih dahulu
+        if ($penawaran->status === 'disetujui' && $validated['status'] !== 'disetujui') {
+            // Status berubah dari disetujui ke status lain, log dengan status baru
+            $this->restoreInventory($penawaran, $validated['status']);
+        }
+
+        // Get old items for comparison
+        $oldItems = ItemPenawaran::where('penawaran_id', $penawaran->id)->get();
+        
         // Delete old items
         ItemPenawaran::where('penawaran_id', $penawaran->id)->delete();
 
@@ -179,7 +188,12 @@ class PenawaranController extends Controller
             'total_margin' => $totalMargin,
         ]);
 
-        return redirect()->route('quotations.show', $penawaran->id)->with('success', 'Penawaran berhasil diubah');
+        // Jika penawaran status disetujui, kurangi inventory barang baru
+        if ($validated['status'] === 'disetujui') {
+            $this->reduceInventory($penawaran);
+        }
+
+        return redirect()->route('penawaran.show', $penawaran->id)->with('success', 'Penawaran berhasil diubah');
     }
 
     /**
@@ -188,7 +202,7 @@ class PenawaranController extends Controller
     public function destroy(Penawaran $penawaran)
     {
         $penawaran->delete();
-        return redirect()->route('quotations.index')->with('success', 'Penawaran berhasil dihapus');
+        return redirect()->route('penawaran.index')->with('success', 'Penawaran berhasil dihapus');
     }
 
     /**
@@ -210,14 +224,14 @@ class PenawaranController extends Controller
 
         // Jika status berubah dari disetujui ke status lain, tambah kembali stok
         if ($oldStatus === 'disetujui' && $newStatus !== 'disetujui') {
-            $this->restoreInventory($penawaran);
+            $this->restoreInventory($penawaran, $newStatus);
         }
 
         $penawaran->update([
             'status' => $newStatus,
         ]);
 
-        return redirect()->route('quotations.show', $penawaran->id)->with('success', 'Status penawaran berhasil diubah menjadi ' . $penawaran->getStatusLabel());
+        return redirect()->route('penawaran.show', $penawaran->id)->with('success', 'Status penawaran berhasil diubah menjadi ' . $penawaran->getStatusLabel());
     }
 
     /**
@@ -239,9 +253,11 @@ class PenawaranController extends Controller
                     'material_id' => $item->material_id,
                     'jenis' => 'keluar',
                     'jumlah' => $item->jumlah,
-                    'tanggal' => now(),
+                    'tanggal' => now()->toDateString(),
                     'catatan' => 'Pengurangan stok dari penawaran #' . $penawaran->no_penawaran . ' - ' . $penawaran->client->nama,
-                    'dibuat_oleh' => auth()->user()->id,
+                    'dibuat_oleh' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
             }
         }
@@ -250,7 +266,7 @@ class PenawaranController extends Controller
     /**
      * Restore inventory when penawaran status is reverted from approved
      */
-    private function restoreInventory(Penawaran $penawaran)
+    private function restoreInventory(Penawaran $penawaran, $newStatus = 'dibatalkan')
     {
         $penawaran->load('items');
 
@@ -261,14 +277,16 @@ class PenawaranController extends Controller
                 $inventory->stok += $item->jumlah;
                 $inventory->save();
 
-                // Log the inventory restore
+                // Log the inventory restore with the new status
                 LogInventory::create([
                     'material_id' => $item->material_id,
                     'jenis' => 'masuk',
                     'jumlah' => $item->jumlah,
-                    'tanggal' => now(),
-                    'catatan' => 'Pemulihan stok dari penawaran #' . $penawaran->no_penawaran . ' (status dibatalkan)',
-                    'dibuat_oleh' => auth()->user()->id,
+                    'tanggal' => now()->toDateString(),
+                    'catatan' => 'Pemulihan stok dari penawaran #' . $penawaran->no_penawaran . ' (status ' . $newStatus . ')',
+                    'dibuat_oleh' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
             }
         }

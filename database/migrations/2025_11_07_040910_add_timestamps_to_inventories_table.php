@@ -21,8 +21,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('inventories', function (Blueprint $table) {
-            $table->dropTimestamps();
-        });
+        if (Schema::hasTable('inventories')) {
+            Schema::table('inventories', function (Blueprint $table) {
+                $table->dropTimestamps();
+            });
+        }
     }
 };

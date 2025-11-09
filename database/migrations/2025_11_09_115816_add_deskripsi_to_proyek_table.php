@@ -11,12 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('inventories')) {
-            Schema::create('inventories', function (Blueprint $table) {
-                $table->id();
-                $table->timestamps();
-            });
-        }
+        Schema::table('proyek', function (Blueprint $table) {
+            $table->text('deskripsi')->nullable()->after('nama');
+        });
     }
 
     /**
@@ -24,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::disableForeignKeyConstraints();
-        Schema::dropIfExists('inventories');
-        Schema::enableForeignKeyConstraints();
+        Schema::table('proyek', function (Blueprint $table) {
+            $table->dropColumn('deskripsi');
+        });
     }
 };

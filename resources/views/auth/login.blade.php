@@ -137,16 +137,7 @@
                         </svg>
                     </button>
                 </form>
-
-                <!-- Divider -->
-                <div class="relative my-8">
-                    <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-slate-600"></div>
-                    </div>
-                    <div class="relative flex justify-center text-sm">
-                        <span class="px-2 bg-slate-800 text-slate-400">Don't have an account?</span>
-                    </div>
-                </div>               
+        
             </div>
 
             <!-- Footer -->
