@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('supplier', SupplierController::class);
     Route::resource('material', MaterialController::class);
     Route::resource('inventory', InventoryController::class);
+    Route::get('inventory-log', [InventoryController::class, 'log'])->name('inventory.log');
 
     // Logout route
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

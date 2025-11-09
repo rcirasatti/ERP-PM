@@ -9,12 +9,20 @@
             <h1 class="text-3xl font-bold text-gray-900">Inventory Management</h1>
             <p class="text-gray-600 mt-2">Kelola stok material dan inventory</p>
         </div>
-        <a href="{{ route('inventory.create') }}" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center space-x-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            <span>Tambah Inventory</span>
-        </a>
+        <div class="flex items-center gap-3">
+            <a href="{{ route('inventory.log') }}" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>Log</span>
+            </a>
+            <a href="{{ route('inventory.create') }}" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>Tambah Inventory</span>
+            </a>
+        </div>
     </div>
 
     <!-- KPI Cards -->
@@ -131,65 +139,6 @@
                 <p class="text-gray-500 text-sm mt-1">Klik tombol "Tambah Inventory" untuk menambahkan inventory baru</p>
             </div>
         @endif
-    </div>
-
-    <!-- Log History Section -->
-    <div class="mt-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">Riwayat Perubahan Inventory</h2>
-        
-        <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            @if ($logs->count() > 0)
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50 border-b border-gray-200">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Tanggal</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Material</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Jenis</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Jumlah</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Keterangan</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">User</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        @foreach ($logs as $log)
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <p class="text-sm text-gray-600">{{ $log->tanggal ? \Carbon\Carbon::parse($log->tanggal)->format('d M Y') : '-' }}</p>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <p class="text-sm font-medium text-gray-900">{{ $log->material->nama ?? '-' }}</p>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $log->jenis == 'masuk' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                        {{ ucfirst($log->jenis) }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <p class="text-sm font-semibold {{ $log->jenis == 'masuk' ? 'text-green-600' : 'text-red-600' }}">
-                                        {{ $log->jenis == 'masuk' ? '+' : '-' }}{{ number_format($log->jumlah, 2) }}
-                                    </p>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <p class="text-sm text-gray-600">{{ $log->catatan ?? '-' }}</p>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <p class="text-sm text-gray-600">{{ $log->user->name ?? 'System' }}</p>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-            @else
-                <div class="p-8 text-center">
-                    <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    <p class="text-gray-600 text-lg">Belum ada riwayat perubahan inventory</p>
-                </div>
-            @endif
-        </div>
     </div>
 
     <script>

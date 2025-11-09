@@ -15,8 +15,35 @@ class InventoryController extends Controller
     public function index()
     {
         $inventories = Inventory::with('material')->get();
-        $logs = LogInventory::with('material', 'user')->orderBy('tanggal', 'DESC')->limit(20)->get();
-        return view('inventories.index', compact('inventories', 'logs'));
+        return view('inventories.index', compact('inventories'));
+    }
+
+    /**
+     * Display inventory logs with search
+     */
+    public function log(Request $request)
+    {
+        $query = LogInventory::with('material', 'user');
+
+        // Search by material name or jenis
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('material', function ($mq) use ($search) {
+                    $mq->where('nama', 'like', "%{$search}%");
+                })->orWhere('jenis', 'like', "%{$search}%")
+                  ->orWhere('catatan', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by jenis
+        if ($request->filled('jenis')) {
+            $query->where('jenis', $request->input('jenis'));
+        }
+
+        $logs = $query->orderBy('tanggal', 'DESC')->paginate(15);
+        
+        return view('inventories.log', compact('logs'));
     }
 
     /**

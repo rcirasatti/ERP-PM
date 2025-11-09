@@ -239,7 +239,7 @@ class PenawaranController extends Controller
                     'material_id' => $item->material_id,
                     'jenis' => 'keluar',
                     'jumlah' => $item->jumlah,
-                    'tanggal' => now()->toDateString(),
+                    'tanggal' => now(),
                     'catatan' => 'Pengurangan stok dari penawaran #' . $penawaran->no_penawaran . ' - ' . $penawaran->client->nama,
                     'dibuat_oleh' => auth()->user()->id,
                 ]);
@@ -266,7 +266,7 @@ class PenawaranController extends Controller
                     'material_id' => $item->material_id,
                     'jenis' => 'masuk',
                     'jumlah' => $item->jumlah,
-                    'tanggal' => now()->toDateString(),
+                    'tanggal' => now(),
                     'catatan' => 'Pemulihan stok dari penawaran #' . $penawaran->no_penawaran . ' (status dibatalkan)',
                     'dibuat_oleh' => auth()->user()->id,
                 ]);
