@@ -39,7 +39,7 @@
                         <select name="penawaran_id" id="penawaran_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('penawaran_id') border-red-500 @enderror" required onchange="updatePenawaranInfo()">
                             <option value="">-- Pilih Penawaran --</option>
                             @foreach($penawaran_disetujui as $penawaran)
-                                <option value="{{ $penawaran->id }}" data-client="{{ $penawaran->client->nama }}" data-no="{{ $penawaran->no_penawaran }}" data-biaya="{{ $penawaran->total_biaya }}">
+                                <option value="{{ $penawaran->id }}" data-client="{{ $penawaran->client->nama }}" data-no="{{ $penawaran->no_penawaran }}" data-biaya="{{ $penawaran->total_biaya }}" data-margin="{{ $penawaran->total_margin }}" data-grand="{{ $penawaran->grand_total }}">
                                     {{ $penawaran->no_penawaran }} - {{ $penawaran->client->nama }}
                                 </option>
                             @endforeach
@@ -60,9 +60,17 @@
                                 <p class="text-xs font-medium text-blue-600 uppercase">Client</p>
                                 <p class="text-sm font-semibold text-gray-900" id="client-penawaran">-</p>
                             </div>
-                            <div class="col-span-2">
+                            <div>
                                 <p class="text-xs font-medium text-blue-600 uppercase">Total Biaya</p>
                                 <p class="text-sm font-semibold text-gray-900">Rp <span id="biaya-penawaran">0</span></p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-medium text-blue-600 uppercase">Total Margin</p>
+                                <p class="text-sm font-semibold text-gray-900">Rp <span id="margin-penawaran">0</span></p>
+                            </div>
+                            <div class="col-span-2">
+                                <p class="text-xs font-medium text-blue-600 uppercase">Grand Total</p>
+                                <p class="text-sm font-semibold text-blue-600">Rp <span id="grand-penawaran">0</span></p>
                             </div>
                         </div>
                     </div>
@@ -192,6 +200,8 @@
             document.getElementById('no-penawaran').textContent = option.getAttribute('data-no');
             document.getElementById('client-penawaran').textContent = option.getAttribute('data-client');
             document.getElementById('biaya-penawaran').textContent = new Intl.NumberFormat('id-ID').format(option.getAttribute('data-biaya'));
+            document.getElementById('margin-penawaran').textContent = new Intl.NumberFormat('id-ID').format(option.getAttribute('data-margin'));
+            document.getElementById('grand-penawaran').textContent = new Intl.NumberFormat('id-ID').format(option.getAttribute('data-grand'));
             infoDiv.classList.remove('hidden');
         } else {
             infoDiv.classList.add('hidden');
