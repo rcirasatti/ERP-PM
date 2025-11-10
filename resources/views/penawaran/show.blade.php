@@ -141,7 +141,7 @@
 
                 <div class="flex justify-between pt-4 mb-6">
                     <span class="text-lg font-bold text-gray-900">Grand Total:</span>
-                    <span class="text-lg font-bold text-blue-600">Rp {{ number_format($penawaran->total_biaya + $penawaran->total_margin, 0, ',', '.') }}</span>
+                    <span class="text-lg font-bold text-blue-600">Rp {{ number_format($penawaran->grand_total, 0, ',', '.') }}</span>
                 </div>
 
                 <div class="space-y-3">

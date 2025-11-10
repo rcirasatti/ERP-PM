@@ -89,4 +89,12 @@ class Penawaran extends Model
             default => 'Unknown'
         };
     }
+
+    /**
+     * Get grand total (total_biaya + total_margin)
+     */
+    public function getGrandTotalAttribute()
+    {
+        return $this->total_biaya + $this->total_margin;
+    }
 }
