@@ -109,7 +109,7 @@
                                     <td class="px-4 py-3 text-sm text-gray-600">Rp {{ number_format($item->harga_asli, 0, ',', '.') }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-900">{{ number_format($item->persentase_margin, 2, ',', '.') }}%</td>
                                     <td class="px-4 py-3 text-sm font-medium text-blue-600">Rp {{ number_format($item->harga_jual, 0, ',', '.') }}</td>
-                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">Rp {{ number_format($item->harga_jual * $item->jumlah, 0, ',', '.') }}</td>
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">Rp {{ number_format($item->total_cost, 0, ',', '.') }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -130,7 +130,7 @@
                         <span class="font-semibold text-gray-900">{{ $penawaran->items->count() }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-gray-600">Total Biaya:</span>
+                        <span class="text-gray-600">Total Biaya (Asli):</span>
                         <span class="font-semibold text-gray-900">Rp {{ number_format($penawaran->total_biaya, 0, ',', '.') }}</span>
                     </div>
                     <div class="flex justify-between">

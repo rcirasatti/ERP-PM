@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('penawaran_id')->references('id')->on('penawaran')->onDelete('cascade');
             $table->foreignId('material_id')->references('id')->on('materials')->onDelete('cascade');
-            $table->decimal('jumlah', 15, 2);
+            $table->integer('jumlah');
             $table->decimal('harga_asli', 15, 2);
             $table->decimal('persentase_margin', 5, 2);
             $table->decimal('harga_jual', 15, 2);

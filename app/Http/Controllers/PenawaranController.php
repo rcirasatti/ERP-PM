@@ -89,7 +89,7 @@ class PenawaranController extends Controller
                 'harga_jual' => $hargaJual,
             ]);
 
-            $totalBiaya += $totalHargaJual;
+            $totalBiaya += $totalBiayaAsli;
             $totalMargin += $marginValue;
         }
 
@@ -175,7 +175,7 @@ class PenawaranController extends Controller
                 'harga_jual' => $hargaJual,
             ]);
 
-            $totalBiaya += $totalHargaJual;
+            $totalBiaya += $totalBiayaAsli;
             $totalMargin += $marginValue;
         }
 

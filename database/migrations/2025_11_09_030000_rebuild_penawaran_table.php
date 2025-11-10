@@ -20,10 +20,7 @@ return new class extends Migration
         // Drop the corrupted table if it exists
         Schema::dropIfExists('penawaran');
         
-        // Re-enable foreign key constraints
-        Schema::enableForeignKeyConstraints();
-        
-        // Recreate it with proper schema
+        // Recreate penawaran table with proper schema
         Schema::create('penawaran', function (Blueprint $table) {
             $table->id();
             $table->string('no_penawaran')->unique();
@@ -34,6 +31,21 @@ return new class extends Migration
             $table->decimal('total_biaya', 15, 2)->default(0);
             $table->timestamps();
         });
+        
+        // Re-create item_penawaran table
+        Schema::create('item_penawaran', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('penawaran_id')->references('id')->on('penawaran')->onDelete('cascade');
+            $table->foreignId('material_id')->references('id')->on('materials')->onDelete('cascade');
+            $table->integer('jumlah');
+            $table->decimal('harga_asli', 15, 2);
+            $table->decimal('persentase_margin', 5, 2);
+            $table->decimal('harga_jual', 15, 2);
+            $table->timestamps();
+        });
+        
+        // Re-enable foreign key constraints
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
