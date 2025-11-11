@@ -21,22 +21,6 @@ class DatabaseSeeder extends Seeder
             SupplierSeeder::class,
             ClientSeeder::class,
         ]);
-
-        // Seed entities that depend on suppliers and clients
-        $this->call([
-            MaterialSeeder::class,
-            PenawaranSeeder::class,
-        ]);
-
-        // Seed inventory that depends on materials
-        $this->call([
-            InventorySeeder::class,
-            ItemPenawaranSeeder::class,
-        ]);
-
-        // Seed projects that depend on clients and penawaran
-        $this->call([
-            ProyekSeeder::class,
-        ]);
+    
     }
 }

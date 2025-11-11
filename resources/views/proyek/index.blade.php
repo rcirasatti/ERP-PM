@@ -3,11 +3,11 @@
 @section('title', 'Projects')
 
 @section('content')
-    <!-- Header Section -->
+<!-- Header Section -->
     <div class="flex items-center justify-between mb-8">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">Projects</h1>
-            <p class="text-gray-600 mt-2">Kelola semua project dari penawaran yang disetujui</p>
+            <p class="text-gray-600 mt-2">Kelola semua project dari penawaran yang telah disetujui.</p>
         </div>
         <a href="{{ route('proyek.create') }}" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center space-x-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,15 +116,23 @@
         });
 
         function deleteProject(id) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/proyek/${id}`;
-            form.innerHTML = `
-                @csrf
-                @method('DELETE')
-            `;
-            document.body.appendChild(form);
-            form.submit();
+            // Show custom confirmation modal (matches data master style)
+            showConfirm(
+                'Apakah Anda yakin ingin menghapus project ini? Tindakan ini tidak dapat dibatalkan.',
+                'Hapus Project',
+                function() {
+                    // If confirmed, submit the delete form
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `/proyek/${id}`;
+                    form.innerHTML = `
+                        @csrf
+                        @method('DELETE')
+                    `;
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            );
         }
     </script>
 </div>

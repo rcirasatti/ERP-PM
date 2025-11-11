@@ -106,30 +106,88 @@
 
             <!-- Stats Card -->
             <div class="space-y-6">
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Statistik Task</h3>
-                    <div class="space-y-4">
-                        <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                            <p class="text-sm text-gray-600 mb-1">Total Task</p>
-                            <p class="text-3xl font-bold text-blue-600">{{ $proyek->tugas()->count() }}</p>
+                <!-- Budget Card -->
+                @php
+                    $budget = $proyek->budget()->first();
+                @endphp
+                @if ($budget)
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Budget Project</h3>
+                            <a href="{{ route('finance.dashboard') }}"
+                                class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                Detail →
+                            </a>
                         </div>
-                        <div class="p-4 bg-green-50 rounded-lg border border-green-100">
-                            <p class="text-sm text-gray-600 mb-1">Selesai</p>
-                            <p class="text-3xl font-bold text-green-600">
-                                {{ $proyek->tugas()->where('selesai', true)->count() }}</p>
-                        </div>
-                        <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-100">
-                            <p class="text-sm text-gray-600 mb-1">Belum Selesai</p>
-                            <p class="text-3xl font-bold text-yellow-600">
-                                {{ $proyek->tugas()->where('selesai', false)->count() }}</p>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
+                                <p class="text-sm text-gray-600 mb-1">Budget Rencana</p>
+                                <p class="text-xl font-bold text-blue-600">Rp
+                                    {{ number_format($budget->jumlah_rencana, 0, ',', '.') }}</p>
+                            </div>
+                            <div class="p-4 bg-red-50 rounded-lg border border-red-100">
+                                <p class="text-sm text-gray-600 mb-1">Realisasi</p>
+                                <p class="text-xl font-bold text-red-600">Rp
+                                    {{ number_format($budget->jumlah_realisasi, 0, ',', '.') }}</p>
+                            </div>
+                            <div class="p-4 bg-green-50 rounded-lg border border-green-100">
+                                <p class="text-sm text-gray-600 mb-1">Sisa Budget</p>
+                                <p class="text-xl font-bold text-green-600">Rp
+                                    {{ number_format($budget->sisa_budget, 0, ',', '.') }}</p>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium text-gray-700">Penggunaan Budget</span>
+                                    <span
+                                        class="text-sm font-bold text-gray-900">{{ number_format($budget->persentase_penggunaan, 1) }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="h-3 rounded-full {{ $budget->persentase_penggunaan < 70 ? 'bg-green-500' : ($budget->persentase_penggunaan < 90 ? 'bg-yellow-500' : 'bg-red-500') }}"
+                                        style="width: {{ min($budget->persentase_penggunaan, 100) }}%"></div>
+                                </div>
+                                <div class="mt-2 text-center">
+                                    <span
+                                        class="px-3 py-1 text-xs font-semibold rounded-full {{ $budget->getStatusColor() }}">
+                                        @if ($budget->getStatusBudget() == 'aman')
+                                            Status: Aman
+                                        @elseif($budget->getStatusBudget() == 'peringatan')
+                                            Status: Peringatan
+                                        @else
+                                            Status: Bahaya
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                @endif
+
+            </div>
+        </div>
+
+        <!-- Task Stats Section (Horizontal) -->
+        <div class="mt-8 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+                    <p class="text-sm text-gray-600 mb-2">Total Task</p>
+                    <p class="text-4xl font-bold text-blue-600">{{ $proyek->tugas()->count() }}</p>
+                    <p class="text-xs text-gray-500 mt-2">Semua task</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+                    <p class="text-sm text-gray-600 mb-2">Selesai</p>
+                    <p class="text-4xl font-bold text-green-600">{{ $proyek->tugas()->where('selesai', true)->count() }}</p>
+                    <p class="text-xs text-gray-500 mt-2">Task yang sudah selesai</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
+                    <p class="text-sm text-gray-600 mb-2">Belum Selesai</p>
+                    <p class="text-4xl font-bold text-yellow-600">{{ $proyek->tugas()->where('selesai', false)->count() }}</p>
+                    <p class="text-xs text-gray-500 mt-2">Task yang belum selesai</p>
                 </div>
             </div>
         </div>
 
         <!-- Tasks Section -->
-        <div class="mt-8 mb-8">
+        <div class="mb-8">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-900">Task-Task Project</h2>
             </div>
@@ -145,7 +203,8 @@
                     <button type="submit"
                         class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+                            </path>
                         </svg>
                         <span>Tambah</span>
                     </button>
@@ -193,7 +252,8 @@
                                 id="pendingTasksList">
                                 @forelse($proyek->tugas->where('selesai', false) as $tugas)
                                     <div class="hover:bg-gray-50 transition p-4" data-task-id="{{ $tugas->id }}"
-                                        data-task-name="{{ strtolower($tugas->nama) }}">
+                                        data-task-name="{{ strtolower($tugas->nama) }}"
+                                        data-task-search="{{ strtolower($tugas->nama) }}">
                                         <div class="flex items-center justify-between gap-4">
                                             <div class="flex items-center gap-4 flex-1 min-w-0">
                                                 <input type="checkbox" id="task-{{ $tugas->id }}"
@@ -243,7 +303,8 @@
                                 id="completedTasksList">
                                 @forelse($proyek->tugas->where('selesai', true) as $tugas)
                                     <div class="hover:bg-gray-50 transition p-4" data-task-id="{{ $tugas->id }}"
-                                        data-task-name="{{ strtolower($tugas->nama) }}">
+                                        data-task-name="{{ strtolower($tugas->nama) }}"
+                                        data-task-search="{{ strtolower($tugas->nama) }}">
                                         <div class="flex items-center justify-between gap-4">
                                             <div class="flex items-center gap-4 flex-1 min-w-0">
                                                 <input type="checkbox" id="task-{{ $tugas->id }}"
@@ -283,69 +344,69 @@
             </div>
         </div>
 
-    <script>
-        // Helper function to safely get CSRF token
-        function getCsrfToken() {
-            const token = document.querySelector('meta[name="csrf-token"]')?.content;
-            if (!token) {
-                console.error('CSRF token not found in meta tag!');
-                throw new Error('CSRF token not available');
-            }
-            return token;
-        }
-
-        // Add Task via AJAX
-        document.getElementById('addTaskForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const form = this;
-            const input = document.getElementById('taskNameInput');
-            const taskName = input.value.trim();
-
-            if (!taskName) {
-                showToast('Nama task tidak boleh kosong', 'error');
-                return;
+        <script>
+            // Helper function to safely get CSRF token
+            function getCsrfToken() {
+                const token = document.querySelector('meta[name="csrf-token"]')?.content;
+                if (!token) {
+                    console.error('CSRF token not found in meta tag!');
+                    throw new Error('CSRF token not available');
+                }
+                return token;
             }
 
-            // Disable form while submitting
-            input.disabled = true;
-            form.querySelector('button').disabled = true;
+            // Add Task via AJAX
+            document.getElementById('addTaskForm').addEventListener('submit', function(e) {
+                e.preventDefault();
 
-            fetch('/proyek/{{ $proyek->id }}/tugas', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': getCsrfToken(),
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        nama: taskName
+                const form = this;
+                const input = document.getElementById('taskNameInput');
+                const taskName = input.value.trim();
+
+                if (!taskName) {
+                    showToast('Nama task tidak boleh kosong', 'error');
+                    return;
+                }
+
+                // Disable form while submitting
+                input.disabled = true;
+                form.querySelector('button').disabled = true;
+
+                fetch('/proyek/{{ $proyek->id }}/tugas', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': getCsrfToken(),
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            nama: taskName
+                        })
                     })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Clear input
-                        input.value = '';
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Clear input
+                            input.value = '';
 
-                        // Hide empty state if exists
-                        const emptyState = document.getElementById('emptyState');
-                        if (emptyState) {
-                            emptyState.remove();
-                        }
+                            // Hide empty state if exists
+                            const emptyState = document.getElementById('emptyState');
+                            if (emptyState) {
+                                emptyState.remove();
+                            }
 
-                        // Get or create task list
-                        let taskList = document.getElementById('taskList');
-                        if (!taskList) {
-                            const container = document.getElementById('taskListContainer');
-                            taskList = document.createElement('div');
-                            taskList.id = 'taskList';
-                            taskList.className = 'divide-y divide-gray-200';
-                            container.appendChild(taskList);
-                        }
+                            // Get or create task list
+                            let taskList = document.getElementById('taskList');
+                            if (!taskList) {
+                                const container = document.getElementById('taskListContainer');
+                                taskList = document.createElement('div');
+                                taskList.id = 'taskList';
+                                taskList.className = 'divide-y divide-gray-200';
+                                container.appendChild(taskList);
+                            }
 
-                        // Add new task to list
-                        const taskHtml = `
+                            // Add new task to list
+                            const taskHtml = `
                     <div class="hover:bg-gray-50 transition p-6" data-task-id="${data.task.id}">
                         <div class="flex items-center justify-between gap-4">
                             <div class="flex items-center gap-4 flex-1 min-w-0">
@@ -378,220 +439,220 @@
                     </div>
                 `;
 
-                        taskList.insertAdjacentHTML('beforeend', taskHtml);
+                            taskList.insertAdjacentHTML('beforeend', taskHtml);
 
-                        // Update stats
-                        updateStats(data.progress);
+                            // Update stats
+                            updateStats(data.progress);
 
-                        showToast(data.message, 'success');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showToast('Gagal menambahkan task', 'error');
-                })
-                .finally(() => {
-                    input.disabled = false;
-                    form.querySelector('button').disabled = false;
-                    input.focus();
-                });
-        });
-
-        // Toggle Task Status
-        function toggleTaskStatus(checkbox) {
-            const taskId = checkbox.dataset.taskId;
-            const proyekId = checkbox.dataset.proyekId;
-            const isCompleted = checkbox.checked;
-
-            console.log('Toggling task:', taskId, 'Project:', proyekId, 'Status:', isCompleted);
-
-            // Find the task row with data-task-id
-            let taskRow = checkbox.closest('div[data-task-id]');
-            if (!taskRow) {
-                console.error('Task row not found. Checkbox:', checkbox);
-                checkbox.checked = !isCompleted;
-                return;
-            }
-
-            console.log('Task row found. Moving task between sections...');
-
-            // Get the label for visual update
-            const label = taskRow.querySelector('span.task-name');
-            if (!label) {
-                console.error('Task name span not found');
-                checkbox.checked = !isCompleted;
-                return;
-            }
-
-            // Update visual classes
-            if (isCompleted) {
-                label.classList.add('line-through', 'text-gray-500');
-                label.classList.remove('text-gray-900');
-            } else {
-                label.classList.remove('line-through', 'text-gray-500');
-                label.classList.add('text-gray-900');
-            }
-
-            // Disable checkbox while sending
-            checkbox.disabled = true;
-
-            const url = `/proyek/${proyekId}/tugas/${taskId}/status`;
-            console.log('Calling API:', url);
-
-            fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': getCsrfToken(),
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        selesai: isCompleted
-                    })
-                })
-                .then(response => {
-                    console.log('Response status:', response.status);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Response data:', data);
-                    if (data.success) {
-                        // Move task to appropriate section
-                        const pendingTasksList = document.getElementById('pendingTasksList');
-                        const completedTasksList = document.getElementById('completedTasksList');
-                        
-                        if (isCompleted && completedTasksList) {
-                            // Move to completed section
-                            completedTasksList.appendChild(taskRow);
-                        } else if (!isCompleted && pendingTasksList) {
-                            // Move to pending section
-                            pendingTasksList.appendChild(taskRow);
+                            showToast(data.message, 'success');
                         }
-                        
-                        // Update counters
-                        updateTaskCounters();
-                        
-                        // Update stats
-                        updateStats(data.progress);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToast('Gagal menambahkan task', 'error');
+                    })
+                    .finally(() => {
+                        input.disabled = false;
+                        form.querySelector('button').disabled = false;
+                        input.focus();
+                    });
+            });
 
-                        showToast(data.message, 'success');
-                    } else {
+            // Toggle Task Status
+            function toggleTaskStatus(checkbox) {
+                const taskId = checkbox.dataset.taskId;
+                const proyekId = checkbox.dataset.proyekId;
+                const isCompleted = checkbox.checked;
+
+                console.log('Toggling task:', taskId, 'Project:', proyekId, 'Status:', isCompleted);
+
+                // Find the task row with data-task-id
+                let taskRow = checkbox.closest('div[data-task-id]');
+                if (!taskRow) {
+                    console.error('Task row not found. Checkbox:', checkbox);
+                    checkbox.checked = !isCompleted;
+                    return;
+                }
+
+                console.log('Task row found. Moving task between sections...');
+
+                // Get the label for visual update
+                const label = taskRow.querySelector('span.task-name');
+                if (!label) {
+                    console.error('Task name span not found');
+                    checkbox.checked = !isCompleted;
+                    return;
+                }
+
+                // Update visual classes
+                if (isCompleted) {
+                    label.classList.add('line-through', 'text-gray-500');
+                    label.classList.remove('text-gray-900');
+                } else {
+                    label.classList.remove('line-through', 'text-gray-500');
+                    label.classList.add('text-gray-900');
+                }
+
+                // Disable checkbox while sending
+                checkbox.disabled = true;
+
+                const url = `/proyek/${proyekId}/tugas/${taskId}/status`;
+                console.log('Calling API:', url);
+
+                fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': getCsrfToken(),
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            selesai: isCompleted
+                        })
+                    })
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Response data:', data);
+                        if (data.success) {
+                            // Move task to appropriate section
+                            const pendingTasksList = document.getElementById('pendingTasksList');
+                            const completedTasksList = document.getElementById('completedTasksList');
+
+                            if (isCompleted && completedTasksList) {
+                                // Move to completed section
+                                completedTasksList.appendChild(taskRow);
+                            } else if (!isCompleted && pendingTasksList) {
+                                // Move to pending section
+                                pendingTasksList.appendChild(taskRow);
+                            }
+
+                            // Update counters
+                            updateTaskCounters();
+
+                            // Update stats
+                            updateStats(data.progress);
+
+                            showToast(data.message, 'success');
+                        } else {
+                            // Revert on error
+                            checkbox.checked = !isCompleted;
+                            label.classList.remove('line-through', 'text-gray-500');
+                            label.classList.add('text-gray-900');
+                            showToast(data.message || 'Gagal mengupdate status task', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
                         // Revert on error
                         checkbox.checked = !isCompleted;
                         label.classList.remove('line-through', 'text-gray-500');
                         label.classList.add('text-gray-900');
-                        showToast(data.message || 'Gagal mengupdate status task', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    // Revert on error
-                    checkbox.checked = !isCompleted;
-                    label.classList.remove('line-through', 'text-gray-500');
-                    label.classList.add('text-gray-900');
-                    showToast('Gagal mengupdate status task: ' + error.message, 'error');
-                })
-                .finally(() => {
-                    checkbox.disabled = false;
-                });
-        }
-
-        // Update task counters for grouped sections
-        function updateTaskCounters() {
-            const pendingRows = document.querySelectorAll('#pendingTasksList > div[data-task-name]');
-            const completedRows = document.querySelectorAll('#completedTasksList > div[data-task-name]');
-            
-            const pendingCount = document.getElementById('pendingCount');
-            const completedCount = document.getElementById('completedCount');
-            
-            if (pendingCount) pendingCount.textContent = pendingRows.length;
-            if (completedCount) completedCount.textContent = completedRows.length;
-        }
-
-        // Delete Task
-        function deleteTask(taskId, proyekId) {
-            console.log('deleteTask called. TaskID:', taskId, 'ProyekID:', proyekId);
-
-            // Find the task row
-            const taskRow = document.querySelector(`[data-task-id="${taskId}"]`);
-            if (!taskRow) {
-                console.error('Task row not found for ID:', taskId);
-                showToast('Task tidak ditemukan', 'error');
-                return;
-            }
-
-            // Get task name for confirmation message
-            const taskName = taskRow.querySelector('span.task-name')?.textContent || 'Task';
-
-            // Show custom confirmation modal instead of browser confirm
-            showConfirm(
-                `Apakah Anda yakin ingin menghapus task "${taskName}"? Tindakan ini tidak dapat dibatalkan.`,
-                'Hapus Task',
-                function() {
-                    performDeleteTask(taskId, proyekId, taskRow);
-                }
-            );
-        }
-
-        // Perform the actual delete operation
-        function performDeleteTask(taskId, proyekId, taskRow) {
-            console.log('Performing delete for TaskID:', taskId);
-
-            // Find and disable the delete button
-            const deleteButton = taskRow.querySelector('button[onclick*="deleteTask"]');
-            if (deleteButton) {
-                deleteButton.disabled = true;
-                deleteButton.style.opacity = '0.5';
-            }
-
-            const url = `/proyek/${proyekId}/tugas/${taskId}`;
-            console.log('Calling DELETE:', url);
-
-            fetch(url, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': getCsrfToken(),
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => {
-                    console.log('Delete response status:', response.status, 'OK:', response.ok);
-                    console.log('Response headers:', response.headers.get('content-type'));
-
-                    // Always try to parse JSON regardless of status
-                    return response.json().then(data => {
-                        console.log('Parsed response data:', data);
-
-                        // If response was not ok, throw error with message from response
-                        if (!response.ok) {
-                            throw new Error(data.message || `HTTP error! status: ${response.status}`);
-                        }
-
-                        return data;
-                    }).catch(err => {
-                        console.error('Failed to parse response:', err);
-                        throw new Error(`Failed to parse server response: ${err.message}`);
+                        showToast('Gagal mengupdate status task: ' + error.message, 'error');
+                    })
+                    .finally(() => {
+                        checkbox.disabled = false;
                     });
-                })
-                .then(data => {
-                    console.log('Delete successful. Data:', data);
-                    if (data.success) {
-                        // Remove task from DOM with animation
-                        if (taskRow) {
-                            taskRow.style.opacity = '0';
-                            taskRow.style.transition = 'opacity 0.3s ease-out';
-                            setTimeout(() => {
-                                taskRow.remove();
+            }
 
-                                // Check if no more tasks
-                                const taskList = document.getElementById('taskList');
-                                if (taskList && taskList.children.length === 0) {
-                                    const container = document.getElementById('taskListContainer');
-                                    container.innerHTML = `
+            // Update task counters for grouped sections
+            function updateTaskCounters() {
+                const pendingRows = document.querySelectorAll('#pendingTasksList > div[data-task-name]');
+                const completedRows = document.querySelectorAll('#completedTasksList > div[data-task-name]');
+
+                const pendingCount = document.getElementById('pendingCount');
+                const completedCount = document.getElementById('completedCount');
+
+                if (pendingCount) pendingCount.textContent = pendingRows.length;
+                if (completedCount) completedCount.textContent = completedRows.length;
+            }
+
+            // Delete Task
+            function deleteTask(taskId, proyekId) {
+                console.log('deleteTask called. TaskID:', taskId, 'ProyekID:', proyekId);
+
+                // Find the task row
+                const taskRow = document.querySelector(`[data-task-id="${taskId}"]`);
+                if (!taskRow) {
+                    console.error('Task row not found for ID:', taskId);
+                    showToast('Task tidak ditemukan', 'error');
+                    return;
+                }
+
+                // Get task name for confirmation message
+                const taskName = taskRow.querySelector('span.task-name')?.textContent || 'Task';
+
+                // Show custom confirmation modal instead of browser confirm
+                showConfirm(
+                    `Apakah Anda yakin ingin menghapus task "${taskName}"? Tindakan ini tidak dapat dibatalkan.`,
+                    'Hapus Task',
+                    function() {
+                        performDeleteTask(taskId, proyekId, taskRow);
+                    }
+                );
+            }
+
+            // Perform the actual delete operation
+            function performDeleteTask(taskId, proyekId, taskRow) {
+                console.log('Performing delete for TaskID:', taskId);
+
+                // Find and disable the delete button
+                const deleteButton = taskRow.querySelector('button[onclick*="deleteTask"]');
+                if (deleteButton) {
+                    deleteButton.disabled = true;
+                    deleteButton.style.opacity = '0.5';
+                }
+
+                const url = `/proyek/${proyekId}/tugas/${taskId}`;
+                console.log('Calling DELETE:', url);
+
+                fetch(url, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': getCsrfToken(),
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        console.log('Delete response status:', response.status, 'OK:', response.ok);
+                        console.log('Response headers:', response.headers.get('content-type'));
+
+                        // Always try to parse JSON regardless of status
+                        return response.json().then(data => {
+                            console.log('Parsed response data:', data);
+
+                            // If response was not ok, throw error with message from response
+                            if (!response.ok) {
+                                throw new Error(data.message || `HTTP error! status: ${response.status}`);
+                            }
+
+                            return data;
+                        }).catch(err => {
+                            console.error('Failed to parse response:', err);
+                            throw new Error(`Failed to parse server response: ${err.message}`);
+                        });
+                    })
+                    .then(data => {
+                        console.log('Delete successful. Data:', data);
+                        if (data.success) {
+                            // Remove task from DOM with animation
+                            if (taskRow) {
+                                taskRow.style.opacity = '0';
+                                taskRow.style.transition = 'opacity 0.3s ease-out';
+                                setTimeout(() => {
+                                    taskRow.remove();
+
+                                    // Check if no more tasks
+                                    const taskList = document.getElementById('taskList');
+                                    if (taskList && taskList.children.length === 0) {
+                                        const container = document.getElementById('taskListContainer');
+                                        container.innerHTML = `
                                 <div class="p-12 text-center" id="emptyState">
                                     <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
@@ -600,161 +661,161 @@
                                     <p class="text-gray-400 mt-2">Tambahkan task pertama untuk project ini</p>
                                 </div>
                             `;
-                                }
-                            }, 300);
+                                    }
+                                }, 300);
+                            }
+
+                            // Recalculate stats from DOM (more accurate after deletion)
+                            updateStatsFromDOM();
+
+                            showToast(data.message, 'success');
+                        } else {
+                            showToast(data.message || data.error || 'Gagal menghapus task', 'error');
+                            if (deleteButton) {
+                                deleteButton.disabled = false;
+                                deleteButton.style.opacity = '1';
+                            }
                         }
-
-                        // Recalculate stats from DOM (more accurate after deletion)
-                        updateStatsFromDOM();
-
-                        showToast(data.message, 'success');
-                    } else {
-                        showToast(data.message || data.error || 'Gagal menghapus task', 'error');
+                    })
+                    .catch(error => {
+                        console.error('Delete error:', error);
+                        showToast('Gagal menghapus task: ' + error.message, 'error');
                         if (deleteButton) {
                             deleteButton.disabled = false;
                             deleteButton.style.opacity = '1';
                         }
+                    });
+            }
+
+            // Update Progress Stats
+            function updateStats(progress) {
+                // Update progress bar and percentage
+                const progressElement = document.getElementById('project-progress');
+                const progressBar = document.getElementById('project-progress-bar');
+
+                if (progressElement && progress !== undefined) {
+                    progressElement.textContent = Math.round(progress) + '%';
+                }
+                if (progressBar && progress !== undefined) {
+                    progressBar.style.width = progress + '%';
+
+                    // Update color based on progress
+                    progressBar.className = 'h-6 rounded-full transition-all duration-300';
+                    if (progress === 100) {
+                        progressBar.classList.add('bg-green-600');
+                    } else if (progress >= 50) {
+                        progressBar.classList.add('bg-blue-600');
+                    } else if (progress > 0) {
+                        progressBar.classList.add('bg-yellow-600');
+                    } else {
+                        progressBar.classList.add('bg-gray-300');
                     }
-                })
-                .catch(error => {
-                    console.error('Delete error:', error);
-                    showToast('Gagal menghapus task: ' + error.message, 'error');
-                    if (deleteButton) {
-                        deleteButton.disabled = false;
-                        deleteButton.style.opacity = '1';
+                }
+
+                // Count and update task stats
+                const allCheckboxes = document.querySelectorAll('.task-checkbox');
+                const completedCheckboxes = Array.from(allCheckboxes).filter(cb => cb.checked);
+                const pendingCheckboxes = Array.from(allCheckboxes).filter(cb => !cb.checked);
+
+                // Update stat cards if they exist
+                const totalTaskEl = document.querySelector('.text-blue-600');
+                const completedTaskEl = document.querySelector('.text-green-600');
+                const pendingTaskEl = document.querySelector('.text-yellow-600');
+
+                if (totalTaskEl) totalTaskEl.textContent = allCheckboxes.length;
+                if (completedTaskEl) completedTaskEl.textContent = completedCheckboxes.length;
+                if (pendingTaskEl) pendingTaskEl.textContent = pendingCheckboxes.length;
+            }
+
+            // Recalculate stats from DOM (useful after delete when server response might be stale)
+            function updateStatsFromDOM() {
+                const allCheckboxes = document.querySelectorAll('.task-checkbox');
+
+                if (allCheckboxes.length === 0) {
+                    // No tasks left
+                    updateStats(0);
+                    return;
+                }
+
+                const completedCheckboxes = Array.from(allCheckboxes).filter(cb => cb.checked);
+                const progress = (completedCheckboxes.length / allCheckboxes.length) * 100;
+
+                console.log('Recalculated from DOM:', {
+                    total: allCheckboxes.length,
+                    completed: completedCheckboxes.length,
+                    progress: progress
+                });
+
+                updateStats(progress);
+            }
+
+            // Search/Filter functionality
+            function filterTasks(searchTerm) {
+                const searchLower = searchTerm.toLowerCase().trim();
+
+                // Get all task rows
+                const pendingRows = document.querySelectorAll('#pendingTasksList > div[data-task-search]');
+                const completedRows = document.querySelectorAll('#completedTasksList > div[data-task-search]');
+
+                let visiblePending = 0;
+                let visibleCompleted = 0;
+
+                // Filter pending tasks
+                pendingRows.forEach(row => {
+                    const taskName = row.getAttribute('data-task-search') || '';
+                    const matches = searchLower === '' || taskName.includes(searchLower);
+                    row.style.display = matches ? '' : 'none';
+                    if (matches) visiblePending++;
+                });
+
+                // Filter completed tasks
+                completedRows.forEach(row => {
+                    const taskName = row.getAttribute('data-task-search') || '';
+                    const matches = searchLower === '' || taskName.includes(searchLower);
+                    row.style.display = matches ? '' : 'none';
+                    if (matches) visibleCompleted++;
+                });
+
+                // Update counters to show visible count
+                const pendingCount = document.getElementById('pendingCount');
+                const completedCount = document.getElementById('completedCount');
+
+                if (pendingCount) {
+                    if (searchLower === '') {
+                        pendingCount.textContent = pendingRows.length;
+                    } else {
+                        pendingCount.innerHTML = `<span class="text-blue-600">${visiblePending}</span>/${pendingRows.length}`;
                     }
-                });
-        }
+                }
 
-        // Update Progress Stats
-        function updateStats(progress) {
-            // Update progress bar and percentage
-            const progressElement = document.getElementById('project-progress');
-            const progressBar = document.getElementById('project-progress-bar');
-
-            if (progressElement && progress !== undefined) {
-                progressElement.textContent = Math.round(progress) + '%';
-            }
-            if (progressBar && progress !== undefined) {
-                progressBar.style.width = progress + '%';
-
-                // Update color based on progress
-                progressBar.className = 'h-6 rounded-full transition-all duration-300';
-                if (progress === 100) {
-                    progressBar.classList.add('bg-green-600');
-                } else if (progress >= 50) {
-                    progressBar.classList.add('bg-blue-600');
-                } else if (progress > 0) {
-                    progressBar.classList.add('bg-yellow-600');
-                } else {
-                    progressBar.classList.add('bg-gray-300');
+                if (completedCount) {
+                    if (searchLower === '') {
+                        completedCount.textContent = completedRows.length;
+                    } else {
+                        completedCount.innerHTML =
+                            `<span class="text-blue-600">${visibleCompleted}</span>/${completedRows.length}`;
+                    }
                 }
             }
 
-            // Count and update task stats
-            const allCheckboxes = document.querySelectorAll('.task-checkbox');
-            const completedCheckboxes = Array.from(allCheckboxes).filter(cb => cb.checked);
-            const pendingCheckboxes = Array.from(allCheckboxes).filter(cb => !cb.checked);
-
-            // Update stat cards if they exist
-            const totalTaskEl = document.querySelector('.text-blue-600');
-            const completedTaskEl = document.querySelector('.text-green-600');
-            const pendingTaskEl = document.querySelector('.text-yellow-600');
-
-            if (totalTaskEl) totalTaskEl.textContent = allCheckboxes.length;
-            if (completedTaskEl) completedTaskEl.textContent = completedCheckboxes.length;
-            if (pendingTaskEl) pendingTaskEl.textContent = pendingCheckboxes.length;
-        }
-
-        // Recalculate stats from DOM (useful after delete when server response might be stale)
-        function updateStatsFromDOM() {
-            const allCheckboxes = document.querySelectorAll('.task-checkbox');
-
-            if (allCheckboxes.length === 0) {
-                // No tasks left
-                updateStats(0);
-                return;
-            }
-
-            const completedCheckboxes = Array.from(allCheckboxes).filter(cb => cb.checked);
-            const progress = (completedCheckboxes.length / allCheckboxes.length) * 100;
-
-            console.log('Recalculated from DOM:', {
-                total: allCheckboxes.length,
-                completed: completedCheckboxes.length,
-                progress: progress
-            });
-
-            updateStats(progress);
-        }
-
-        // Search/Filter functionality
-        function filterTasks(searchTerm) {
-            const searchLower = searchTerm.toLowerCase().trim();
-
-            // Get all task rows
-            const pendingRows = document.querySelectorAll('#pendingTasksList > div[data-task-name]');
-            const completedRows = document.querySelectorAll('#completedTasksList > div[data-task-name]');
-
-            let visiblePending = 0;
-            let visibleCompleted = 0;
-
-            // Filter pending tasks
-            pendingRows.forEach(row => {
-                const taskName = row.getAttribute('data-task-name') || '';
-                const matches = searchLower === '' || taskName.includes(searchLower);
-                row.style.display = matches ? '' : 'none';
-                if (matches) visiblePending++;
-            });
-
-            // Filter completed tasks
-            completedRows.forEach(row => {
-                const taskName = row.getAttribute('data-task-name') || '';
-                const matches = searchLower === '' || taskName.includes(searchLower);
-                row.style.display = matches ? '' : 'none';
-                if (matches) visibleCompleted++;
-            });
-
-            // Update counters to show visible count
-            const pendingCount = document.getElementById('pendingCount');
-            const completedCount = document.getElementById('completedCount');
-
-            if (pendingCount) {
-                if (searchLower === '') {
-                    pendingCount.textContent = pendingRows.length;
-                } else {
-                    pendingCount.innerHTML = `<span class="text-blue-600">${visiblePending}</span>/${pendingRows.length}`;
+            // Reset search/filter
+            function resetTaskSearch() {
+                const searchInput = document.getElementById('taskSearchInput');
+                if (searchInput) {
+                    searchInput.value = '';
+                    filterTasks('');
                 }
             }
 
-            if (completedCount) {
-                if (searchLower === '') {
-                    completedCount.textContent = completedRows.length;
-                } else {
-                    completedCount.innerHTML =
-                        `<span class="text-blue-600">${visibleCompleted}</span>/${completedRows.length}`;
+            // Initialize search listener
+            document.addEventListener('DOMContentLoaded', function() {
+                const searchInput = document.getElementById('taskSearchInput');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        filterTasks(this.value);
+                    });
                 }
-            }
-        }
-
-        // Reset search/filter
-        function resetTaskSearch() {
-            const searchInput = document.getElementById('taskSearchInput');
-            if (searchInput) {
-                searchInput.value = '';
-                filterTasks('');
-            }
-        }
-
-        // Initialize search listener
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('taskSearchInput');
-            if (searchInput) {
-                searchInput.addEventListener('input', function() {
-                    filterTasks(this.value);
-                });
-            }
-        });
-    </script>
+            });
+        </script>
     </div>
 @endsection

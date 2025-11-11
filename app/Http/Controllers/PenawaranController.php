@@ -21,7 +21,7 @@ class PenawaranController extends Controller
         
         // Calculate KPI data
         $totalPenawaran = $penawaran->count();
-        $totalValue = $penawaran->sum('total_biaya');
+        $totalValue = $penawaran->sum('grand_total');
         $pendingPenawaran = $penawaran->where('status', 'draft')->count();
 
         return view('penawaran.index', compact('penawaran', 'totalPenawaran', 'totalValue', 'pendingPenawaran'));

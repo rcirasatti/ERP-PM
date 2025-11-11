@@ -9,6 +9,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PenawaranController;
 use App\Http\Controllers\ProyekController;
 use App\Http\Controllers\TugasController;
+use App\Http\Controllers\FinanceController;
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -40,6 +41,14 @@ Route::middleware('auth')->group(function () {
     // Penawaran (Quotations)
     Route::resource('penawaran', PenawaranController::class);
     Route::put('penawaran/{penawaran}/update-status', [PenawaranController::class, 'updateStatus'])->name('penawaran.updateStatus');
+
+    // Finance & Budget Management
+    Route::get('finance/dashboard', [FinanceController::class, 'dashboard'])->name('finance.dashboard');
+    Route::get('finance/budget', [FinanceController::class, 'budget'])->name('finance.budget');
+    Route::get('finance/pengeluaran', [FinanceController::class, 'pengeluaran'])->name('finance.pengeluaran');
+    Route::post('finance/pengeluaran', [FinanceController::class, 'storePengeluaran'])->name('finance.pengeluaran.store');
+    Route::put('finance/pengeluaran/{pengeluaran}', [FinanceController::class, 'updatePengeluaran'])->name('finance.pengeluaran.update');
+    Route::delete('finance/pengeluaran/{pengeluaran}', [FinanceController::class, 'destroyPengeluaran'])->name('finance.pengeluaran.destroy');
 
     // Tasks
     Route::get('/tasks', function () {

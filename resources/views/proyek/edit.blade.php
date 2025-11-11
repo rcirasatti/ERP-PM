@@ -17,7 +17,8 @@
         <!-- Form Section -->
         <div class="lg:col-span-2">
             <div class="bg-white rounded-lg shadow-md p-8">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Edit Project</h2>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Edit Project</h2>
+                <p class="text-gray-600 mb-6">Perbarui informasi project seperti nama, deskripsi, lokasi, tanggal, dan status. Data seperti client dan penawaran tidak dapat diubah.</p>
 
                 @if ($errors->any())
                     <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
@@ -128,23 +129,43 @@
         <!-- Info Section -->
         <div class="lg:col-span-1">
             <div class="bg-blue-50 rounded-lg p-6 border border-blue-200 mb-6">
-                <h3 class="font-semibold text-blue-900 mb-4">Info Project</h3>
+                <h3 class="font-semibold text-blue-900 mb-4">Informasi Project</h3>
                 <dl class="space-y-3 text-sm">
-                    <div>
-                        <dt class="font-medium text-blue-600">Client</dt>
+                    <div class="pb-3 border-b border-blue-100">
+                        <dt class="font-medium text-blue-600 mb-1">Client</dt>
                         <dd class="text-gray-900">{{ $proyek->client->nama ?? 'N/A' }}</dd>
                     </div>
-                    <div>
-                        <dt class="font-medium text-blue-600">Status Saat Ini</dt>
+                    <div class="pb-3 border-b border-blue-100">
+                        <dt class="font-medium text-blue-600 mb-1">No. Penawaran</dt>
+                        <dd class="text-gray-900">{{ $proyek->penawaran->no_penawaran ?? 'N/A' }}</dd>
+                    </div>
+                    <div class="pb-3 border-b border-blue-100">
+                        <dt class="font-medium text-blue-600 mb-1">Status Saat Ini</dt>
                         <dd>
                             <span class="inline-block px-3 py-1 rounded-full text-xs font-medium {{ $proyek->getStatusColor() }}">
                                 {{ $proyek->getStatusLabel() }}
                             </span>
                         </dd>
                     </div>
+                    <div class="pb-3 border-b border-blue-100">
+                        <dt class="font-medium text-blue-600 mb-1">Progress Saat Ini</dt>
+                        <dd>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-bold text-gray-900">{{ number_format($proyek->persentase_progres, 0) }}%</span>
+                            </div>
+                            <div class="w-full h-2 bg-blue-100 rounded-full overflow-hidden">
+                                <div class="h-2 rounded-full {{ $proyek->getProgressColor() }}" 
+                                     style="width: {{ $proyek->persentase_progres }}%"></div>
+                            </div>
+                        </dd>
+                    </div>
+                    <div class="pb-3 border-b border-blue-100">
+                        <dt class="font-medium text-blue-600 mb-1">Dibuat Pada</dt>
+                        <dd class="text-gray-900">{{ $proyek->created_at?->format('d M Y H:i') ?? '-' }}</dd>
+                    </div>
                     <div>
-                        <dt class="font-medium text-blue-600">Progress</dt>
-                        <dd>{{ number_format($proyek->persentase_progres, 0) }}%</dd>
+                        <dt class="font-medium text-blue-600 mb-1">Diperbarui</dt>
+                        <dd class="text-gray-900">{{ $proyek->updated_at?->format('d M Y H:i') ?? '-' }}</dd>
                     </div>
                 </dl>
             </div>

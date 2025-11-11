@@ -26,16 +26,16 @@ class AppServiceProvider extends ServiceProvider
         // the {tugas} is resolved as a Tugas model scoped to that specific Proyek
         
         // Bind Proyek model
-        $this->app['router']->model('proyek', Proyek::class);
+        // $this->app['router']->model('proyek', Proyek::class);
         
         // Bind Tugas model - using the nested route scope
         // This will only find Tugas that belong to the specified Proyek
-        $this->app['router']->bind('tugas', function ($id, $route) {
-            $proyek = $route->parameter('proyek');
-            return Tugas::where('id', $id)
-                ->where('proyek_id', $proyek->id)
-                ->firstOrFail();
-        });
+        // $this->app['router']->bind('tugas', function ($id, $route) {
+        //     $proyek = $route->parameter('proyek');
+        //     return Tugas::where('id', $id)
+        //         ->where('proyek_id', $proyek->id)
+        //         ->firstOrFail();
+        // });
     }
 }
 

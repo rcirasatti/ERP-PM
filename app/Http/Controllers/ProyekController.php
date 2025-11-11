@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Proyek;
 use App\Models\Penawaran;
 use App\Models\Client;
+use App\Models\ProyekBudget;
 use Illuminate\Http\Request;
 
 class ProyekController extends Controller
@@ -71,6 +72,13 @@ class ProyekController extends Controller
             'tanggal_selesai' => $validated['tanggal_selesai'],
             'status' => 'baru', // Always start as 'baru'
             'persentase_progres' => 0, // Initial progress is 0%
+        ]);
+
+        // Create budget automatically from penawaran grand_total
+        ProyekBudget::create([
+            'proyek_id' => $proyek->id,
+            'jumlah_rencana' => $penawaran->grand_total,
+            'jumlah_realisasi' => 0,
         ]);
 
         return redirect()->route('proyek.show', $proyek->id)

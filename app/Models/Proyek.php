@@ -42,6 +42,22 @@ class Proyek extends Model
     }
 
     /**
+     * Get the budget for this project
+     */
+    public function budget(): HasMany
+    {
+        return $this->hasMany(ProyekBudget::class, 'proyek_id');
+    }
+
+    /**
+     * Get all expenses for this project
+     */
+    public function pengeluaran(): HasMany
+    {
+        return $this->hasMany(Pengeluaran::class, 'proyek_id');
+    }
+
+    /**
      * Calculate project progress from tasks
      */
     public function hitungProgress()

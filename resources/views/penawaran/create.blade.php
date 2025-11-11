@@ -245,28 +245,33 @@
                 const hargaAsli = parseFloat(row.querySelector('.harga-asli-input').value) || 0;
                 const margin = parseFloat(row.querySelector('.margin-input').value) || 0;
 
-                // Kalkulasi harga jual = harga asli + (harga asli * margin%)
+                // Total biaya (harga asli * jumlah)
+                const biayaItem = hargaAsli * jumlah;
+                
+                // Margin value = biaya * margin%
+                const marginValue = biayaItem * margin / 100;
+                
+                // Harga jual per unit = harga asli + (harga asli * margin%)
                 const hargaJual = hargaAsli + (hargaAsli * margin / 100);
                 
                 // Subtotal = harga jual * jumlah
                 const subtotal = jumlah * hargaJual;
-                
-                // Margin value = subtotal - (harga asli * jumlah)
-                const marginValue = subtotal - (hargaAsli * jumlah);
 
                 // Update display
                 row.querySelector('.harga-jual-display').textContent = 'Rp ' + number_format(hargaJual, 0, ',', '.');
                 row.querySelector('.subtotal-display').textContent = 'Rp ' + number_format(subtotal, 0, ',', '.');
 
-                totalBiaya += subtotal;
+                totalBiaya += biayaItem;
                 totalMargin += marginValue;
                 totalItems++;
             });
 
+            const grandTotal = totalBiaya + totalMargin;
+
             document.getElementById('totalItems').textContent = totalItems;
             document.getElementById('totalBiaya').textContent = 'Rp ' + number_format(totalBiaya, 0, ',', '.');
             document.getElementById('totalMargin').textContent = 'Rp ' + number_format(totalMargin, 0, ',', '.');
-            document.getElementById('grandTotal').textContent = 'Rp ' + number_format(totalBiaya, 0, ',', '.');
+            document.getElementById('grandTotal').textContent = 'Rp ' + number_format(grandTotal, 0, ',', '.');
         }
 
         function number_format(num, decimals, dec_point, thousands_sep) {
