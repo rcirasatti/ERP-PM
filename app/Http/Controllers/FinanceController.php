@@ -108,6 +108,13 @@ class FinanceController extends Controller
             $bulan_realisasi[] = $realisasi_bulan;
         }
         
+        // Alias untuk compatibility dengan view
+        $recent_pengeluaran = $pengeluaran_terbaru;
+        
+        // Prepare kategori labels dan totals untuk chart
+        $kategori_labels = $pengeluaran_per_kategori->pluck('label')->toArray();
+        $kategori_totals = $pengeluaran_per_kategori->pluck('total')->toArray();
+
         return view('finance.dashboard', compact(
             'total_budget',
             'total_realisasi',
@@ -118,22 +125,52 @@ class FinanceController extends Controller
             'top_proyek',
             'proyek_kritis',
             'pengeluaran_terbaru',
+            'recent_pengeluaran',
             'bulan_labels',
             'bulan_budget',
-            'bulan_realisasi'
+            'bulan_realisasi',
+            'kategori_labels',
+            'kategori_totals'
         ));
     }
 
     /**
      * Display list of all budgets
      */
-    public function budget()
+    public function budget(Request $request)
     {
-        $budgets = ProyekBudget::with(['proyek.client'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $query = ProyekBudget::with(['proyek.client']);
+        
+        // Search by proyek name or client name
+        if ($request->has('q') && $request->q != '') {
+            $search = $request->q;
+            $query->whereHas('proyek', function ($q) use ($search) {
+                $q->where('nama', 'like', '%' . $search . '%')
+                  ->orWhereHas('client', function ($q2) use ($search) {
+                      $q2->where('nama', 'like', '%' . $search . '%');
+                  });
+            });
+        }
+        
+        $budgets = $query->orderBy('created_at', 'desc')->paginate(15);
         
         return view('finance.budget', compact('budgets'));
+    }
+
+    /**
+     * Display budget detail page
+     */
+    public function showBudget(ProyekBudget $budget)
+    {
+        $budget->load(['proyek.client', 'proyek.pengeluaran']);
+        
+        // Get all pengeluaran for this proyek
+        $pengeluarans = Pengeluaran::where('proyek_id', $budget->proyek_id)
+            ->with(['creator', 'proyek'])
+            ->orderBy('tanggal', 'desc')
+            ->get();
+        
+        return view('finance.budget.show', compact('budget', 'pengeluarans'));
     }
 
     /**
@@ -174,7 +211,7 @@ class FinanceController extends Controller
             $budget->update(['jumlah_realisasi' => $total_pengeluaran]);
         }
 
-        return redirect()->route('finance.pengeluaran')
+        return redirect()->route('pengeluaran.index')
             ->with('success', 'Pengeluaran berhasil ditambahkan');
     }
 
@@ -200,7 +237,7 @@ class FinanceController extends Controller
             $budget->update(['jumlah_realisasi' => $total_pengeluaran]);
         }
 
-        return redirect()->route('finance.pengeluaran')
+        return redirect()->route('pengeluaran.index')
             ->with('success', 'Pengeluaran berhasil diperbarui');
     }
 
@@ -219,7 +256,7 @@ class FinanceController extends Controller
             $budget->update(['jumlah_realisasi' => $total_pengeluaran]);
         }
 
-        return redirect()->route('finance.pengeluaran')
+        return redirect()->route('pengeluaran.index')
             ->with('success', 'Pengeluaran berhasil dihapus');
     }
 }

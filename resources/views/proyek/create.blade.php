@@ -5,10 +5,8 @@
 @section('content')
     <div class="mb-8">
         <div class="flex items-center space-x-2 text-sm text-gray-600">
-            <a href="{{ route('proyek.index') }}" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center space-x-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
+            <a href="{{ route('proyek.index') }}" class="hover:text-blue-600">Projects</a>
+            <span>/</span>
             <span>Buat Project</span>
         </div>
     </div>
@@ -17,8 +15,7 @@
         <!-- Form Section -->
         <div class="lg:col-span-2">
             <div class="bg-white rounded-lg shadow-md p-8">
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">Buat Project Baru</h2>
-                <p class="text-gray-600 mb-6">Buat project baru dari penawaran yang telah disetujui. Project akan otomatis mendapatkan status "Baru" dan progress 0%.</p>
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Buat Project Baru</h2>
 
                 @if ($errors->any())
                     <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
@@ -54,7 +51,6 @@
 
                     <!-- Penawaran Info -->
                     <div id="penawaran-info" class="p-4 bg-blue-50 border border-blue-200 rounded-lg hidden">
-                        <h4 class="font-semibold text-blue-900 mb-4">Detail Penawaran</h4>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <p class="text-xs font-medium text-blue-600 uppercase">No. Penawaran</p>
@@ -74,7 +70,7 @@
                             </div>
                             <div class="col-span-2">
                                 <p class="text-xs font-medium text-blue-600 uppercase">Grand Total</p>
-                                <p class="text-lg font-bold text-blue-600">Rp <span id="grand-penawaran">0</span></p>
+                                <p class="text-sm font-semibold text-blue-600">Rp <span id="grand-penawaran">0</span></p>
                             </div>
                         </div>
                     </div>

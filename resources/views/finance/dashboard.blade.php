@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Finance Dashboard')
 
@@ -16,7 +16,7 @@
                 </svg>
                 <span>Lihat Budget</span>
             </a>
-            <a href="{{ route('finance.pengeluaran') }}" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center space-x-2">
+            <a href="{{ route('pengeluaran.index') }}" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center space-x-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
@@ -108,25 +108,16 @@
                                 <h3 class="font-medium text-gray-900">{{ $budget->proyek->nama }}</h3>
                                 <p class="text-xs text-gray-600">{{ $budget->proyek->client->nama }}</p>
                             </div>
-                            <span class="px-2 py-1 text-xs font-semibold rounded {{ $budget->getStatusColor() }}">
-                                {{ number_format($budget->persentase_penggunaan, 1) }}%
-                            </span>
+                            <span class="text-sm font-semibold text-red-600">Rp {{ number_format($budget->jumlah_realisasi, 0, ',', '.') }}</span>
                         </div>
-                        <div class="flex justify-between text-xs mt-2">
-                            <span class="text-gray-600">Budget: Rp {{ number_format($budget->jumlah_rencana, 0, ',', '.') }}</span>
-                            <span class="text-red-600 font-medium">Sisa: Rp {{ number_format($budget->sisa_budget, 0, ',', '.') }}</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                        <div class="w-full bg-gray-200 rounded-full h-2">
                             <div class="bg-red-500 h-2 rounded-full" style="width: {{ min($budget->persentase_penggunaan, 100) }}%"></div>
                         </div>
+                        <p class="text-xs text-gray-500 mt-1">{{ number_format($budget->persentase_penggunaan, 1) }}% terpakai - PERHATIAN!</p>
                     </div>
                 @empty
                     <div class="text-center py-8">
-                        <svg class="w-12 h-12 text-green-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <p class="text-green-600 font-medium">Semua proyek dalam kondisi aman</p>
-                        <p class="text-sm text-gray-500">Tidak ada proyek dengan budget kritis</p>
+                        <p class="text-gray-500">Tidak ada proyek kritis</p>
                     </div>
                 @endforelse
             </div>
@@ -135,139 +126,142 @@
 
     <!-- Recent Expenses -->
     <div class="bg-white rounded-lg shadow-md p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-semibold text-gray-900">Pengeluaran Terbaru</h2>
-            <a href="{{ route('finance.pengeluaran') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">Lihat Semua →</a>
-        </div>
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Pengeluaran Terbaru</h2>
         <div class="overflow-x-auto">
-            <table class="w-full min-w-max">
-                <thead class="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Tanggal</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Proyek</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Kategori</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Deskripsi</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Jumlah</th>
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-gray-200">
+                        <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Proyek</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Kategori</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Deskripsi</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Jumlah</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Tanggal</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
-                    @forelse($pengeluaran_terbaru as $pengeluaran)
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ $pengeluaran->tanggal->format('d/m/Y') }}</div>
+                <tbody>
+                    @forelse($recent_pengeluaran as $pengeluaran)
+                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
+                            <td class="px-4 py-3 text-sm text-gray-900">
+                                <a href="{{ route('finance.budget.show', $pengeluaran->proyek_id) }}" class="text-blue-600 hover:underline">
+                                    {{ $pengeluaran->proyek->nama }}
+                                </a>
                             </td>
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">{{ $pengeluaran->proyek->nama }}</div>
-                            </td>
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <span class="px-2 py-1 text-xs font-semibold rounded {{ $pengeluaran->getKategoriColor() }}">
-                                    {{ $pengeluaran->getKategoriLabel() }}
+                            <td class="px-4 py-3 text-sm">
+                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                                    {{ ucfirst(str_replace('_', ' ', $pengeluaran->kategori)) }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3">
-                                <div class="text-sm text-gray-600 max-w-xs">{{ Str::limit($pengeluaran->deskripsi, 50) }}</div>
-                            </td>
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="text-sm font-semibold text-red-600">Rp {{ number_format($pengeluaran->jumlah, 0, ',', '.') }}</div>
-                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-600">{{ $pengeluaran->deskripsi }}</td>
+                            <td class="px-4 py-3 text-sm font-semibold text-gray-900">Rp {{ number_format($pengeluaran->jumlah, 0, ',', '.') }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600">{{ $pengeluaran->tanggal->format('d M Y') }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-8 text-center text-gray-500">Belum ada pengeluaran tercatat</td>
+                            <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                                Belum ada pengeluaran
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
     </div>
+
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Budget Trend Chart
-    const budgetTrendCtx = document.getElementById('budgetTrendChart').getContext('2d');
-    new Chart(budgetTrendCtx, {
-        type: 'line',
-        data: {
-            labels: @json($bulan_labels),
-            datasets: [{
-                label: 'Budget',
-                data: @json($bulan_budget),
-                borderColor: 'rgb(59, 130, 246)',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.4,
-                fill: true
-            }, {
-                label: 'Realisasi',
-                data: @json($bulan_realisasi),
-                borderColor: 'rgb(239, 68, 68)',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': Rp ' + context.parsed.y.toLocaleString('id-ID');
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Budget Trend Chart
+            const budgetCtx = document.getElementById('budgetTrendChart');
+            if (budgetCtx) {
+                new Chart(budgetCtx, {
+                    type: 'line',
+                    data: {
+                        labels: {!! json_encode($bulan_labels) !!},
+                        datasets: [
+                            {
+                                label: 'Budget Rencana',
+                                data: {!! json_encode($bulan_budget) !!},
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                borderWidth: 2
+                            },
+                            {
+                                label: 'Budget Realisasi',
+                                data: {!! json_encode($bulan_realisasi) !!},
+                                borderColor: '#ef4444',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                borderWidth: 2
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 15
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return 'Rp ' + value.toLocaleString('id-ID');
+                                    }
+                                }
+                            }
                         }
                     }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return 'Rp ' + (value / 1000000).toFixed(0) + 'jt';
-                        }
-                    }
-                }
+                });
             }
-        }
-    });
 
-    // Category Chart
-    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-    new Chart(categoryCtx, {
-        type: 'doughnut',
-        data: {
-            labels: @json($pengeluaran_per_kategori->pluck('label')),
-            datasets: [{
-                data: @json($pengeluaran_per_kategori->pluck('total')),
-                backgroundColor: [
-                    'rgb(59, 130, 246)',
-                    'rgb(34, 197, 94)',
-                    'rgb(251, 191, 36)',
-                    'rgb(168, 85, 247)',
-                    'rgb(156, 163, 175)'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'right',
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.label + ': Rp ' + context.parsed.toLocaleString('id-ID');
+            // Category Chart
+            const categoryCtx = document.getElementById('categoryChart');
+            if (categoryCtx) {
+                new Chart(categoryCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: {!! json_encode($kategori_labels) !!},
+                        datasets: [{
+                            data: {!! json_encode($kategori_totals) !!},
+                            backgroundColor: [
+                                '#3b82f6',
+                                '#ef4444',
+                                '#10b981',
+                                '#f59e0b',
+                                '#8b5cf6'
+                            ],
+                            borderColor: '#ffffff',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 15
+                                }
+                            }
                         }
                     }
-                }
+                });
             }
-        }
-    });
-</script>
+        });
+    </script>
 @endpush
