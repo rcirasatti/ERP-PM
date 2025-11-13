@@ -162,12 +162,13 @@ class FinanceController extends Controller
      */
     public function showBudget(ProyekBudget $budget)
     {
-        $budget->load(['proyek.client', 'proyek.pengeluaran']);
+        $budget->load(['proyek.client']);
         
-        // Get all pengeluaran for this proyek
+        // Get all pengeluaran for this proyek - sorted by tanggal DESC (newest first)
         $pengeluarans = Pengeluaran::where('proyek_id', $budget->proyek_id)
             ->with(['creator', 'proyek'])
             ->orderBy('tanggal', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get();
         
         return view('finance.budget.show', compact('budget', 'pengeluarans'));
