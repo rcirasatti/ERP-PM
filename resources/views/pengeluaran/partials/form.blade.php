@@ -68,3 +68,74 @@
         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
     @enderror
 </div>
+
+<!-- Bukti File -->
+<div>
+    <label for="bukti_file" class="block text-sm font-medium text-gray-700 mb-2">Bukti (Upload File) *</label>
+    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition" id="dropZone">
+        <input type="file" name="bukti_file" id="bukti_file" class="hidden" required
+            accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx">
+        
+        <svg class="mx-auto h-12 w-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        
+        <p class="text-gray-700 font-medium">Drag & drop file atau <span class="text-blue-600 hover:text-blue-700">klik untuk upload</span></p>
+        <p class="text-xs text-gray-500 mt-1">PDF, JPG, PNG, GIF, DOC, DOCX, XLS, XLSX (Max 5 MB)</p>
+        
+        <div id="fileInfo" class="mt-3 text-sm text-gray-600"></div>
+    </div>
+    
+    @if(isset($pengeluaran) && $pengeluaran->bukti_file)
+        <div class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <p class="text-sm text-green-800 font-medium">File saat ini:</p>
+            <a href="{{ asset('storage/' . $pengeluaran->bukti_file) }}" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm">
+                {{ basename($pengeluaran->bukti_file) }}
+            </a>
+        </div>
+    @endif
+    
+    @error('bukti_file')
+        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+    @enderror
+</div>
+
+<script>
+    // File upload dengan drag & drop
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('bukti_file');
+    const fileInfo = document.getElementById('fileInfo');
+
+    // Click to upload
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // Drag & drop events
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-blue-500', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+        fileInput.files = e.dataTransfer.files;
+        updateFileInfo();
+    });
+
+    // File input change
+    fileInput.addEventListener('change', updateFileInfo);
+
+    function updateFileInfo() {
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            fileInfo.innerHTML = `<span class="text-green-600">✓ ${file.name} (${sizeMB} MB)</span>`;
+        } else {
+            fileInfo.innerHTML = '';
+        }
+    }
+</script>

@@ -73,7 +73,7 @@
     <div class="bg-white rounded-lg shadow-md p-6">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-bold text-gray-900">Riwayat Pengeluaran</h3>
-            <a href="{{ route('pengeluaran.create', ['proyek_id' => $budget->proyek_id]) }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium flex items-center space-x-2">
+            <a href="{{ route('pengeluaran.create', ['proyek_id' => $budget->proyek_id, 'from' => 'budget', 'budget_id' => $budget->id]) }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium flex items-center space-x-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
@@ -91,6 +91,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Deskripsi</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Jumlah</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Dibuat Oleh</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Bukti</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Aksi</th>
                         </tr>
                     </thead>
@@ -114,9 +115,21 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="text-sm text-gray-600">{{ $pengeluaran->creator->name ?? 'N/A' }}</span>
                                 </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    @if($pengeluaran->bukti_file)
+                                        <a href="{{ asset('storage/' . $pengeluaran->bukti_file) }}" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium text-xs inline-flex items-center gap-1">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            Lihat
+                                        </a>
+                                    @else
+                                        <span class="text-gray-400 text-xs">-</span>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex gap-2">
-                                        <a href="{{ route('pengeluaran.edit', $pengeluaran->id) }}" class="text-yellow-600 hover:text-yellow-900">
+                                        <a href="{{ route('pengeluaran.edit', ['pengeluaran' => $pengeluaran->id, 'from' => 'budget', 'budget_id' => $budget->id]) }}" class="text-yellow-600 hover:text-yellow-900">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>

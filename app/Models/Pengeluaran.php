@@ -15,6 +15,7 @@ class Pengeluaran extends Model
         'kategori',
         'deskripsi',
         'jumlah',
+        'bukti_file',
         'dibuat_oleh',
     ];
 

@@ -9,6 +9,8 @@ use App\Models\Proyek;
 use App\Models\Client;
 use App\Models\Penawaran;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class PengeluaranControllerTest extends TestCase
 {
@@ -243,5 +245,152 @@ class PengeluaranControllerTest extends TestCase
         ]);
 
         $this->assertEquals('Peralatan', $pengeluaran->getKategoriLabel());
+    }
+
+    /**
+     * Test pengeluaran can be stored with bukti file
+     */
+    public function test_pengeluaran_can_be_stored_with_bukti_file()
+    {
+        Storage::fake('public');
+
+        $file = UploadedFile::fake()->create('bukti.pdf', 100);
+
+        $data = [
+            'proyek_id' => $this->proyek->id,
+            'tanggal' => now()->format('Y-m-d'),
+            'kategori' => 'material',
+            'deskripsi' => 'Pembelian material dengan bukti',
+            'jumlah' => 1000000,
+            'bukti_file' => $file,
+        ];
+
+        $response = $this->post('/pengeluaran', $data);
+
+        $response->assertRedirect('/pengeluaran');
+        $this->assertDatabaseHas('pengeluaran', [
+            'proyek_id' => $this->proyek->id,
+            'kategori' => 'material',
+            'deskripsi' => 'Pembelian material dengan bukti',
+        ]);
+        
+        // Verify that bukti_file is not null
+        $pengeluaran = Pengeluaran::where('deskripsi', 'Pembelian material dengan bukti')->first();
+        $this->assertNotNull($pengeluaran->bukti_file);
+        $this->assertTrue(str_contains($pengeluaran->bukti_file, 'pengeluaran/'));
+    }
+
+    /**
+     * Test pengeluaran can be updated with new bukti file
+     */
+    public function test_pengeluaran_can_be_updated_with_new_bukti_file()
+    {
+        Storage::fake('public');
+
+        // Upload initial file
+        $initialFile = UploadedFile::fake()->create('bukti_awal.pdf', 100);
+        $this->pengeluaran->bukti_file = 'pengeluaran/' . $initialFile->hashName();
+        $this->pengeluaran->save();
+
+        // Update with new file
+        $newFile = UploadedFile::fake()->create('bukti_baru.jpg', 150);
+
+        $data = [
+            'proyek_id' => $this->proyek->id,
+            'tanggal' => now()->format('Y-m-d'),
+            'kategori' => 'material',
+            'deskripsi' => 'Updated dengan bukti baru',
+            'jumlah' => 600000,
+            'bukti_file' => $newFile,
+        ];
+
+        $response = $this->put("/pengeluaran/{$this->pengeluaran->id}", $data);
+
+        $response->assertRedirect('/pengeluaran');
+        $this->assertDatabaseHas('pengeluaran', [
+            'id' => $this->pengeluaran->id,
+            'deskripsi' => 'Updated dengan bukti baru',
+        ]);
+    }
+
+    /**
+     * Test pengeluaran validation fails with invalid file type
+     */
+    public function test_pengeluaran_validation_fails_with_invalid_file_type()
+    {
+        Storage::fake('public');
+
+        $file = UploadedFile::fake()->create('bukti.exe', 100);
+
+        $data = [
+            'proyek_id' => $this->proyek->id,
+            'tanggal' => now()->format('Y-m-d'),
+            'kategori' => 'material',
+            'deskripsi' => 'Test',
+            'jumlah' => 500000,
+            'bukti_file' => $file,
+        ];
+
+        $response = $this->post('/pengeluaran', $data);
+
+        $response->assertSessionHasErrors(['bukti_file']);
+    }
+
+    /**
+     * Test pengeluaran validation fails with file too large
+     */
+    public function test_pengeluaran_validation_fails_with_file_too_large()
+    {
+        Storage::fake('public');
+
+        // Create a file larger than 5MB
+        $file = UploadedFile::fake()->create('bukti.pdf', 6000);
+
+        $data = [
+            'proyek_id' => $this->proyek->id,
+            'tanggal' => now()->format('Y-m-d'),
+            'kategori' => 'material',
+            'deskripsi' => 'Test',
+            'jumlah' => 500000,
+            'bukti_file' => $file,
+        ];
+
+        $response = $this->post('/pengeluaran', $data);
+
+        $response->assertSessionHasErrors(['bukti_file']);
+    }
+
+    /**
+     * Test pengeluaran can be deleted with bukti file
+     */
+    public function test_pengeluaran_can_be_deleted_with_bukti_file()
+    {
+        Storage::fake('public');
+
+        // Create file first
+        $file = UploadedFile::fake()->create('bukti.pdf', 100);
+        $filePath = 'pengeluaran/' . $file->hashName();
+        
+        // Store file
+        Storage::disk('public')->put($filePath, 'fake content');
+
+        // Create pengeluaran with bukti file
+        $pengeluaran = Pengeluaran::create([
+            'proyek_id' => $this->proyek->id,
+            'tanggal' => now(),
+            'kategori' => 'material',
+            'deskripsi' => 'Test with bukti',
+            'jumlah' => 500000,
+            'bukti_file' => $filePath,
+            'dibuat_oleh' => $this->user->id,
+        ]);
+
+        $pengeluaranId = $pengeluaran->id;
+
+        // Delete pengeluaran
+        $response = $this->delete("/pengeluaran/{$pengeluaranId}");
+
+        $response->assertRedirect('/pengeluaran');
+        $this->assertDatabaseMissing('pengeluaran', ['id' => $pengeluaranId]);
     }
 }

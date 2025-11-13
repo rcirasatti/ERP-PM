@@ -87,6 +87,7 @@
                         </a>
                     </div>
                 </form>
+                @include('components.form-validation')
             </div>
         </div>
 

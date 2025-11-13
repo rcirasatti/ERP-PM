@@ -128,6 +128,7 @@
             </div>
         </div>
     </form>
+    @include('components.form-validation')
 
     <!-- Item Template (Hidden) -->
     <template id="itemTemplate">

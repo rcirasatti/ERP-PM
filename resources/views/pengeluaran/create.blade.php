@@ -33,25 +33,42 @@
                     </div>
                 @endif
 
-                <form action="{{ route('pengeluaran.store') }}" method="POST" class="space-y-6">
+                <form action="{{ route('pengeluaran.store') }}" method="POST" class="space-y-6" enctype="multipart/form-data">
                     @csrf
 
+                    <!-- Hidden fields untuk tracking dari mana request datang -->
+                    <input type="hidden" name="from" value="{{ request('from', 'index') }}">
+                    <input type="hidden" name="budget_id" value="{{ request('budget_id', '') }}">
+
                     <!-- Proyek -->
-                    <div>
-                        <label for="proyek_id" class="block text-sm font-medium text-gray-700 mb-2">Proyek *</label>
-                        <select name="proyek_id" id="proyek_id" required
-                            class="searchable-select w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition @error('proyek_id') border-red-500 @enderror">
-                            <option value="">-- Pilih Proyek --</option>
-                            @foreach ($projects as $project)
-                                <option value="{{ $project->id }}" {{ old('proyek_id') == $project->id ? 'selected' : '' }}>
-                                    {{ $project->nama }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('proyek_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
+                    @if ($proyek_id && $selectedProyek)
+                        <!-- Auto-detected dari budget -->
+                        <div>
+                            <label for="proyek_name" class="block text-sm font-medium text-gray-700 mb-2">Proyek</label>
+                            <div class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-blue-50">
+                                <p class="text-gray-800 font-medium">{{ $selectedProyek->nama }}</p>
+                                <p class="text-sm text-gray-600">Otomatis terdeteksi dari Budget</p>
+                            </div>
+                            <input type="hidden" name="proyek_id" value="{{ $proyek_id }}">
+                        </div>
+                    @else
+                        <!-- Normal dropdown untuk memilih proyek -->
+                        <div>
+                            <label for="proyek_id" class="block text-sm font-medium text-gray-700 mb-2">Proyek *</label>
+                            <select name="proyek_id" id="proyek_id" required
+                                class="searchable-select w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition @error('proyek_id') border-red-500 @enderror">
+                                <option value="">-- Pilih Proyek --</option>
+                                @foreach ($projects as $project)
+                                    <option value="{{ $project->id }}" {{ old('proyek_id') == $project->id ? 'selected' : '' }}>
+                                        {{ $project->nama }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('proyek_id')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @endif
 
                     <!-- Tanggal -->
                     <div>
@@ -102,9 +119,71 @@
                         @enderror
                     </div>
 
+                    <!-- Bukti File -->
+                    <div>
+                        <label for="bukti_file" class="block text-sm font-medium text-gray-700 mb-2">Bukti (Upload File) *</label>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition" id="dropZone">
+                            <input type="file" name="bukti_file" id="bukti_file" class="hidden" required
+                                accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx">
+                            
+                            <svg class="mx-auto h-12 w-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            
+                            <p class="text-gray-700 font-medium">Drag & drop file atau <span class="text-blue-600 hover:text-blue-700">klik untuk upload</span></p>
+                            <p class="text-xs text-gray-500 mt-1">PDF, JPG, PNG, GIF, DOC, DOCX, XLS, XLSX (Max 5 MB)</p>
+                            
+                            <div id="fileInfo" class="mt-3 text-sm text-gray-600"></div>
+                        </div>
+                        
+                        @error('bukti_file')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <script>
+                        // File upload dengan drag & drop
+                        const dropZone = document.getElementById('dropZone');
+                        const fileInput = document.getElementById('bukti_file');
+                        const fileInfo = document.getElementById('fileInfo');
+
+                        // Click to upload
+                        dropZone.addEventListener('click', () => fileInput.click());
+
+                        // Drag & drop events
+                        dropZone.addEventListener('dragover', (e) => {
+                            e.preventDefault();
+                            dropZone.classList.add('border-blue-500', 'bg-blue-50');
+                        });
+
+                        dropZone.addEventListener('dragleave', () => {
+                            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+                        });
+
+                        dropZone.addEventListener('drop', (e) => {
+                            e.preventDefault();
+                            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+                            fileInput.files = e.dataTransfer.files;
+                            updateFileInfo();
+                        });
+
+                        // File input change
+                        fileInput.addEventListener('change', updateFileInfo);
+
+                        function updateFileInfo() {
+                            if (fileInput.files.length > 0) {
+                                const file = fileInput.files[0];
+                                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                                fileInfo.innerHTML = `<span class="text-green-600">✓ ${file.name} (${sizeMB} MB)</span>`;
+                            } else {
+                                fileInfo.innerHTML = '';
+                            }
+                        }
+                    </script>
+
                     <!-- Buttons -->
                     <div class="flex gap-4 pt-6">
-                        <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center justify-center space-x-2">
+                        <button type="submit" id="submitBtn" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center justify-center space-x-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
@@ -114,6 +193,66 @@
                             Batal
                         </a>
                     </div>
+
+                    <script>
+                        // Form validation untuk field wajib
+                        const form = document.querySelector('form');
+                        
+                        form.addEventListener('submit', function(e) {
+                            const requiredFields = [];
+                            
+                            // Check Proyek (hanya jika tidak auto-detected)
+                            const proyekInput = document.getElementById('proyek_id');
+                            if (proyekInput && !proyekInput.style.display?.includes('none')) {
+                                if (!proyekInput.value) {
+                                    requiredFields.push('Proyek');
+                                }
+                            } else {
+                                // Check hidden proyek_id jika ada
+                                const hiddenProyek = document.querySelector('input[name="proyek_id"][type="hidden"]');
+                                if (!hiddenProyek && !proyekInput) {
+                                    requiredFields.push('Proyek');
+                                }
+                            }
+                            
+                            // Check Tanggal
+                            const tanggalInput = document.getElementById('tanggal');
+                            if (!tanggalInput.value) {
+                                requiredFields.push('Tanggal');
+                            }
+                            
+                            // Check Kategori
+                            const kategoriInput = document.getElementById('kategori');
+                            if (!kategoriInput.value) {
+                                requiredFields.push('Kategori');
+                            }
+                            
+                            // Check Deskripsi
+                            const deskripsiInput = document.getElementById('deskripsi');
+                            if (!deskripsiInput.value.trim()) {
+                                requiredFields.push('Deskripsi');
+                            }
+                            
+                            // Check Jumlah
+                            const jumlahInput = document.getElementById('jumlah');
+                            if (!jumlahInput.value) {
+                                requiredFields.push('Jumlah');
+                            }
+                            
+                            // Check Bukti File
+                            const buktiInput = document.getElementById('bukti_file');
+                            if (!buktiInput.files || buktiInput.files.length === 0) {
+                                requiredFields.push('Bukti File');
+                            }
+                            
+                            if (requiredFields.length > 0) {
+                                e.preventDefault();
+                                const fieldList = requiredFields.join(',\n• ');
+                                alert('⚠️ Field wajib diisi:\n\n• ' + fieldList + '\n\nMohon lengkapi semua field yang diperlukan!');
+                                return false;
+                            }
+                        });
+                    </script>
                 </form>
             </div>
         </div>

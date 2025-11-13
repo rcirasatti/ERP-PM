@@ -24,10 +24,18 @@ class PengeluaranController extends Controller
     /**
      * Show the form for creating a new pengeluaran
      */
-    public function create()
+    public function create(Request $request)
     {
         $projects = Proyek::all();
-        return view('pengeluaran.create', compact('projects'));
+        $proyek_id = $request->query('proyek_id');
+        $selectedProyek = null;
+        
+        // Jika dari budget, auto-detect proyek
+        if ($proyek_id) {
+            $selectedProyek = Proyek::find($proyek_id);
+        }
+        
+        return view('pengeluaran.create', compact('projects', 'proyek_id', 'selectedProyek'));
     }
 
     /**
@@ -41,6 +49,7 @@ class PengeluaranController extends Controller
             'kategori' => 'required|in:material,gaji,bahan_bakar,peralatan,lainnya',
             'deskripsi' => 'required|string|max:1000',
             'jumlah' => 'required|numeric|min:0',
+            'bukti_file' => 'required|file|mimes:pdf,jpg,jpeg,png,gif,doc,docx,xls,xlsx|max:5120',
         ], [
             'proyek_id.required' => 'Proyek harus dipilih',
             'proyek_id.exists' => 'Proyek yang dipilih tidak ditemukan',
@@ -53,20 +62,39 @@ class PengeluaranController extends Controller
             'jumlah.required' => 'Jumlah harus diisi',
             'jumlah.numeric' => 'Jumlah harus berupa angka',
             'jumlah.min' => 'Jumlah tidak boleh kurang dari 0',
+            'bukti_file.required' => 'Bukti file harus diunggah',
+            'bukti_file.file' => 'File harus berupa file yang valid',
+            'bukti_file.mimes' => 'File harus bertipe: PDF, JPG, PNG, GIF, DOC, DOCX, XLS, XLSX',
+            'bukti_file.max' => 'Ukuran file tidak boleh lebih dari 5 MB',
         ]);
 
         $validated['dibuat_oleh'] = auth()->id();
+
+        // Handle file upload
+        if ($request->hasFile('bukti_file')) {
+            $file = $request->file('bukti_file');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $file->storeAs('pengeluaran', $fileName, 'public');
+            $validated['bukti_file'] = 'pengeluaran/' . $fileName;
+        }
 
         $pengeluaran = Pengeluaran::create($validated);
 
         // Update ProyekBudget - hitung total pengeluaran untuk proyek ini
         $this->updateBudgetRealisasi($validated['proyek_id']);
 
-        // Get the ProyekBudget to redirect to budget detail page
-        $budget = ProyekBudget::where('proyek_id', $validated['proyek_id'])->first();
-
-        return redirect()->route('finance.budget.show', $budget->id)
-            ->with('success', 'Pengeluaran berhasil ditambahkan');
+        // Check where request came from
+        $from = $request->input('from', 'index'); // default to index
+        
+        if ($from === 'budget' && $request->input('budget_id')) {
+            // Redirect to budget show page
+            return redirect()->route('finance.budget.show', $request->input('budget_id'))
+                ->with('success', 'Pengeluaran berhasil ditambahkan');
+        } else {
+            // Redirect to pengeluaran index
+            return redirect()->route('pengeluaran.index')
+                ->with('success', 'Pengeluaran berhasil ditambahkan');
+        }
     }
 
     /**
@@ -89,6 +117,7 @@ class PengeluaranController extends Controller
             'kategori' => 'required|in:material,gaji,bahan_bakar,peralatan,lainnya',
             'deskripsi' => 'required|string|max:1000',
             'jumlah' => 'required|numeric|min:0',
+            'bukti_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,gif,doc,docx,xls,xlsx|max:5120',
         ], [
             'proyek_id.required' => 'Proyek harus dipilih',
             'proyek_id.exists' => 'Proyek yang dipilih tidak ditemukan',
@@ -101,7 +130,23 @@ class PengeluaranController extends Controller
             'jumlah.required' => 'Jumlah harus diisi',
             'jumlah.numeric' => 'Jumlah harus berupa angka',
             'jumlah.min' => 'Jumlah tidak boleh kurang dari 0',
+            'bukti_file.file' => 'File harus berupa file yang valid',
+            'bukti_file.mimes' => 'File harus bertipe: PDF, JPG, PNG, GIF, DOC, DOCX, XLS, XLSX',
+            'bukti_file.max' => 'Ukuran file tidak boleh lebih dari 5 MB',
         ]);
+
+        // Handle file upload
+        if ($request->hasFile('bukti_file')) {
+            // Delete old file if exists
+            if ($pengeluaran->bukti_file && \Storage::disk('public')->exists($pengeluaran->bukti_file)) {
+                \Storage::disk('public')->delete($pengeluaran->bukti_file);
+            }
+            
+            $file = $request->file('bukti_file');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $file->storeAs('pengeluaran', $fileName, 'public');
+            $validated['bukti_file'] = 'pengeluaran/' . $fileName;
+        }
 
         $oldProyekId = $pengeluaran->proyek_id;
         $pengeluaran->update($validated);
@@ -112,8 +157,18 @@ class PengeluaranController extends Controller
             $this->updateBudgetRealisasi($validated['proyek_id']);
         }
 
-        return redirect()->route('pengeluaran.index')
-            ->with('success', 'Pengeluaran berhasil diperbarui');
+        // Check where request came from
+        $from = $request->input('from', 'index'); // default to index
+        
+        if ($from === 'budget' && $request->input('budget_id')) {
+            // Redirect to budget show page
+            return redirect()->route('finance.budget.show', $request->input('budget_id'))
+                ->with('success', 'Pengeluaran berhasil diperbarui');
+        } else {
+            // Redirect to pengeluaran index
+            return redirect()->route('pengeluaran.index')
+                ->with('success', 'Pengeluaran berhasil diperbarui');
+        }
     }
 
     /**
@@ -122,6 +177,12 @@ class PengeluaranController extends Controller
     public function destroy(Pengeluaran $pengeluaran)
     {
         $proyekId = $pengeluaran->proyek_id;
+        
+        // Delete file if exists
+        if ($pengeluaran->bukti_file && \Storage::disk('public')->exists($pengeluaran->bukti_file)) {
+            \Storage::disk('public')->delete($pengeluaran->bukti_file);
+        }
+        
         $pengeluaran->delete();
 
         // Update ProyekBudget setelah delete

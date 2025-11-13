@@ -114,7 +114,7 @@
                     <div class="bg-white rounded-lg shadow-md p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold text-gray-900">Budget Project</h3>
-                            <a href="{{ route('finance.dashboard') }}"
+                            <a href="{{ route('finance.budget.show', $budget->id) }}"
                                 class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                                 Detail →
                             </a>

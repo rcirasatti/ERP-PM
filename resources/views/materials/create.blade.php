@@ -80,5 +80,8 @@
                 </a>
             </div>
         </form>
+        @include('components.form-validation')
+            </div>
+        </form>
     </div>
 @endsection
