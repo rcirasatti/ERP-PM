@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Material')
+@section('title', 'Detail Item Penawaran')
 
 @section('content')
     <div class="mb-8">
         <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2 text-sm text-gray-600">
-                <a href="{{ route('material.index') }}" class="hover:text-blue-600">Material</a>
+                <a href="{{ route('material.index') }}" class="hover:text-blue-600">Item Penawaran</a>
                 <span>/</span>
                 <span>{{ $material->deskripsi }}</span>
             </div>
@@ -28,18 +28,18 @@
         <!-- Detail Section -->
         <div class="lg:col-span-2">
             <div class="bg-white rounded-lg shadow-md p-8">
-                <h2 class="text-2xl font-bold text-gray-900 mb-6">Informasi Material</h2>
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Informasi Item Penawaran</h2>
 
                 <div class="space-y-6">
                     <!-- Nama -->
                     <div class="pb-6 border-b border-gray-200">
-                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Nama Material</p>
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Nama Item Penawaran</p>
                         <p class="text-xl font-semibold text-gray-900">{{ $material->nama }}</p>
                     </div>
 
-                    <!-- Tipe Material -->
+                    <!-- Tipe Item Penawaran -->
                     <div class="pb-6 border-b border-gray-200">
-                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Tipe Material</p>
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Tipe Item Penawaran</p>
                         <span class="inline-block px-3 py-1 
                             @if($material->type === 'BARANG') bg-blue-100 text-blue-800
                             @elseif($material->type === 'JASA') bg-green-100 text-green-800
@@ -123,11 +123,11 @@
 
             <!-- Delete Button -->
             <div class="mt-6">
-                <button onclick="showConfirm('Yakin ingin menghapus material ini? Data tidak bisa dipulihkan.', 'Hapus Material', function() { document.getElementById('deleteForm').submit(); })" class="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium flex items-center justify-center space-x-2">
+                <button onclick="showConfirm('Yakin ingin menghapus item penawaran ini? Data tidak bisa dipulihkan.', 'Hapus Item Penawaran', function() { document.getElementById('deleteForm').submit(); })" class="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium flex items-center justify-center space-x-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
-                    <span>Hapus Material</span>
+                    <span>Hapus Item Penawaran</span>
                 </button>
                 <form id="deleteForm" action="{{ route('material.destroy', $material->id) }}" method="POST" class="hidden">
                     @csrf

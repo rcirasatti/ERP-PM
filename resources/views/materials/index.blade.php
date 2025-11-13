@@ -1,19 +1,19 @@
 @extends('layouts.app')
 
-@section('title', 'Material Management')
+@section('title', 'Item Penawaran Management')
 
 @section('content')
     <!-- Header Section -->
     <div class="flex items-center justify-between mb-8">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">Material Management</h1>
-            <p class="text-gray-600 mt-2">Kelola data material dan harga dari supplier</p>
+            <h1 class="text-3xl font-bold text-gray-900">Item Penawaran Management</h1>
+            <p class="text-gray-600 mt-2">Kelola data item penawaran (barang, jasa, tol) dan harga dari supplier</p>
         </div>
         <a href="{{ route('material.create') }}" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center space-x-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
-            <span>Tambah Material</span>
+            <span>Tambah Item Penawaran</span>
         </a>
     </div>
 
@@ -48,7 +48,7 @@
         </div>
     </div>
 
-    <!-- Materials Table -->
+    <!-- Item Penawaran Table -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
         @if ($materials->count() > 0)
         <div class="overflow-x-auto">
@@ -143,20 +143,20 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
                 <h3 class="text-xl font-semibold text-gray-900 mb-2">Data tidak tersedia</h3>
-                <p class="text-gray-600">Tidak ada material yang sesuai dengan pencarian Anda.</p>
+                <p class="text-gray-600">Tidak ada item penawaran yang sesuai dengan pencarian Anda.</p>
             </div>
         @else
             <div class="p-8 text-center">
                 <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
                 </svg>
-                <h3 class="text-xl font-semibold text-gray-900 mb-2">Tidak ada material</h3>
-                <p class="text-gray-600 mb-6">Mulai dengan menambahkan material baru untuk dikelola inventorynya.</p>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Tidak ada item penawaran</h3>
+                <p class="text-gray-600 mb-6">Mulai dengan menambahkan item penawaran baru untuk dikelola inventorynya.</p>
                 <a href="{{ route('material.create') }}" class="inline-flex px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
-                    Tambah Material
+                    Tambah Item Penawaran
                 </a>
             </div>
         @endif
