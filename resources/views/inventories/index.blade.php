@@ -64,6 +64,7 @@
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Material</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Tipe</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Supplier</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Stok</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Satuan</th>
@@ -77,6 +78,17 @@
                         <tr class="hover:bg-gray-50 transition inventory-row">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="font-medium text-gray-900">{{ $inventory->material->nama ?? 'N/A' }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-block px-3 py-1 
+                                    @if($inventory->material->type === 'BARANG') bg-blue-100 text-blue-800
+                                    @elseif($inventory->material->type === 'JASA') bg-green-100 text-green-800
+                                    @elseif($inventory->material->type === 'TOL') bg-orange-100 text-orange-800
+                                    @else bg-gray-100 text-gray-800
+                                    @endif
+                                    rounded-full text-xs font-medium">
+                                    {{ $inventory->material->type ?? 'N/A' }}
+                                </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600">{{ $inventory->material->supplier->nama ?? 'N/A' }}</div>
@@ -95,7 +107,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex gap-2">
-                                    <a href="{{ route('inventory.show', $inventory->id) }}" class="text-blue-600 hover:text-blue-800 font-medium text-sm">
+                                    <a href="{{ route('inventory.show', $inventory->id) }}" class="text-blue-600 hover:text-blue-800 font-medium text-sm" title="Lihat Detail"
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>

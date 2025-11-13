@@ -51,7 +51,7 @@ class InventoryController extends Controller
      */
     public function create()
     {
-        $materials = Material::all();
+        $materials = Material::where('track_inventory', true)->where('type', Material::TYPE_BARANG)->get();
         return view('inventories.create', compact('materials'));
     }
 
@@ -93,7 +93,7 @@ class InventoryController extends Controller
      */
     public function edit(Inventory $inventory)
     {
-        $materials = Material::all();
+        $materials = Material::where('track_inventory', true)->where('type', Material::TYPE_BARANG)->get();
         return view('inventories.edit', compact('inventory', 'materials'));
     }
 

@@ -26,15 +26,15 @@
         </div>
 
         <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
-            <p class="text-gray-600 text-sm">Supplier Aktif</p>
-            <p class="text-3xl font-bold text-gray-900 mt-2">{{ $materials->unique('supplier_id')->count() }}</p>
-            <p class="text-xs text-green-600 mt-1">Supplier dengan material</p>
+            <p class="text-gray-600 text-sm">Material dengan Tracking</p>
+            <p class="text-3xl font-bold text-gray-900 mt-2">{{ $materials->where('track_inventory', true)->count() }}</p>
+            <p class="text-xs text-green-600 mt-1">Material Barang yang tracking stok</p>
         </div>
 
         <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
-            <p class="text-gray-600 text-sm">Material Tanpa Stok</p>
-            <p class="text-3xl font-bold text-orange-600 mt-2">{{ $materialsNoStock }}</p>
-            <p class="text-xs text-gray-600 mt-1">Belum memiliki inventory</p>
+            <p class="text-gray-600 text-sm">Material Non-Stok</p>
+            <p class="text-3xl font-bold text-orange-600 mt-2">{{ $materials->where('track_inventory', false)->count() }}</p>
+            <p class="text-xs text-gray-600 mt-1">Jasa, Tol, dan lainnya</p>
         </div>
     </div>
 
@@ -56,6 +56,7 @@
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Nama</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Tipe</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Supplier</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Satuan</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Harga</th>
@@ -73,17 +74,28 @@
                                 <div class="flex items-center gap-3">
                                     <div>
                                         <div class="font-medium text-gray-900">{{ $material->nama }}</div>
-                                        @if ($hasStok)
-                                            <div class="inline-block mt-1 px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
-                                                Stok: {{ number_format($stok, 2) }}
-                                            </div>
-                                        @else
+                                        @if ($material->needsInventoryTracking() && !$hasStok)
                                             <div class="inline-block mt-1 px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
                                                 Stok: 0 - Tidak Tersedia
+                                            </div>
+                                        @elseif ($material->needsInventoryTracking())
+                                            <div class="inline-block mt-1 px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
+                                                Stok: {{ number_format($stok, 2) }}
                                             </div>
                                         @endif
                                     </div>
                                 </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-block px-3 py-1 
+                                    @if($material->type === 'BARANG') bg-blue-100 text-blue-800
+                                    @elseif($material->type === 'JASA') bg-green-100 text-green-800
+                                    @elseif($material->type === 'TOL') bg-orange-100 text-orange-800
+                                    @else bg-gray-100 text-gray-800
+                                    @endif
+                                    rounded-full text-xs font-medium">
+                                    {{ $material->type }}
+                                </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600">{{ $material->supplier->nama ?? '-' }}</div>
@@ -98,18 +110,18 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex gap-2">
-                                    <a href="{{ route('material.show', $material->id) }}" class="text-blue-600 hover:text-blue-800 font-medium text-sm">
+                                    <a href="{{ route('material.show', $material->id) }}" class="text-blue-600 hover:text-blue-800 font-medium text-sm" title="Lihat Detail">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                         </svg>
                                     </a>
-                                    <a href="{{ route('material.edit', $material->id) }}" class="text-yellow-600 hover:text-yellow-800 font-medium text-sm">
+                                    <a href="{{ route('material.edit', $material->id) }}" class="text-yellow-600 hover:text-yellow-800 font-medium text-sm" title="Edit Material">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                         </svg>
                                     </a>
-                                    <button onclick="showConfirm('Yakin ingin menghapus material ini? Data tidak bisa dipulihkan.', 'Hapus Material', function() { document.getElementById('deleteForm{{ $material->id }}').submit(); })" class="text-red-600 hover:text-red-800 font-medium text-sm">
+                                    <button onclick="showConfirm('Yakin ingin menghapus material ini? Data tidak bisa dipulihkan.', 'Hapus Material', function() { document.getElementById('deleteForm{{ $material->id }}').submit(); })" class="text-red-600 hover:text-red-800 font-medium text-sm" title="Hapus Material">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>

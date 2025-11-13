@@ -38,14 +38,17 @@
                         <select id="material_id" name="material_id" class="searchable-select w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('material_id') border-red-500 @enderror" required>
                             <option value="">-- Pilih Material --</option>
                             @foreach ($materials as $material)
-                                <option value="{{ $material->id }}" {{ old('material_id', $inventory->material_id) == $material->id ? 'selected' : '' }}>
-                                    {{ $material->nama }} ({{ $material->satuan }}) - Rp {{ number_format($material->harga, 0, ',', '.') }}
-                                </option>
+                                @if ($material->needsInventoryTracking())
+                                    <option value="{{ $material->id }}" {{ old('material_id', $inventory->material_id) == $material->id ? 'selected' : '' }}>
+                                        {{ $material->nama }} ({{ $material->satuan }}) - Rp {{ number_format($material->harga, 0, ',', '.') }}
+                                    </option>
+                                @endif
                             @endforeach
                         </select>
                         @error('material_id')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
+                        <p class="mt-1 text-xs text-gray-500">Hanya material bertipe Barang yang menampilkan tracking inventory</p>
                     </div>
 
                     <!-- Stok -->

@@ -25,7 +25,8 @@ class MaterialController extends Controller
     public function create()
     {
         $suppliers = Supplier::all();
-        return view('materials.create', compact('suppliers'));
+        $types = Material::getTypes();
+        return view('materials.create', compact('suppliers', 'types'));
     }
 
     /**
@@ -33,12 +34,30 @@ class MaterialController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'supplier_id' => 'required|exists:suppliers,id',
+        $type = $request->input('type', Material::TYPE_BARANG);
+        
+        // Validasi dinamis berdasarkan tipe
+        $rules = [
             'nama' => 'required|string|max:255',
             'satuan' => 'required|string|max:50',
-            'harga' => 'required|numeric|min:0'
-        ]);
+            'harga' => 'required|numeric|min:0',
+            'type' => 'required|in:' . implode(',', array_keys(Material::getTypes())),
+            'track_inventory' => 'sometimes|boolean',
+        ];
+        
+        // Supplier hanya wajib untuk tipe BARANG
+        if ($type === Material::TYPE_BARANG) {
+            $rules['supplier_id'] = 'required|exists:suppliers,id';
+        } else {
+            $rules['supplier_id'] = 'nullable|exists:suppliers,id';
+        }
+        
+        $validated = $request->validate($rules);
+        
+        // Set track_inventory default berdasarkan tipe
+        if (!isset($validated['track_inventory'])) {
+            $validated['track_inventory'] = ($type === Material::TYPE_BARANG);
+        }
 
         Material::create($validated);
         return redirect()->route('material.index')->with('success', 'Material berhasil ditambahkan');
@@ -53,12 +72,13 @@ class MaterialController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Show the form for editing the resource.
      */
     public function edit(Material $material)
     {
         $suppliers = Supplier::all();
-        return view('materials.edit', compact('material', 'suppliers'));
+        $types = Material::getTypes();
+        return view('materials.edit', compact('material', 'suppliers', 'types'));
     }
 
     /**
@@ -66,12 +86,30 @@ class MaterialController extends Controller
      */
     public function update(Request $request, Material $material)
     {
-        $validated = $request->validate([
-            'supplier_id' => 'required|exists:suppliers,id',
+        $type = $request->input('type', $material->type);
+        
+        // Validasi dinamis berdasarkan tipe
+        $rules = [
             'nama' => 'required|string|max:255',
             'satuan' => 'required|string|max:50',
-            'harga' => 'required|numeric|min:0'
-        ]);
+            'harga' => 'required|numeric|min:0',
+            'type' => 'required|in:' . implode(',', array_keys(Material::getTypes())),
+            'track_inventory' => 'sometimes|boolean',
+        ];
+        
+        // Supplier hanya wajib untuk tipe BARANG
+        if ($type === Material::TYPE_BARANG) {
+            $rules['supplier_id'] = 'required|exists:suppliers,id';
+        } else {
+            $rules['supplier_id'] = 'nullable|exists:suppliers,id';
+        }
+        
+        $validated = $request->validate($rules);
+        
+        // Set track_inventory default berdasarkan tipe
+        if (!isset($validated['track_inventory'])) {
+            $validated['track_inventory'] = ($type === Material::TYPE_BARANG);
+        }
 
         $material->update($validated);
         return redirect()->route('material.index')->with('success', 'Material berhasil diubah');

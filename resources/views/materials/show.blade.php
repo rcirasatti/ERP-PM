@@ -8,7 +8,7 @@
             <div class="flex items-center space-x-2 text-sm text-gray-600">
                 <a href="{{ route('material.index') }}" class="hover:text-blue-600">Material</a>
                 <span>/</span>
-                <span>{{ $material->nama }}</span>
+                <span>{{ $material->deskripsi }}</span>
             </div>
             <div class="flex gap-2">
                 <a href="{{ route('material.edit', $material->id) }}" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition font-medium flex items-center space-x-2">
@@ -37,7 +37,22 @@
                         <p class="text-xl font-semibold text-gray-900">{{ $material->nama }}</p>
                     </div>
 
-                    <!-- Supplier -->
+                    <!-- Tipe Material -->
+                    <div class="pb-6 border-b border-gray-200">
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Tipe Material</p>
+                        <span class="inline-block px-3 py-1 
+                            @if($material->type === 'BARANG') bg-blue-100 text-blue-800
+                            @elseif($material->type === 'JASA') bg-green-100 text-green-800
+                            @elseif($material->type === 'TOL') bg-orange-100 text-orange-800
+                            @else bg-gray-100 text-gray-800
+                            @endif
+                            rounded-full text-sm font-medium">
+                            {{ $material->type }}
+                        </span>
+                    </div>
+
+                    <!-- Supplier (Only if not null) -->
+                    @if ($material->supplier)
                     <div class="pb-6 border-b border-gray-200">
                         <p class="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Supplier</p>
                         <div class="flex items-center space-x-3">
@@ -49,6 +64,12 @@
                             </p>
                         </div>
                     </div>
+                    @else
+                    <div class="pb-6 border-b border-gray-200">
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Supplier</p>
+                        <p class="text-lg text-gray-500 italic">Tidak ada supplier (Tipe: {{ $material->type }})</p>
+                    </div>
+                    @endif
 
                     <!-- Satuan -->
                     <div class="pb-6 border-b border-gray-200">
@@ -57,9 +78,23 @@
                     </div>
 
                     <!-- Harga -->
-                    <div class="pb-6">
+                    <div class="pb-6 border-b border-gray-200">
                         <p class="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Harga</p>
                         <p class="text-3xl font-bold text-green-600">Rp {{ number_format($material->harga, 0, ',', '.') }}</p>
+                    </div>
+
+                    <!-- Track Inventory -->
+                    <div class="pb-6">
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Tracking Inventory</p>
+                        @if ($material->track_inventory)
+                            <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded text-sm font-medium">
+                                ✓ Aktif
+                            </span>
+                        @else
+                            <span class="inline-block px-3 py-1 bg-gray-100 text-gray-800 rounded text-sm font-medium">
+                                ✗ Tidak Aktif
+                            </span>
+                        @endif
                     </div>
                 </div>
             </div>
