@@ -92,7 +92,9 @@
                                 <div class="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">{{ $material->satuan }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-semibold text-green-600">Rp {{ number_format($material->harga, 0, ',', '.') }}</div>
+                                <div class="text-sm font-semibold text-green-600" title="Rp {{ number_format($material->harga, 0, ',', '.') }}">
+                                    {{ $formatHelper->formatCurrencyCompact($material->harga) }}
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex gap-2">

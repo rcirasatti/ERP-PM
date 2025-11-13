@@ -174,7 +174,7 @@ class PengeluaranController extends Controller
     /**
      * Delete a pengeluaran from database
      */
-    public function destroy(Pengeluaran $pengeluaran)
+    public function destroy(Pengeluaran $pengeluaran, Request $request)
     {
         $proyekId = $pengeluaran->proyek_id;
         
@@ -188,8 +188,18 @@ class PengeluaranController extends Controller
         // Update ProyekBudget setelah delete
         $this->updateBudgetRealisasi($proyekId);
 
-        return redirect()->route('pengeluaran.index')
-            ->with('success', 'Pengeluaran berhasil dihapus');
+        // Check where request came from
+        $from = $request->input('from', 'index'); // default to index
+        
+        if ($from === 'budget' && $request->input('budget_id')) {
+            // Redirect to budget show page
+            return redirect()->route('finance.budget.show', $request->input('budget_id'))
+                ->with('success', 'Pengeluaran berhasil dihapus');
+        } else {
+            // Redirect to pengeluaran index
+            return redirect()->route('pengeluaran.index')
+                ->with('success', 'Pengeluaran berhasil dihapus');
+        }
     }
 
     /**

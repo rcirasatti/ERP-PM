@@ -160,6 +160,8 @@
     <form id="delete-form" method="POST" style="display: none;">
         @csrf
         @method('DELETE')
+        <input type="hidden" name="from" value="budget">
+        <input type="hidden" name="budget_id" value="{{ $budget->id }}">
     </form>
 
     <script>

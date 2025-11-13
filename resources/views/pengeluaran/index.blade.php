@@ -31,7 +31,9 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
             <p class="text-gray-600 text-sm">Total Pengeluaran</p>
-            <p class="text-3xl font-bold text-blue-600 mt-2">Rp {{ number_format($pengeluaran->sum('jumlah'), 0, ',', '.') }}</p>
+            <p class="text-3xl font-bold text-blue-600 mt-2" title="Rp {{ number_format($pengeluaran->sum('jumlah'), 0, ',', '.') }}">
+                {{ $formatHelper->formatCurrencyCompact($pengeluaran->sum('jumlah')) }}
+            </p>
             <p class="text-xs text-gray-600 mt-1">Dari semua kategori</p>
         </div>
 
@@ -103,7 +105,9 @@
                                 <div class="text-sm text-gray-600 max-w-xs">{{ Str::limit($item->deskripsi, 40) }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-semibold text-gray-900 text-right">Rp {{ number_format($item->jumlah, 0, ',', '.') }}</div>
+                                <div class="text-sm font-semibold text-gray-900 text-right" title="Rp {{ number_format($item->jumlah, 0, ',', '.') }}">
+                                    {{ $formatHelper->formatCurrencyCompact($item->jumlah) }}
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600">{{ $item->creator->name ?? '-' }}</div>
@@ -164,6 +168,7 @@
     <form id="delete-form" method="POST" style="display: none;">
         @csrf
         @method('DELETE')
+        <input type="hidden" name="from" value="index">
     </form>
 
     <script>

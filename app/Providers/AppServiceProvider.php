@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Proyek;
 use App\Models\Tugas;
+use App\Helpers\FormatHelper;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,6 +22,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Make FormatHelper available in all views
+        \Illuminate\Support\Facades\View::share('formatHelper', new FormatHelper());
+        
         // Route model binding for nested resources
         // This ensures that when we have /proyek/{proyek}/tugas/{tugas}
         // the {tugas} is resolved as a Tugas model scoped to that specific Proyek

@@ -27,7 +27,9 @@
 
         <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
             <p class="text-gray-600 text-sm">Total Nilai</p>
-            <p class="text-3xl font-bold text-gray-900 mt-2">Rp {{ number_format($totalValue, 0, ',', '.') }}</p>
+            <p class="text-3xl font-bold text-gray-900 mt-2" title="Rp {{ number_format($totalValue, 0, ',', '.') }}">
+                {{ $formatHelper->formatCurrencyCompact($totalValue) }}
+            </p>
             <p class="text-xs text-green-600 mt-1">Total biaya semua penawaran</p>
         </div>
 
@@ -85,13 +87,19 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <p class="font-medium text-gray-900">Rp {{ number_format($item->total_biaya, 0, ',', '.') }}</p>
+                                <p class="font-medium text-gray-900" title="Rp {{ number_format($item->total_biaya, 0, ',', '.') }}">
+                                    {{ $formatHelper->formatCurrencyCompact($item->total_biaya) }}
+                                </p>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <p class="font-medium text-gray-900">Rp {{ number_format($item->total_margin, 0, ',', '.') }}</p>
+                                <p class="font-medium text-gray-900" title="Rp {{ number_format($item->total_margin, 0, ',', '.') }}">
+                                    {{ $formatHelper->formatCurrencyCompact($item->total_margin) }}
+                                </p>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <p class="font-semibold text-blue-600">Rp {{ number_format($item->grand_total, 0, ',', '.') }}</p>
+                                <p class="font-semibold text-blue-600" title="Rp {{ number_format($item->grand_total, 0, ',', '.') }}">
+                                    {{ $formatHelper->formatCurrencyCompact($item->grand_total) }}
+                                </p>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <p class="text-sm text-gray-600">

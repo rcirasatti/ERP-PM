@@ -11,17 +11,23 @@
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
     <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
         <p class="text-gray-600 text-sm">Total Budget Rencana</p>
-        <p class="text-3xl font-bold text-blue-600 mt-2">Rp {{ number_format($budgets->sum('jumlah_rencana'), 0, ',', '.') }}</p>
+        <p class="text-3xl font-bold text-blue-600 mt-2" title="Rp {{ number_format($budgets->sum('jumlah_rencana'), 0, ',', '.') }}">
+            {{ $formatHelper->formatCurrencyCompact($budgets->sum('jumlah_rencana')) }}
+        </p>
         <p class="text-xs text-gray-600 mt-1">Total rencana anggaran</p>
     </div>
     <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
         <p class="text-gray-600 text-sm">Total Realisasi</p>
-        <p class="text-3xl font-bold text-red-600 mt-2">Rp {{ number_format($budgets->sum('jumlah_realisasi'), 0, ',', '.') }}</p>
+        <p class="text-3xl font-bold text-red-600 mt-2" title="Rp {{ number_format($budgets->sum('jumlah_realisasi'), 0, ',', '.') }}">
+            {{ $formatHelper->formatCurrencyCompact($budgets->sum('jumlah_realisasi')) }}
+        </p>
         <p class="text-xs text-red-600 mt-1">Total pengeluaran</p>
     </div>
     <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
         <p class="text-gray-600 text-sm">Total Sisa Budget</p>
-        <p class="text-3xl font-bold text-green-600 mt-2">Rp {{ number_format($budgets->sum('sisa_budget'), 0, ',', '.') }}</p>
+        <p class="text-3xl font-bold text-green-600 mt-2" title="Rp {{ number_format($budgets->sum('sisa_budget'), 0, ',', '.') }}">
+            {{ $formatHelper->formatCurrencyCompact($budgets->sum('sisa_budget')) }}
+        </p>
         <p class="text-xs text-green-600 mt-1">Sisa budget tersedia</p>
     </div>
     <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
@@ -71,15 +77,21 @@
         <div class="space-y-2 mb-3 text-xs">
             <div class="flex justify-between">
                 <span class="text-gray-600">Rencana:</span>
-                <span class="font-semibold text-gray-900">Rp {{ number_format($budget->jumlah_rencana / 1000000, 1) }}jt</span>
+                <span class="font-semibold text-gray-900" title="Rp {{ number_format($budget->jumlah_rencana, 0, ',', '.') }}">
+                    {{ $formatHelper->formatCurrencyCompact($budget->jumlah_rencana) }}
+                </span>
             </div>
             <div class="flex justify-between">
                 <span class="text-gray-600">Realisasi:</span>
-                <span class="font-semibold text-red-600">Rp {{ number_format($budget->jumlah_realisasi / 1000000, 1) }}jt</span>
+                <span class="font-semibold text-red-600" title="Rp {{ number_format($budget->jumlah_realisasi, 0, ',', '.') }}">
+                    {{ $formatHelper->formatCurrencyCompact($budget->jumlah_realisasi) }}
+                </span>
             </div>
             <div class="flex justify-between">
                 <span class="text-gray-600">Sisa:</span>
-                <span class="font-semibold text-green-600">Rp {{ number_format($budget->sisa_budget / 1000000, 1) }}jt</span>
+                <span class="font-semibold text-green-600" title="Rp {{ number_format($budget->sisa_budget, 0, ',', '.') }}">
+                    {{ $formatHelper->formatCurrencyCompact($budget->sisa_budget) }}
+                </span>
             </div>
         </div>
 
