@@ -7,6 +7,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PenawaranController;
+use App\Http\Controllers\PenawaranDocumentController;
 use App\Http\Controllers\ProyekController;
 use App\Http\Controllers\TugasController;
 use App\Http\Controllers\FinanceController;
@@ -42,6 +43,16 @@ Route::middleware('auth')->group(function () {
     // Penawaran (Quotations)
     Route::resource('penawaran', PenawaranController::class);
     Route::put('penawaran/{penawaran}/update-status', [PenawaranController::class, 'updateStatus'])->name('penawaran.updateStatus');
+    
+    // Penawaran Documents
+    Route::prefix('penawaran/{penawaran}/documents')->group(function () {
+        Route::get('invoice-gsb', [PenawaranDocumentController::class, 'invoiceGsb'])->name('penawaran.document.invoice-gsb');
+        Route::get('invoice-ritel', [PenawaranDocumentController::class, 'invoiceRitel'])->name('penawaran.document.invoice-ritel');
+        Route::get('invoice-corporate', [PenawaranDocumentController::class, 'invoiceCorporate'])->name('penawaran.document.invoice-corporate');
+        Route::get('surat-jalan', [PenawaranDocumentController::class, 'suratJalan'])->name('penawaran.document.surat-jalan');
+        Route::get('bas', [PenawaranDocumentController::class, 'bas'])->name('penawaran.document.bas');
+        Route::get('bast', [PenawaranDocumentController::class, 'bast'])->name('penawaran.document.bast');
+    });
 
     // Finance & Budget Management
     Route::get('finance/dashboard', [FinanceController::class, 'dashboard'])->name('finance.dashboard');
