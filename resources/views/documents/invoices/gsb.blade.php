@@ -360,18 +360,18 @@
                 <tr>
                     <td style="width: 82%;text-align: center;"><strong>PPN 11%</strong></td>
                     <td style="width: 18%;text-align: center;">
-                        Rp{{ number_format($penawaran->grand_total * 0.11, 0, ',', '.') }}</td>
+                        Rp{{ number_format($penawaran->ppn ?? ($penawaran->grand_total * 0.11), 0, ',', '.') }}</td>
                 </tr>
                 <tr class="total-row">
                     <td style="width: 82%;text-align: center;border-right: 1px solid #999;"><strong>TOTAL
                             TAGIHAN</strong></td>
                     <td style="width: 18%;text-align: center;">
-                        <strong>Rp{{ number_format($penawaran->grand_total * 1.11, 0, ',', '.') }}</strong>
+                        <strong>Rp{{ number_format($penawaran->grand_total_with_ppn ?? ($penawaran->grand_total * 1.11), 0, ',', '.') }}</strong>
                     </td>
                 </tr>
                 <tr class="terbilang">
                     <td style="text-align: center;" colspan="2"><strong> @php
-                        $finalTotal = $penawaran->grand_total * 1.11;
+                        $finalTotal = $penawaran->grand_total_with_ppn ?? ($penawaran->grand_total * 1.11);
                         // Function to convert number to words (Indonesian)
                         $terbilang = \App\Helpers\FormatHelper::angkaKeHuruf($finalTotal);
                     @endphp

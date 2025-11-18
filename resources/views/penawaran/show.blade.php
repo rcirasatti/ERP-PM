@@ -139,12 +139,23 @@
                     </div>
                 </div>
 
-                <div class="flex justify-between pt-4 mb-6">
+                <div class="flex justify-between pt-4 mb-4">
                     <span class="text-lg font-bold text-gray-900">Grand Total:</span>
                     <span class="text-lg font-bold text-blue-600">Rp {{ number_format($penawaran->grand_total, 0, ',', '.') }}</span>
                 </div>
 
-                <div class="space-y-3">
+                <div class="space-y-2 pb-4 border-b border-gray-200">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">PPN 11%:</span>
+                        <span class="font-semibold text-gray-900">Rp {{ number_format($penawaran->ppn ?? ($penawaran->grand_total * 0.11), 0, ',', '.') }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-lg font-bold text-gray-900">Total Tagihan:</span>
+                        <span class="text-lg font-bold text-green-600">Rp {{ number_format($penawaran->grand_total_with_ppn ?? ($penawaran->grand_total * 1.11), 0, ',', '.') }}</span>
+                    </div>
+                </div>
+
+                <div class="mt-6 space-y-3">
                     @if($penawaran && $penawaran->id)
                         <button onclick="changeStatus()" class="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium">
                             Ubah Status

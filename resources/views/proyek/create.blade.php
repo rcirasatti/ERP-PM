@@ -39,7 +39,7 @@
                         <select name="penawaran_id" id="penawaran_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('penawaran_id') border-red-500 @enderror" required onchange="updatePenawaranInfo()">
                             <option value="">-- Pilih Penawaran --</option>
                             @foreach($penawaran_disetujui as $penawaran)
-                                <option value="{{ $penawaran->id }}" data-client="{{ $penawaran->client->nama }}" data-no="{{ $penawaran->no_penawaran }}" data-biaya="{{ $penawaran->total_biaya }}" data-margin="{{ $penawaran->total_margin }}" data-grand="{{ $penawaran->grand_total }}">
+                                <option value="{{ $penawaran->id }}" data-client="{{ $penawaran->client->nama }}" data-no="{{ $penawaran->no_penawaran }}" data-biaya="{{ $penawaran->total_biaya }}" data-margin="{{ $penawaran->total_margin }}" data-grand="{{ $penawaran->grand_total }}" data-grand-ppn="{{ $penawaran->grand_total_with_ppn ?? ($penawaran->grand_total * 1.11) }}">
                                     {{ $penawaran->no_penawaran }} - {{ $penawaran->client->nama }}
                                 </option>
                             @endforeach
@@ -71,6 +71,10 @@
                             <div class="col-span-2">
                                 <p class="text-xs font-medium text-blue-600 uppercase">Grand Total</p>
                                 <p class="text-sm font-semibold text-blue-600">Rp <span id="grand-penawaran">0</span></p>
+                            </div>
+                            <div class="col-span-2">
+                                <p class="text-xs font-medium text-green-600 uppercase">Total Tagihan (PPN)</p>
+                                <p class="text-sm font-semibold text-green-600">Rp <span id="grand-penawaran-ppn">0</span></p>
                             </div>
                         </div>
                     </div>
@@ -203,6 +207,7 @@
             document.getElementById('biaya-penawaran').textContent = new Intl.NumberFormat('id-ID').format(option.getAttribute('data-biaya'));
             document.getElementById('margin-penawaran').textContent = new Intl.NumberFormat('id-ID').format(option.getAttribute('data-margin'));
             document.getElementById('grand-penawaran').textContent = new Intl.NumberFormat('id-ID').format(option.getAttribute('data-grand'));
+            document.getElementById('grand-penawaran-ppn').textContent = new Intl.NumberFormat('id-ID').format(option.getAttribute('data-grand-ppn'));
             infoDiv.classList.remove('hidden');
         } else {
             infoDiv.classList.add('hidden');

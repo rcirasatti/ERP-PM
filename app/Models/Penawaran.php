@@ -10,11 +10,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Penawaran extends Model
 {
     protected $table = 'penawaran';
-    protected $fillable = ['no_penawaran', 'client_id', 'tanggal', 'status', 'total_margin', 'total_biaya'];
+    protected $fillable = ['no_penawaran', 'client_id', 'tanggal', 'status', 'total_margin', 'total_biaya', 'ppn', 'grand_total_with_ppn'];
     protected $casts = [
         'tanggal' => 'date',
         'total_margin' => 'decimal:2',
         'total_biaya' => 'decimal:2',
+        'ppn' => 'decimal:2',
+        'grand_total_with_ppn' => 'decimal:2',
     ];
     public $timestamps = true;
 
@@ -96,5 +98,21 @@ class Penawaran extends Model
     public function getGrandTotalAttribute()
     {
         return $this->total_biaya + $this->total_margin;
+    }
+
+    /**
+     * Get PPN 11% value
+     */
+    public function getPpnAttribute()
+    {
+        return $this->grand_total * 0.11;
+    }
+
+    /**
+     * Get grand total with 11% PPN
+     */
+    public function getGrandTotalWithPpnAttribute()
+    {
+        return $this->grand_total * 1.11;
     }
 }

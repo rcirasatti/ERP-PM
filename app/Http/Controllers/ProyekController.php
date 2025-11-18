@@ -74,10 +74,10 @@ class ProyekController extends Controller
             'persentase_progres' => 0, // Initial progress is 0%
         ]);
 
-        // Create budget automatically from penawaran grand_total
+        // Create budget automatically from penawaran grand_total_with_ppn
         ProyekBudget::create([
             'proyek_id' => $proyek->id,
-            'jumlah_rencana' => $penawaran->grand_total,
+            'jumlah_rencana' => $penawaran->grand_total_with_ppn ?? ($penawaran->grand_total * 1.11),
             'jumlah_realisasi' => 0,
         ]);
 

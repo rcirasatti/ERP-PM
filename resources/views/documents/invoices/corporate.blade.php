@@ -325,21 +325,21 @@
                 <tr>
                     <td colspan="2">PPN :</td>
                     <td class="right">
-                        Rp{{ number_format($penawaran->grand_total * 0.11, 0, ',', '.') }}
+                        Rp{{ number_format($penawaran->ppn ?? ($penawaran->grand_total * 0.11), 0, ',', '.') }}
                                            </td>
                 </tr>
 
                 <tr>
                     <td colspan="2">NILAI TAGIHAN :</td>
                     <td class="right">
-                        Rp{{ number_format($penawaran->grand_total * 1.11, 0, ',', '.') }}
+                        Rp{{ number_format($penawaran->grand_total_with_ppn ?? ($penawaran->grand_total * 1.11), 0, ',', '.') }}
                     </td>
                 </tr>
 
                 <tr>
                     <td class="item-label-inside">TERBILANG</td>
                     <td class="yellow" colspan="3" style="text-align: center; height: 50px;"> @php
-                        $finalTotal = $penawaran->grand_total * 1.11;
+                        $finalTotal = $penawaran->grand_total_with_ppn ?? ($penawaran->grand_total * 1.11);
                         // Function to convert number to words (Indonesian)
                         $terbilang = \App\Helpers\FormatHelper::angkaKeHuruf($finalTotal);
                     @endphp

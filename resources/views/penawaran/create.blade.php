@@ -115,6 +115,17 @@
                         <span class="text-lg font-bold text-blue-600" id="grandTotal">Rp 0</span>
                     </div>
 
+                    <div class="space-y-2 pb-4 border-b border-gray-200">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">PPN 11%:</span>
+                            <span class="font-semibold text-gray-900" id="ppnTotal">Rp 0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-lg font-bold text-gray-900">Total Tagihan:</span>
+                            <span class="text-lg font-bold text-green-600" id="grandTotalWithPpn">Rp 0</span>
+                        </div>
+                    </div>
+
                     <div class="space-y-3">
                         <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
                             Simpan Penawaran
@@ -268,11 +279,15 @@
             });
 
             const grandTotal = totalBiaya + totalMargin;
+            const ppn = grandTotal * 0.11;
+            const grandTotalWithPpn = grandTotal * 1.11;
 
             document.getElementById('totalItems').textContent = totalItems;
             document.getElementById('totalBiaya').textContent = 'Rp ' + number_format(totalBiaya, 0, ',', '.');
             document.getElementById('totalMargin').textContent = 'Rp ' + number_format(totalMargin, 0, ',', '.');
             document.getElementById('grandTotal').textContent = 'Rp ' + number_format(grandTotal, 0, ',', '.');
+            document.getElementById('ppnTotal').textContent = 'Rp ' + number_format(ppn, 0, ',', '.');
+            document.getElementById('grandTotalWithPpn').textContent = 'Rp ' + number_format(grandTotalWithPpn, 0, ',', '.');
         }
 
         function number_format(num, decimals, dec_point, thousands_sep) {

@@ -19,9 +19,11 @@ class PenawaranController extends Controller
     {
         $penawaran = Penawaran::with('client')->orderBy('created_at', 'DESC')->get();
         
-        // Calculate KPI data
+        // Calculate KPI data using grand_total_with_ppn
         $totalPenawaran = $penawaran->count();
-        $totalValue = $penawaran->sum('grand_total');
+        $totalValue = $penawaran->sum(function($item) {
+            return $item->grand_total_with_ppn ?? ($item->grand_total * 1.11);
+        });
         $pendingPenawaran = $penawaran->where('status', 'draft')->count();
 
         return view('penawaran.index', compact('penawaran', 'totalPenawaran', 'totalValue', 'pendingPenawaran'));
@@ -94,9 +96,15 @@ class PenawaranController extends Controller
         }
 
         // Update totals
+        $grandTotal = $totalBiaya + $totalMargin;
+        $ppn = $grandTotal * 0.11;
+        $grandTotalWithPpn = $grandTotal * 1.11;
+        
         $penawaran->update([
             'total_biaya' => $totalBiaya,
             'total_margin' => $totalMargin,
+            'ppn' => $ppn,
+            'grand_total_with_ppn' => $grandTotalWithPpn,
         ]);
 
         return redirect()->route('penawaran.show', $penawaran->id)->with('success', 'Penawaran berhasil dibuat');
@@ -180,12 +188,18 @@ class PenawaranController extends Controller
         }
 
         // Update penawaran
+        $grandTotal = $totalBiaya + $totalMargin;
+        $ppn = $grandTotal * 0.11;
+        $grandTotalWithPpn = $grandTotal * 1.11;
+        
         $penawaran->update([
             'client_id' => $validated['client_id'],
             'tanggal' => $validated['tanggal'],
             'status' => $validated['status'],
             'total_biaya' => $totalBiaya,
             'total_margin' => $totalMargin,
+            'ppn' => $ppn,
+            'grand_total_with_ppn' => $grandTotalWithPpn,
         ]);
 
         // Jika penawaran status disetujui, kurangi inventory barang baru

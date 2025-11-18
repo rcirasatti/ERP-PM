@@ -23,7 +23,7 @@ class ProyekBudgetSeeder extends Seeder
             if (!$existingBudget && $proyek->penawaran) {
                 ProyekBudget::create([
                     'proyek_id' => $proyek->id,
-                    'jumlah_rencana' => $proyek->penawaran->grand_total,
+                    'jumlah_rencana' => $proyek->penawaran->grand_total_with_ppn ?? ($proyek->penawaran->grand_total * 1.11),
                     'jumlah_realisasi' => 0,
                 ]);
                 

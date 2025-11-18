@@ -69,6 +69,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Total Biaya</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Total Margin</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Grand Total</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Total Tagihan (PPN)</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Tanggal</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Status</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Aksi</th>
@@ -99,6 +100,11 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <p class="font-semibold text-blue-600" title="Rp {{ number_format($item->grand_total, 0, ',', '.') }}">
                                     {{ $formatHelper->formatCurrencyCompact($item->grand_total) }}
+                                </p>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <p class="font-semibold text-green-600" title="Rp {{ number_format($item->grand_total_with_ppn ?? ($item->grand_total * 1.11), 0, ',', '.') }}">
+                                    {{ $formatHelper->formatCurrencyCompact($item->grand_total_with_ppn ?? ($item->grand_total * 1.11)) }}
                                 </p>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
