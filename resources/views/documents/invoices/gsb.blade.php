@@ -40,6 +40,37 @@
             .print-button {
                 display: none !important;
             }
+
+                       * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            thead {
+                background: #e8e8e8 !important;
+            }
+
+            th {
+                background: #e8e8e8 !important;
+            }
+
+            .total-row td {
+                background: #000 !important;
+                color: white !important;
+            }
+
+            .terbilang td {
+                background: #f5f5f5 !important;
+            }
+
+            .bill-to {
+                background: #f9f9f9 !important;
+            }
+
+            .payment-info {
+                background: #fafafa !important;
+            }
         }
 
         /* Header */
@@ -102,7 +133,7 @@
 
         .right-top p,
         .right-bottom p {
-            margin-left: 37%;
+            margin-left: 47%;
             display: flex;
             gap: 8px;
         }
@@ -313,8 +344,8 @@
 
             <div class="right-bottom">
                 <p style="text-decoration: underline;"><strong>For :</strong></p>
-                <p>No. BAPS: [BAPS NUMBER]</p>
-                <p>No. Perjanjian: [AGREEMENT NUMBER]</p>
+                <p>No. BAPS:</p>
+                <p>No. Perjanjian: </p>
             </div>
 
         </div>

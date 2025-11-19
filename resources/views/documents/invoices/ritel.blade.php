@@ -256,6 +256,30 @@
             .print-button {
                 display: none;
             }
+
+                       * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            thead {
+                background: #000 !important;
+            }
+
+            th {
+                background: #000 !important;
+                color: white !important;
+            }
+
+            .total-row td {
+                background: #000 !important;
+                color: white !important;
+            }
+
+            .terbilang td {
+                background: #f5f5f5 !important;
+            }
         }
     </style>
 </head>
@@ -294,9 +318,9 @@
 
             <div class="right-bottom">
                 <p style="text-decoration: underline;"><strong>For :</strong></p>
-                <p>No. BAPS <span>: [BAPS NUMBER]</span></p>
-                <p>No. Perjanjian <span>: [AGREEMENT NUMBER]</span></p>
-                <p>No. Faktur <span>: [FAKTUR NUMBER]</span></p>
+                <p>No. BAPS <span>: </span></p>
+                <p>No. Perjanjian <span>: </span></p>
+                <p>No. Faktur <span>: </span></p>
             </div>
 
         </div>

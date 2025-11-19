@@ -46,6 +46,11 @@ class TugasController extends Controller
 
         // Recalculate project progress
         $proyek->hitungProgress();
+        
+        // Calculate automatic status
+        $proyek->hitungStatusOtomatis();
+        $proyek->save();
+        
         $proyek->refresh();
 
         // Return JSON for AJAX requests
@@ -89,6 +94,10 @@ class TugasController extends Controller
 
         // Recalculate project progress
         $proyek->hitungProgress();
+        
+        // Calculate automatic status
+        $proyek->hitungStatusOtomatis();
+        $proyek->save();
 
         return redirect()->route('proyek.show', $proyek->id)
             ->with('success', 'Task berhasil diperbarui');
@@ -99,12 +108,40 @@ class TugasController extends Controller
      */
     public function destroy(Proyek $proyek, Tugas $tugas)
     {
+        \Log::info('=== DELETE TUGAS STARTED ===');
+        \Log::info('Proyek ID: ' . $proyek->id);
+        \Log::info('Tugas ID: ' . $tugas->id);
+        \Log::info('Tugas Proyek ID: ' . $tugas->proyek_id);
+        
+        // Verify that the task belongs to this project (additional safety check)
+        if ($tugas->proyek_id !== $proyek->id) {
+            \Log::error('Task does not belong to project');
+            
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Task tidak ditemukan dalam project ini',
+                ], 404);
+            }
+            
+            return redirect()->route('proyek.show', $proyek->id)
+                ->with('error', 'Task tidak ditemukan dalam project ini');
+        }
+
         // Delete the task
-        $tugas->delete();
+        $deleted = $tugas->delete();
+        \Log::info('Tugas deleted: ' . ($deleted ? 'YES' : 'NO'));
 
         // Recalculate project progress
         $proyek->hitungProgress();
+        
+        // Calculate automatic status
+        $proyek->hitungStatusOtomatis();
+        $proyek->save();
+        
         $proyek->refresh();
+
+        \Log::info('=== DELETE TUGAS COMPLETED ===');
 
         // Return JSON for AJAX requests
         if (request()->expectsJson() || request()->ajax()) {
@@ -134,6 +171,11 @@ class TugasController extends Controller
 
         // Recalculate project progress
         $proyek->hitungProgress();
+        
+        // Calculate automatic status based on tasks and progress
+        $proyek->hitungStatusOtomatis();
+        $proyek->save();
+        
         $proyek->refresh(); // Refresh to get updated progress
 
         return response()->json([

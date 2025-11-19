@@ -81,6 +81,31 @@ class Proyek extends Model
     }
 
     /**
+     * Calculate automatic status based on progress and tasks
+     */
+    public function hitungStatusOtomatis()
+    {
+        $tasks = $this->tugas()->get();
+        $progress = $this->persentase_progres;
+
+        // If no tasks exist, status is "baru"
+        if ($tasks->isEmpty()) {
+            $status = 'baru';
+        }
+        // If progress is 100%, status is "selesai"
+        elseif ($progress == 100) {
+            $status = 'selesai';
+        }
+        // If has tasks but progress < 100%, status is "instalasi"
+        else {
+            $status = 'instalasi';
+        }
+
+        $this->status = $status;
+        return $status;
+    }
+
+    /**
      * Get status color for badge
      */
     public function getStatusColor()

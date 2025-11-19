@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Proyek;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -20,6 +21,8 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             SupplierSeeder::class,
             ClientSeeder::class,
+            MaterialSeeder::class,
+            InventorySeeder::class
         ]);
     
     }

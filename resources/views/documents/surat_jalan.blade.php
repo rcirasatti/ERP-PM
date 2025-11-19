@@ -42,6 +42,24 @@
             .page-frame {
                 padding: 15px;
             }
+
+            {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            thead {
+                background: #f0f0f0 !important;
+            }
+
+            th {
+                background: #f0f0f0 !important;
+            }
+
+            .print-button {
+                display: none !important;
+            }
         }
 
         /* HEADER */
@@ -180,12 +198,6 @@
             text-align: right;
             margin-top: 20px;
         }
-
-        @media print {
-            .print-button {
-                display: none;
-            }
-        }
     </style>
 </head>
 
@@ -215,7 +227,7 @@
                     </p>
                     <p>
                         <span class="label">Delivery Date</span> :
-                        <strong>{{ $penawaran->tgl_kirim ?? '-' }}</strong>
+                        <strong>{{ $penawaran->tgl_kirim ?? '' }}</strong>
                     </p>
                 </div>
 

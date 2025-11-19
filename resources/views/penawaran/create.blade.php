@@ -159,17 +159,19 @@
                             @foreach ($materials as $material)
                                 @php
                                     $stok = $material->inventory?->stok ?? 0;
-                                    $hasStok = $stok > 0;
+                                    $isBarang = $material->type === 'BARANG';
+                                    $hasStok = $stok > 0 || !$isBarang; // Jasa/Tol/Lainnya tidak perlu stok
+                                    $stokDisplay = $isBarang ? '[Stok: ' . number_format($stok, 2) . ']' : '[' . $material->type . ']';
                                 @endphp
-                                <div onclick="selectMaterial(this, {{ $material->id }}, '{{ $material->nama }}', {{ $material->harga }}, '{{ $material->satuan }}', {{ $stok }})" class="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b last:border-b-0 material-option {{ !$hasStok ? 'opacity-50 cursor-not-allowed' : '' }}" data-material-id="{{ $material->id }}" data-nama="{{ $material->nama }}" data-price="{{ $material->harga }}" data-stok="{{ $stok }}" {{ !$hasStok ? 'onclick="return false;"' : '' }}>
+                                <div onclick="selectMaterial(this, {{ $material->id }}, '{{ $material->nama }}', {{ $material->harga }}, '{{ $material->satuan }}')" class="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b last:border-b-0 material-option {{ !$hasStok ? 'opacity-50 cursor-not-allowed' : '' }}" data-material-id="{{ $material->id }}" data-nama="{{ $material->nama }}" data-price="{{ $material->harga }}" data-type="{{ $material->type }}" {{ !$hasStok ? 'onclick="return false;"' : '' }}>
                                     <div class="font-medium text-gray-900">{{ $material->nama }}</div>
-                                    <div class="text-xs text-gray-600">{{ $material->satuan }} - Rp {{ number_format($material->harga, 0, ',', '.') }} {{ !$hasStok ? '[Stok: 0 - Tidak Tersedia]' : '[Stok: ' . number_format($stok, 2) . ']' }}</div>
+                                    <div class="text-xs text-gray-600">{{ $material->satuan }} - Rp {{ number_format($material->harga, 0, ',', '.') }} {{ $stokDisplay }}</div>
                                 </div>
                             @endforeach
                         </div>
                     </div>
                     <input type="hidden" name="items[0][material_id]" required class="material-id-input">
-                    <p class="text-xs text-gray-500 mt-1">Material dengan stok 0 tidak bisa dipilih</p>
+                    <p class="text-xs text-gray-500 mt-1">Hanya Barang dengan stok > 0 dan item non-Barang (Jasa, Tol, Lainnya) yang dapat dipilih</p>
                 </div>
 
                 <div>
@@ -342,7 +344,10 @@
                     dropdown.classList.remove('hidden');
                     options.forEach(option => {
                         const text = option.textContent.toLowerCase();
-                        const hasStok = option.getAttribute('data-stok') > 0;
+                        const type = option.getAttribute('data-type');
+                        const isBarang = type === 'BARANG';
+                        const stok = option.getAttribute('data-stok') ?? (isBarang ? 0 : 1);
+                        const hasStok = stok > 0 || !isBarang;
                         option.classList.toggle('hidden', !text.includes(searchTerm) || !hasStok);
                     });
                 } else {
@@ -363,9 +368,7 @@
             });
         }
 
-        function selectMaterial(element, materialId, materialName, price, satuan, stok) {
-            if (stok <= 0) return false;
-            
+        function selectMaterial(element, materialId, materialName, price, satuan) {
             const row = element.closest('.item-row');
             const searchInput = row.querySelector('.material-search');
             const dropdown = row.querySelector('.material-dropdown');

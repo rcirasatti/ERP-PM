@@ -39,7 +39,7 @@
             <!-- Status & Client Info -->
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <span
+                    <span id="proyekStatusBadge"
                         class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium {{ $proyek->getStatusColor() }}">
                         {{ $proyek->getStatusLabel() }}
                     </span>
@@ -320,9 +320,10 @@
                                                     </span>
                                                 </label>
                                             </div>
-                                            <button type="button" disabled
-                                                class="p-2 text-gray-400 cursor-not-allowed rounded-lg transition"
-                                                title="Task selesai tidak dapat dihapus">
+                                            <button type="button"
+                                                onclick="deleteTask({{ $tugas->id }}, {{ $proyek->id }})"
+                                                class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                title="Hapus Task">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -395,42 +396,95 @@
                                 emptyState.remove();
                             }
 
-                            // Get pending tasks list (new tasks always go to "Belum Selesai")
-                            const pendingTasksList = document.getElementById('pendingTasksList');
-                            if (!pendingTasksList) {
-                                console.error('Pending tasks list not found');
-                                showToast('Error: Struktur DOM tidak ditemukan', 'error');
-                                return;
+                            // Get or create taskList container
+                            let taskList = document.getElementById('taskList');
+                            if (!taskList) {
+                                // Create the entire task list structure if it doesn't exist
+                                const taskListContainer = document.getElementById('taskListContainer');
+                                taskList = document.createElement('div');
+                                taskList.id = 'taskList';
+                                taskList.className = 'space-y-6 p-6';
+                                taskListContainer.innerHTML = '';
+                                taskListContainer.appendChild(taskList);
                             }
 
-                            // Create new task element with proper structure
+                            // Get or create pending tasks section
+                            let pendingTasksSection = document.getElementById('pendingTasksSection');
+                            if (!pendingTasksSection) {
+                                pendingTasksSection = document.createElement('div');
+                                pendingTasksSection.id = 'pendingTasksSection';
+                                taskList.appendChild(pendingTasksSection);
+                            }
+
+                            // Ensure pending tasks list exists
+                            let pendingTasksList = document.getElementById('pendingTasksList');
+                            if (!pendingTasksList) {
+                                const sectionContent = document.createElement('div');
+                                sectionContent.innerHTML = `
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                        <span class="inline-flex items-center justify-center w-6 h-6 bg-yellow-100 text-yellow-800 rounded-full text-sm font-bold">
+                                            <span id="pendingCount">0</span>
+                                        </span>
+                                        Belum Selesai
+                                    </h4>
+                                    <div class="divide-y divide-gray-200 border border-yellow-200 rounded-lg overflow-hidden" id="pendingTasksList">
+                                    </div>
+                                `;
+                                pendingTasksSection.innerHTML = sectionContent.innerHTML;
+                                pendingTasksList = document.getElementById('pendingTasksList');
+                            }
+
+                            // Ensure completed tasks section exists
+                            let completedTasksSection = document.getElementById('completedTasksSection');
+                            if (!completedTasksSection) {
+                                completedTasksSection = document.createElement('div');
+                                completedTasksSection.id = 'completedTasksSection';
+                                completedTasksSection.className = 'pt-6 border-t border-gray-200';
+                                completedTasksSection.innerHTML = `
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                        <span class="inline-flex items-center justify-center w-6 h-6 bg-green-100 text-green-800 rounded-full text-sm font-bold">
+                                            <span id="completedCount">0</span>
+                                        </span>
+                                        Sudah Selesai
+                                    </h4>
+                                    <div class="divide-y divide-gray-200 border border-green-200 rounded-lg overflow-hidden" id="completedTasksList">
+                                        <div class="p-4 text-center text-gray-500 text-sm">
+                                            Belum ada task yang selesai
+                                        </div>
+                                    </div>
+                                `;
+                                taskList.appendChild(completedTasksSection);
+                            }
+
+                            // Now add the new task
+                            pendingTasksList = document.getElementById('pendingTasksList');
                             const taskHtml = `
-                    <div class="hover:bg-gray-50 transition p-4" data-task-id="${data.task.id}" data-task-name="${data.task.nama.toLowerCase()}" data-task-search="${data.task.nama.toLowerCase()}">
-                        <div class="flex items-center justify-between gap-4">
-                            <div class="flex items-center gap-4 flex-1 min-w-0">
-                                <input type="checkbox" 
-                                       id="task-${data.task.id}" 
-                                       class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer task-checkbox shrink-0"
-                                       data-task-id="${data.task.id}"
-                                       data-proyek-id="{{ $proyek->id }}"
-                                       onchange="toggleTaskStatus(this)">
-                                <label for="task-${data.task.id}" class="flex-1 cursor-pointer min-w-0">
-                                    <span class="font-medium text-gray-900 task-name">
-                                        ${data.task.nama}
-                                    </span>
-                                </label>
-                            </div>
-                            <button type="button" 
-                                    onclick="deleteTask(${data.task.id}, {{ $proyek->id }})"
-                                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                                    title="Hapus Task">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                `;
+                                <div class="hover:bg-gray-50 transition p-4" data-task-id="${data.task.id}" data-task-name="${data.task.nama.toLowerCase()}" data-task-search="${data.task.nama.toLowerCase()}">
+                                    <div class="flex items-center justify-between gap-4">
+                                        <div class="flex items-center gap-4 flex-1 min-w-0">
+                                            <input type="checkbox" 
+                                                   id="task-${data.task.id}" 
+                                                   class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer task-checkbox shrink-0"
+                                                   data-task-id="${data.task.id}"
+                                                   data-proyek-id="{{ $proyek->id }}"
+                                                   onchange="toggleTaskStatus(this)">
+                                            <label for="task-${data.task.id}" class="flex-1 cursor-pointer min-w-0">
+                                                <span class="font-medium text-gray-900 task-name">
+                                                    ${data.task.nama}
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <button type="button" 
+                                                onclick="deleteTask(${data.task.id}, {{ $proyek->id }})"
+                                                class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                title="Hapus Task">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
 
                             // Add new task to pending tasks list
                             pendingTasksList.insertAdjacentHTML('beforeend', taskHtml);
@@ -567,6 +621,27 @@
 
                 if (pendingCount) pendingCount.textContent = pendingRows.length;
                 if (completedCount) completedCount.textContent = completedRows.length;
+
+                // Handle empty state messages
+                const completedTasksList = document.getElementById('completedTasksList');
+                if (completedTasksList) {
+                    // Remove old empty message if exists
+                    const oldEmptyMsg = completedTasksList.querySelector(':scope > div:not([data-task-id])');
+                    if (oldEmptyMsg && completedRows.length > 0) {
+                        oldEmptyMsg.remove();
+                    }
+
+                    // Show empty message if no completed tasks
+                    if (completedRows.length === 0) {
+                        const hasEmptyMsg = completedTasksList.querySelector(':scope > div:not([data-task-id])');
+                        if (!hasEmptyMsg) {
+                            const emptyMsg = document.createElement('div');
+                            emptyMsg.className = 'p-4 text-center text-gray-500 text-sm';
+                            emptyMsg.textContent = 'Belum ada task yang selesai';
+                            completedTasksList.appendChild(emptyMsg);
+                        }
+                    }
+                }
             }
 
             // Delete Task
@@ -645,6 +720,9 @@
                                 setTimeout(() => {
                                     taskRow.remove();
 
+                                    // Update counters after removing task
+                                    updateTaskCounters();
+
                                     // Check if no more tasks
                                     const taskList = document.getElementById('taskList');
                                     if (taskList && taskList.children.length === 0) {
@@ -666,6 +744,11 @@
                             updateStatsFromDOM();
 
                             showToast(data.message, 'success');
+                            
+                            // Refresh page after 500ms to ensure DB changes are persisted
+                            setTimeout(() => {
+                                location.reload();
+                            }, 500);
                         } else {
                             showToast(data.message || data.error || 'Gagal menghapus task', 'error');
                             if (deleteButton) {
@@ -722,6 +805,44 @@
                 if (totalTaskEl) totalTaskEl.textContent = allCheckboxes.length;
                 if (completedTaskEl) completedTaskEl.textContent = completedCheckboxes.length;
                 if (pendingTaskEl) pendingTaskEl.textContent = pendingCheckboxes.length;
+
+                // Fetch updated project status badge
+                updateProjectStatusBadge();
+            }
+
+            // Function to update project status badge from server
+            function updateProjectStatusBadge() {
+                const proyekId = {{ $proyek->id }};
+                const url = `/proyek/${proyekId}/status-info`;
+
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success && data.status && data.statusColor) {
+                        const badge = document.getElementById('proyekStatusBadge');
+                        if (badge) {
+                            // Update badge text
+                            badge.textContent = data.status;
+                            
+                            // Update badge class
+                            badge.className = `inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${data.statusColor}`;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating status badge:', error);
+                    // Silently fail - not critical
+                });
             }
 
             // Recalculate stats from DOM (useful after delete when server response might be stale)

@@ -28,13 +28,15 @@
             padding: 15px 20px 25px;
         }
 
-        .header-yellow {
-            background: #ffff00;
+        .header {
             text-align: center;
             font-weight: bold;
             padding: 14px 8px;
             margin-bottom: 10px;
             font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .title {
@@ -62,10 +64,6 @@
             width: 75px;
             background: #f0f0f0;
             font-weight: bold;
-        }
-
-        .info-yellow {
-            background: #ffff00;
         }
 
         /* ITEM TABLE */
@@ -116,11 +114,6 @@
 
         /* kolom "Jumlah" */
 
-
-        .yellow {
-            background: #ffff00;
-        }
-
         .right {
             text-align: right;
         }
@@ -131,61 +124,47 @@
         }
 
         .bottom-grid {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            column-gap: 40px;
-            align-items: flex-start;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 18px;
+            align-items: center;
         }
 
         .bank-table {
             border-collapse: collapse;
             font-size: 10px;
+            width: auto;
+            line-height: 1.5;
         }
 
         .bank-table td {
-            padding: 0;
-            vertical-align: top;
+            padding: 0 4px;
         }
 
-        .bank-labels {
-            padding-right: 8px;
+        .bank-label {
+            white-space: nowrap;
+            padding-right: 4px;
         }
 
-        .bank-labels p {
-            margin: 0;
-            line-height: 1.4;
+        .bank-colon {
+            width: 8px;
+            text-align: center;
         }
 
-        .bank-yellow {
-            width: 120px;
-            height: 15px;
-            background: #ffff00;
-
+        .bank-value {
+            white-space: nowrap;
+            /* biar nama panjang nggak turun baris */
         }
-
 
         .ttd-box,
         .ttd-2-box,
         .ttd-name {
             border: 1px solid #000;
-            background: #ffff00;
             padding: 8px;
             font-size: 10px;
             text-align: center;
             align-content: center;
             width: 180px;
-        }
-
-
-
-        .note {
-            margin-left: 20px;
-            margin-top: 18px;
-            font-size: 9px;
-        }
-
-        .note p {
-            margin: 2px 0;
         }
 
         @media print {
@@ -201,6 +180,20 @@
             .page {
                 padding: 0;
             }
+
+                      * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            .info-label {
+                background: #f0f0f0 !important;
+            }
+
+            .item-table th {
+                background: #f0f0f0 !important;
+            }
         }
     </style>
 </head>
@@ -209,8 +202,10 @@
     <div class="page">
         <div class="invoice-frame">
             <!-- HEADER -->
-            <div class="header-yellow">
-                NAMA PERUSAHAAN DAN LOGO REKANAN
+            <div class="header">
+                <img src="{{ asset('Picture1.png') }}" alt="GSB Logo"
+                    style="height:65px; width:auto; object-fit:contain; display:block;">
+
             </div>
 
             <div class="title">INVOICE</div>
@@ -230,7 +225,7 @@
                         {{ $penawaran->client->alamat ?? '' }} <br> {{ $penawaran->client->telepon ?? '' }}
                     </td>
                     <td class="info-label">No Faktur Pajak</td>
-                    <td class="info-yellow">[No Faktur Pajak]</td>
+                    <td class="info"></td>
                 </tr>
                 <!-- Row 3 -->
                 <tr>
@@ -241,19 +236,19 @@
                 <!-- Row 4 -->
                 <tr>
                     <td class="info-label">Tgl Jatuh Tempo</td>
-                    <td class="info">45 hari sejak selesai validasi</td>
+                    <td class="info" style="vertical-align: middle;">45 hari sejak selesai validasi</td>
                 </tr>
 
                 <!-- Row 5 -->
                 <tr>
                     <td class="info-label">No. Perjanjian</td>
-                    <td class="info-yellow">[No Perjanjian]</td>
+                    <td class="info"></td>
                 </tr>
 
                 <!-- Row 6 -->
                 <tr>
                     <td class="info-label">NPWP :</td>
-                    <td colspan="3">0010.6119.0305.1000</td>
+                    <td colspan="3"></td>
                 </tr>
             </table>
 
@@ -262,7 +257,7 @@
                 // Pemisahan harga material (BARANG) dan non-material (JASA, TOL, LAINNYA)
                 $hargaMaterial = 0;
                 $hargaNonMaterial = 0;
-                
+
                 foreach ($penawaran->items ?? [] as $item) {
                     $totalItem = $item->harga_jual * $item->jumlah;
                     if ($item->material->type === 'BARANG') {
@@ -288,58 +283,58 @@
                 <tr>
                     <td rowspan="9"></td>
                     <td class="item-label-inside">PEKERJAAN :</td>
-                    <td class="yellow">Aktivasi xxxx</td>
                     <td></td>
+                    <td rowspan="3"></td>
                 </tr>
 
                 <tr>
                     <td class="item-label-inside">PO No. :</td>
-                    <td class="yellow"></td>
                     <td></td>
+
                 </tr>
 
                 <tr>
                     <td class="item-label-inside">GR No. :</td>
-                    <td class="yellow"></td>
                     <td></td>
+
                 </tr>
 
                 <tr>
                     <td colspan="2">JASA :</td>
-                    <td class="yellow right">Rp{{ number_format($hargaNonMaterial, 0, ',', '.') }}
+                    <td style="text-align: center;">Rp{{ number_format($hargaNonMaterial, 0, ',', '.') }}
                     </td>
                 </tr>
 
                 <tr>
                     <td colspan="2">MATERIAL :</td>
-                    <td class="yellow right">Rp{{ number_format($hargaMaterial, 0, ',', '.') }}</td>
+                    <td style="text-align: center;">Rp{{ number_format($hargaMaterial, 0, ',', '.') }}</td>
                 </tr>
 
                 <tr>
                     <td colspan="2">HARGA JUAL (JASA + MATERIAL) :</td>
-                    <td class="right">
+                    <td style="text-align: center;">
                         Rp{{ number_format($penawaran->grand_total, 0, ',', '.') }}
                     </td>
                 </tr>
 
                 <tr>
                     <td colspan="2">PPN :</td>
-                    <td class="right">
-                        Rp{{ number_format($penawaran->ppn ?? ($penawaran->grand_total * 0.11), 0, ',', '.') }}
-                                           </td>
+                    <td style="text-align: center;">
+                        Rp{{ number_format($penawaran->ppn ?? $penawaran->grand_total * 0.11, 0, ',', '.') }}
+                    </td>
                 </tr>
 
                 <tr>
                     <td colspan="2">NILAI TAGIHAN :</td>
-                    <td class="right">
-                        Rp{{ number_format($penawaran->grand_total_with_ppn ?? ($penawaran->grand_total * 1.11), 0, ',', '.') }}
+                    <td style="text-align: center;">
+                        Rp{{ number_format($penawaran->grand_total_with_ppn ?? $penawaran->grand_total * 1.11, 0, ',', '.') }}
                     </td>
                 </tr>
 
                 <tr>
                     <td class="item-label-inside">TERBILANG</td>
-                    <td class="yellow" colspan="3" style="text-align: center; height: 50px;"> @php
-                        $finalTotal = $penawaran->grand_total_with_ppn ?? ($penawaran->grand_total * 1.11);
+                    <td colspan="3" style="text-align: center; height: 50px;"> @php
+                        $finalTotal = $penawaran->grand_total_with_ppn ?? $penawaran->grand_total * 1.11;
                         // Function to convert number to words (Indonesian)
                         $terbilang = \App\Helpers\FormatHelper::angkaKeHuruf($finalTotal);
                     @endphp
@@ -352,45 +347,36 @@
                     <!-- Bank -->
                     <table class="bank-table">
                         <tr>
-                            <td class="bank-labels">
-                                <p>Nama Bank</p>
-                                <p>No Rekening</p>
-                                <p>Nama</p>
-                            </td>
-                            <td>
-                                <div class="bank-yellow"></div>
-                                <div class="bank-yellow"></div>
-                                <div class="bank-yellow"></div>
-                            </td>
+                            <td class="bank-label">Nama Bank</td>
+                            <td class="bank-colon">:</td>
+                            <td class="bank-value">Bank BNI</td>
+                        </tr>
+                        <tr>
+                            <td class="bank-label">No Rekening</td>
+                            <td class="bank-colon">:</td>
+                            <td class="bank-value">1439152652</td>
+                        </tr>
+                        <tr>
+                            <td class="bank-label">Nama</td>
+                            <td class="bank-colon">:</td>
+                            <td class="bank-value">CV Gundara Solusi Bersama</td>
                         </tr>
                     </table>
-
 
                     <!-- TTD -->
                     <div>
                         <div class="ttd-box" style="border-bottom: 0px">
-                            <p>Direktur / Pejabat</p>
-                            <p>Perusahaan</p>
-                            <p>berwenang / Nama Jabatan</p>
-                            <p>Berwenang* pilih sesuai</p>
+                            <p>Direktur</p>
                         </div>
                         <div class="ttd-2-box" style="height: 80px; border-bottom: 0px;">
-                            <p></p>Tanda tangan basah &amp; CAP</p>
-                            <p>Perusahaan</p>
                         </div>
-                        <div class="ttd-name">Nama Lengkap</div>
+                        <div class="ttd-name">HAYU MARYANTI</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- NOTE -->
-    <div class="note">
-        <p><strong>NOTE :</strong></p>
-        <p>Harap isi yang warna kuning</p>
-        <p>Harap sesuaikan format dengan kertas yang digunakan</p>
-        <p>Harap apabila ingin dicetak invoice maka warna kuning mohon di no fill</p>
-    </div>
+
     <div class="print-button" style="text-align: right; margin: 15px 15px 0;">
         <button onclick="window.print()" style="padding: 8px 18px; font-size: 13px; cursor: pointer;">
             Print / Save as PDF

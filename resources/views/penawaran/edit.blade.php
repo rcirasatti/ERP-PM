@@ -159,14 +159,16 @@
                         @foreach ($materials as $material)
                             @php
                                 $stok = $material->inventory?->stok ?? 0;
-                                $hasStok = $stok > 0;
+                                $isBarang = $material->type === 'BARANG';
+                                $hasStok = $stok > 0 || !$isBarang;
+                                $stokDisplay = $isBarang ? '[Stok: ' . number_format($stok, 2) . ']' : '[' . $material->type . ']';
                             @endphp
                             <option value="{{ $material->id }}" data-nama="{{ $material->nama }}" data-price="{{ $material->harga }}" {{ !$hasStok ? 'disabled' : '' }}>
-                                {{ $material->nama }} - {{ $material->satuan }} {{ !$hasStok ? '[Stok: 0 - Tidak Tersedia]' : '[Stok: ' . number_format($stok, 2) . ']' }}
+                                {{ $material->nama }} - {{ $material->satuan }} {{ $stokDisplay }}
                             </option>
                         @endforeach
                     </select>
-                    <p class="text-xs text-gray-500 mt-1">Material dengan stok 0 tidak bisa dipilih</p>
+                    <p class="text-xs text-gray-500 mt-1">Hanya Barang dengan stok > 0 dan item non-Barang (Jasa, Tol, Lainnya) yang dapat dipilih</p>
                 </div>
 
                 <div>

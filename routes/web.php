@@ -34,6 +34,7 @@ Route::middleware('auth')->group(function () {
     // Projects Management (dari Penawaran yang disetujui)
     Route::resource('proyek', ProyekController::class);
     Route::put('proyek/{proyek}/update-status', [ProyekController::class, 'updateStatus'])->name('proyek.updateStatus');
+    Route::get('proyek/{proyek}/status-info', [ProyekController::class, 'getStatusInfo'])->name('proyek.status-info');
     Route::get('proyek-search', [ProyekController::class, 'search'])->name('proyek.search');
 
     // Tasks Management (untuk setiap project)

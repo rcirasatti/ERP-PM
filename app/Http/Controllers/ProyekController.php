@@ -114,10 +114,13 @@ class ProyekController extends Controller
             'lokasi' => 'nullable|string|max:255',
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
-            'status' => 'required|in:baru,survei,instalasi,pengujian,selesai,bast',
         ]);
 
         $proyek->update($validated);
+
+        // Calculate automatic status based on tasks and progress
+        $proyek->hitungStatusOtomatis();
+        $proyek->save();
 
         return redirect()->route('proyek.show', $proyek->id)
             ->with('success', 'Project berhasil diperbarui');
@@ -169,6 +172,18 @@ class ProyekController extends Controller
             'success' => true,
             'html' => view('proyek.partials.project-grid', compact('proyeks'))->render(),
             'pagination' => (string) $proyeks->links(),
+        ]);
+    }
+
+    /**
+     * Get project status info for AJAX update
+     */
+    public function getStatusInfo(Proyek $proyek)
+    {
+        return response()->json([
+            'success' => true,
+            'status' => $proyek->getStatusLabel(),
+            'statusColor' => $proyek->getStatusColor(),
         ]);
     }
 }
