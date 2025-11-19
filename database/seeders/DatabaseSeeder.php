@@ -22,8 +22,14 @@ class DatabaseSeeder extends Seeder
             SupplierSeeder::class,
             ClientSeeder::class,
             MaterialSeeder::class,
-            InventorySeeder::class
+            InventorySeeder::class,
+            PenawaranSeeder::class,
+            ItemPenawaranSeeder::class,
+            ProyekSeeder::class,
+            TugasSeeder::class,
+            ProyekBudgetSeeder::class,
+            PengeluaranSeeder::class,
+            LogInventorySeeder::class,
         ]);
-    
     }
 }

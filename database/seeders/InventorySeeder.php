@@ -24,7 +24,7 @@ class InventorySeeder extends Seeder
             ],
             [
                 'material_id' => 3,
-                'stok' => 100,
+                'stok' => 97,
             ],
             [
                 'material_id' => 4,
@@ -48,7 +48,7 @@ class InventorySeeder extends Seeder
             ],
             [
                 'material_id' => 9,
-                'stok' => 15,
+                'stok' => 13,
             ],
             [
                 'material_id' => 10,

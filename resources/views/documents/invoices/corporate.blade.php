@@ -318,7 +318,7 @@
                 </tr>
 
                 <tr>
-                    <td colspan="2">PPN :</td>
+                    <td colspan="2">PPN 11% :</td>
                     <td style="text-align: center;">
                         Rp{{ number_format($penawaran->ppn ?? $penawaran->grand_total * 0.11, 0, ',', '.') }}
                     </td>
