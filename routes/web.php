@@ -55,8 +55,7 @@ Route::middleware('auth')->group(function () {
         Route::get('bast', [PenawaranDocumentController::class, 'bast'])->name('penawaran.document.bast');
     });
 
-    // Finance & Budget Management
-    Route::get('finance/dashboard', [FinanceController::class, 'dashboard'])->name('finance.dashboard');
+   
     Route::get('finance/budget', [FinanceController::class, 'budget'])->name('finance.budget');
     Route::get('finance/budget/{budget}', [FinanceController::class, 'showBudget'])->name('finance.budget.show');
     
