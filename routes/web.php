@@ -12,6 +12,7 @@ use App\Http\Controllers\ProyekController;
 use App\Http\Controllers\TugasController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\PengeluaranController;
+use App\Http\Controllers\DashboardController;
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -22,9 +23,7 @@ Route::middleware('guest')->group(function () {
 // Protected Routes (require authentication)
 Route::middleware('auth')->group(function () {
     // Dashboard
-    Route::get('/', function () {
-        return view('dashboard.index');
-    })->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Projects
     Route::get('/projects', function () {

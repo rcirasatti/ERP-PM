@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('lokasi');
             $table->date('tanggal_mulai');
             $table->date('tanggal_selesai');
-            $table->enum('status', ['baru', 'survei', 'instalasi', 'pengujian', 'selesai', 'bast'])->default('baru');
+            $table->enum('status', ['baru', 'instalasi', 'selesai'])->default('baru');
             $table->decimal('persentase_progres', 5, 2);
             $table->timestamps();
         });
