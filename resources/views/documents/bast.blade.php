@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,11 +11,13 @@
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: 'Arial', sans-serif;
             font-size: 11px;
             line-height: 1.6;
         }
+
         .container {
             max-width: 210mm;
             margin: 0 auto;
@@ -22,66 +25,105 @@
             background: white;
             color: #000;
         }
+
         @media print {
             body {
                 margin: 0;
                 padding: 0;
             }
+
             .container {
                 padding: 0;
                 max-width: 100%;
             }
         }
+
         .logo-section {
-            text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 5px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
         .logo-section img {
-            height: 40px;
+            height: 65px;
+            width: auto;
+            object-fit: contain;
+            display: block;
         }
+
         .header {
             text-align: center;
             margin-bottom: 20px;
             font-weight: bold;
-            font-size: 13px;
+            font-size: 16px;
         }
+
         .subheader {
-            text-align: center;
+            text-align: left;
             margin-bottom: 15px;
             font-size: 10px;
         }
+
+        .subheader-line {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 4px;
+        }
+
+        .subheader-text {
+            white-space: nowrap;
+            margin-right: 6px;
+        }
+
+        .subheader-blank {
+            flex: 1;
+            border-bottom: 1px solid #000;
+            line-height: 1.5;
+        }
+
+
         .content {
             font-size: 11px;
             line-height: 1.8;
         }
+
         .section-title {
-            font-weight: bold;
             margin-top: 15px;
             margin-bottom: 10px;
         }
+
         .section-content {
             margin: 10px 0;
             padding: 0 10px;
         }
+
         .section-content p {
             margin: 5px 0;
         }
+
         .info-row {
             display: grid;
-            grid-template-columns: 180px 1fr;
-            margin: 5px 0;
+            grid-template-columns: 25px 150px 10px 1fr;
+            margin: 3px 0;
         }
-        .info-label {
-            font-weight: bold;
+
+        
+        .info-colon {
+            text-align: left;
         }
-        .info-value {
-            margin-left: 10px;
-        }
+
+        .info-value {}
+
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin: 15px 0;
         }
+
         th {
             border: 1px solid #000;
             padding: 8px;
@@ -89,49 +131,53 @@
             background: #f0f0f0;
             font-size: 10px;
         }
+
         td {
             border: 1px solid #000;
             padding: 8px;
             font-size: 10px;
         }
+
         .text-right {
             text-align: right;
         }
+
         .signature-section {
             margin-top: 30px;
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 30px;
         }
+
         .signature-item {
-            text-align: left;
+            text-align: center;
         }
+
         .signature-label {
             font-weight: bold;
-            margin-bottom: 50px;
+            margin-bottom: 90px;
             font-size: 11px;
-        }
-        .signature-line {
-            border-top: 1px solid #000;
-            margin-bottom: 5px;
-            height: 30px;
         }
         .signature-name {
             font-size: 10px;
             margin-top: 3px;
         }
+
         .date-section {
             margin-top: 20px;
             text-align: center;
             font-size: 10px;
         }
+
         .date-section p {
             margin: 3px 0;
         }
+
         .print-button {
             text-align: right;
             margin-top: 20px;
         }
+
         @media print {
             .print-button {
                 display: none;
@@ -139,53 +185,79 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- Logo -->
         <div class="logo-section">
-            <p style="font-weight: bold; color: #0066cc;">PLN</p>
-            <p style="font-size: 9px;">Icon Plus</p>
-        </div>
+            <div class="logo-section">
+                <img src="{{ asset('Picture1.png') }}" alt="GSB Logo">
+            </div>
+        </div><br>
 
         <!-- Header -->
         <div class="header">
             BERITA ACARA SERAH TERIMA
-        </div>
+        </div><br>
 
         <!-- Subheader -->
         <div class="subheader">
-            <p>Pada Hari ini, Rabu Tanggal Lima bulan Februari Tahun Dua Ribu Dua Puluh Lima kami yang bertanda tangan dibawah ini :</p>
+            <div class="subheader-line">
+                <span class="subheader-text">Pada Hari ini</span>
+                <span class="subheader-blank"></span>
+            </div>
+            <p>kami yang bertanda tangan dibawah ini :</p>
         </div>
 
         <!-- Content -->
         <div class="content">
             <!-- Pihak I -->
-            <div class="section-title">I. Nama</div>
             <div class="section-content">
                 <div class="info-row">
+                    <div class="info-no">I.</div>
                     <div class="info-label">Nama</div>
-                    <div class="info-value">: Radintha Anka Arsyianiya</div>
+                    <div class="info-colon">:</div>
+                    <div class="info-value"></div>
+                    {{-- atau {{ $penawaran->nama_pic ?? '' }} --}}
                 </div>
                 <div class="info-row">
+                    <div class="info-no"></div>
                     <div class="info-label">Jabatan</div>
-                    <div class="info-value">: Koordinator</div>
+                    <div class="info-colon">:</div>
+                    <div class="info-value">Koordinator</div>
                 </div>
                 <div class="info-row">
+                    <div class="info-no"></div>
                     <div class="info-label">Nama Mitra</div>
-                    <div class="info-value">: CV Gundara Solusi Bersama</div>
+                    <div class="info-colon">:</div>
+                    <div class="info-value">CV Gundara Solusi Bersama</div>
                 </div>
             </div>
+
 
             <!-- Pihak II -->
-            <div class="section-title">II. Telah melakukan serah terima material FOC dengan rincian sebagai berikut :</div>
+            <div class="section-title">telah melakukan serah terima material FOC dengan rincian sebagai berikut :</div>
             <div class="section-content">
-                <p style="font-weight: bold;">Nomor PA : A131401003667/TER</p>
-                <p style="font-weight: bold;">Nama User : DINAS KOMUNIKASI DAN INFORMATIKA PROVINSI JAWA TENGAH(MURALHARIO KUNDURAN BLORA)</p>
-            </div>
+                <div class="info-row">
+                    <div class="info-no"></div>
+                    <div class="info-label">1. Nomor PA</div>
+                    <div class="info-colon">:</div>
+                    <div class="info-value"></div>
+                    {{-- atau {{ $penawaran->nomor_pa ?? '' }} --}}
+                </div>
+                <div class="info-row">
+                    <div class="info-no"></div>
+                    <div class="info-label">2. Nama User</div>
+                    <div class="info-colon">:</div>
+                    <div class="info-value">
+                        {{ $penawaran->client->nama ?? 'N/A' }}
+                    </div>
+                </div>
+            </div><br>
 
             <!-- Material Table -->
-            <div class="section-title">Lampiran Material</div>
-            <table>
+            <div class="section-title" style="text-align: center;"><strong>Lampiran Material</strong></div>
+               <table style="text-align: center">
                 <thead>
                     <tr>
                         <th>No</th>
@@ -196,43 +268,29 @@
                 </thead>
                 <tbody>
                     @forelse($penawaran->items as $index => $item)
-                    <tr>
-                        <td>{{ $index + 1 }}</td>
-                        <td class="text-right">{{ $item->jumlah }}</td>
-                        <td class="text-right">{{ $item->jumlah }}</td>
-                        <td class="text-right">0</td>
-                    </tr>
+                        <tr>
+                            <td>{{ $index + 1 }}</td>
+                            <td class="text-center">{{ $item->jumlah }}</td>
+                            <td class="text-center">{{ $item->jumlah }}</td>
+                            <td class="text-center">0</td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td colspan="4" class="text-right">Tidak ada item</td>
-                    </tr>
+                        <tr>
+                            <td colspan="4" class="text-right">Tidak ada item</td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
-
-            <!-- Footer Content -->
-            <p style="margin-top: 20px;">Dengan ini dinyatakan bahwa material yang diserahkan dalam kondisi baik dan telah diterima oleh kedua belah pihak.</p>
-
             <!-- Signature Section -->
             <div class="signature-section">
                 <div class="signature-item">
                     <div class="signature-label">Tim Gudang,</div>
-                    <div class="signature-line"></div>
-                    <div class="signature-name">(...........................)</div>
+                    <div class="signature-name">(................................................................)</div>
                 </div>
                 <div class="signature-item">
                     <div class="signature-label">Tim Mitra,</div>
-                    <div class="signature-line"></div>
-                    <div class="signature-name">(Radintha Anka)</div>
+                    <div class="signature-name">(................................................................)</div>
                 </div>
-            </div>
-
-            <!-- Date Section -->
-            <div class="date-section">
-                <p style="margin-top: 30px;"><strong>Semarang, {{ $penawaran->tanggal->format('d F Y') }}</strong></p>
-                <p style="margin-top: 10px;"><strong>CV. GUNDARA SOLUSI BERSAMA</strong></p>
-                <p><strong>PT INDOWIN ENGINEERING INDONESIA</strong></p>
-                <p>SBUR JAWA BAGIAN TENGAH</p>
             </div>
         </div>
     </div>
@@ -244,4 +302,5 @@
         </button>
     </div>
 </body>
+
 </html>

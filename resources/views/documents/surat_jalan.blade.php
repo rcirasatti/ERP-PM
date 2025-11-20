@@ -117,6 +117,8 @@
 
 .do-number p {
     margin: 2px 0;
+    width: 230px;   
+
 }
 
 .do-number .label {
@@ -222,12 +224,12 @@
                 </div>
                 <div class="do-number">
                     <p>
-                        <span class="label">DO No</span> :
-                        <strong>{{ $penawaran->no_penawaran ?? '-' }}</strong>
+                        <span class="label">DO No</span> : 
+                        <strong>                         </strong>
                     </p>
                     <p>
                         <span class="label">Delivery Date</span> :
-                        <strong>{{ $penawaran->tgl_kirim ?? '' }}</strong>
+                        <strong></strong>
                     </p>
                 </div>
 
