@@ -10,12 +10,6 @@
             <p class="text-gray-600 mt-2">Kelola data item penawaran (barang, jasa, tol) dan harga dari supplier</p>
         </div>
         <div class="flex gap-3">
-            <a href="{{ route('material.export-template') }}" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium flex items-center space-x-2" title="Unduh template CSV">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                </svg>
-                <span>Unduh Template</span>
-            </a>
             <button onclick="openImportModal()" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium flex items-center space-x-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -238,12 +232,13 @@
 
     <script>
         function openImportModal() {
-            document.getElementById('importModal').classList.remove('hidden');
+            document.getElementById('importModal').style.display = 'flex';
         }
 
         function closeImportModal() {
-            document.getElementById('importModal').classList.add('hidden');
+            document.getElementById('importModal').style.display = 'none';
             document.getElementById('importForm').reset();
+            document.getElementById('fileName').textContent = '';
         }
 
         document.getElementById('searchInput')?.addEventListener('keyup', function() {
@@ -284,86 +279,7 @@
                 closeImportModal();
             }
         });
-    </script>
 
-    <!-- Import Modal -->
-    <div id="importModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
-            <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 flex items-center justify-between rounded-t-lg">
-                <h3 class="text-xl font-semibold text-white flex items-center space-x-2">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                    </svg>
-                    <span>Import Material dari CSV</span>
-                </h3>
-                <button onclick="closeImportModal()" class="text-white hover:text-gray-200 transition">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <div class="p-6">
-                <form id="importForm" action="{{ route('material.import') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    
-                    <div class="mb-4">
-                        <label for="file" class="block text-sm font-medium text-gray-700 mb-2">
-                            Pilih File CSV
-                        </label>
-                        <div class="relative">
-                            <input 
-                                type="file" 
-                                id="file" 
-                                name="file" 
-                                accept=".csv,.txt" 
-                                required
-                                class="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg focus:outline-none focus:border-purple-600 transition cursor-pointer"
-                                onchange="updateFileName(this)"
-                            >
-                            <p class="mt-2 text-sm text-gray-600">
-                                Format: CSV atau TXT (max 5MB)<br>
-                                <span class="text-purple-600 font-medium">Gunakan template yang disediakan</span>
-                            </p>
-                        </div>
-                        <p id="fileName" class="mt-2 text-sm text-gray-700"></p>
-                    </div>
-
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                        <h4 class="font-semibold text-blue-900 text-sm mb-2">Format CSV:</h4>
-                        <p class="text-xs text-blue-800">No,Kategori,Item,Satuan,Supplier (Hanya BARANG),Act Number,Harga,Qty,Jumlah</p>
-                        <p class="text-xs text-blue-700 mt-2">
-                            <strong>Kategori:</strong> BARANG, JASA, TOL, atau LAINNYA<br>
-                            <strong>Supplier:</strong> Hanya untuk BARANG (kosongkan untuk JASA/TOL/LAINNYA)<br>
-                            <strong>Harga:</strong> Angka tanpa simbol (contoh: 50000)<br>
-                            <strong>Qty:</strong> Untuk BARANG masuk stok, JASA/TOL/LAINNYA otomatis 0
-                        </p>
-                    </div>
-
-                    <div class="flex gap-3">
-                        <button 
-                            type="submit" 
-                            class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium flex items-center justify-center space-x-2"
-                        >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                            </svg>
-                            <span>Import</span>
-                        </button>
-                        <button 
-                            type="button" 
-                            onclick="closeImportModal()" 
-                            class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition font-medium"
-                        >
-                            Batal
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <script>
         function updateFileName(input) {
             const fileName = document.getElementById('fileName');
             if (input.files && input.files[0]) {
@@ -374,5 +290,71 @@
                 fileName.textContent = '';
             }
         }
+    </script>
+
+    <!-- Import Modal -->
+    <div id="importModal" class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center" style="display: none;">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-6">Import Material dari CSV</h3>
+
+            <form id="importForm" action="{{ route('material.import') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                
+                <div class="mb-6">
+                    <label for="file" class="block text-sm font-medium text-gray-700 mb-2">
+                        Pilih File CSV
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="file" 
+                            id="file" 
+                            name="file" 
+                            accept=".csv,.txt" 
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 transition cursor-pointer"
+                            onchange="updateFileName(this)"
+                        >
+                        <p id="fileName" class="mt-2 text-sm text-gray-700"></p>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <h4 class="font-semibold text-blue-900 text-sm mb-2">Format CSV:</h4>
+                    <p class="text-xs text-blue-800 mb-3">No, Kategori, Item, Satuan, Supplier (Hanya BARANG), Act Number, Harga, Qty, Jumlah</p>
+                    <p class="text-xs text-blue-700 space-y-1">
+                        <span class="block"><strong>Kategori:</strong> BARANG, JASA, TOL, atau LAINNYA</span>
+                        <span class="block"><strong>Supplier:</strong> Hanya untuk BARANG (kosongkan untuk JASA/TOL/LAINNYA)</span>
+                        <span class="block"><strong>Harga:</strong> Angka tanpa simbol (contoh: 50000)</span>
+                    </p>
+                </div>
+
+                <div class="flex gap-3">
+                    <button 
+                        type="submit" 
+                        class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium"
+                    >
+                        Import
+                    </button>
+                    <button 
+                        type="button" 
+                        onclick="closeImportModal()" 
+                        class="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition font-medium"
+                    >
+                        Batal
+                    </button>
+                </div>
+
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <p class="text-sm text-gray-600 mb-3">Belum punya template?</p>
+                    <a href="{{ route('material.export-template') }}" class="inline-flex items-center justify-center w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Unduh Template CSV
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
 
 @endsection
