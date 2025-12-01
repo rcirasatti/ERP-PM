@@ -223,10 +223,14 @@
             });
 
             if (data) {
-                clone.querySelector('.material-select').value = data.material_id;
+                const materialSelect = clone.querySelector('.material-select');
+                materialSelect.value = data.material_id;
                 clone.querySelector('.jumlah-input').value = data.jumlah;
                 clone.querySelector('.harga-asli-input').value = data.harga_asli;
                 clone.querySelector('.margin-input').value = data.persentase_margin;
+                
+                // Trigger change event to update harga display
+                updateHargaAsli(materialSelect);
             }
 
             container.appendChild(clone);

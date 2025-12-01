@@ -20,10 +20,10 @@
 
             <!-- Nama Material -->
             <div>
-                <label for="deskripsi" class="block text-sm font-medium text-gray-700 mb-2">Deskripsi Item Penawaran</label>
-                <input type="text" name="deskripsi" id="deskripsi" value="{{ old('deskripsi', $material->deskripsi) }}" required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition @error('deskripsi') border-red-500 @enderror">
-                @error('deskripsi')
+                <label for="nama" class="block text-sm font-medium text-gray-700 mb-2">Nama Material</label>
+                <input type="text" name="nama" id="nama" value="{{ old('nama', $material->nama) }}" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition @error('nama') border-red-500 @enderror">
+                @error('nama')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>

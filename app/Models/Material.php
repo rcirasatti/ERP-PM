@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Material extends Model
 {
     protected $table = 'materials';
-    protected $fillable = ['supplier_id', 'nama', 'satuan', 'harga', 'type', 'track_inventory'];
+    protected $fillable = ['supplier_id', 'nama', 'act_number', 'satuan', 'harga', 'type', 'track_inventory'];
     public $timestamps = true;
     
     // Enum untuk tipe material

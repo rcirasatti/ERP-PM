@@ -80,6 +80,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('client', ClientController::class);
     Route::resource('supplier', SupplierController::class);
     Route::resource('material', MaterialController::class);
+    Route::get('material/import/template', [MaterialController::class, 'exportTemplate'])->name('material.export-template');
+    Route::post('material/import', [MaterialController::class, 'import'])->name('material.import');
     Route::resource('inventory', InventoryController::class);
     Route::get('inventory-log', [InventoryController::class, 'log'])->name('inventory.log');
 

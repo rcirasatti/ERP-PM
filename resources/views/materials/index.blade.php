@@ -9,13 +9,87 @@
             <h1 class="text-3xl font-bold text-gray-900">Item Penawaran Management</h1>
             <p class="text-gray-600 mt-2">Kelola data item penawaran (barang, jasa, tol) dan harga dari supplier</p>
         </div>
-        <a href="{{ route('material.create') }}" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center space-x-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            <span>Tambah Item Penawaran</span>
-        </a>
+        <div class="flex gap-3">
+            <a href="{{ route('material.export-template') }}" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium flex items-center space-x-2" title="Unduh template CSV">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                <span>Unduh Template</span>
+            </a>
+            <button onclick="openImportModal()" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>Import Material</span>
+            </button>
+            <a href="{{ route('material.create') }}" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>Tambah Item Penawaran</span>
+            </a>
+        </div>
     </div>
+
+    <!-- Import Success Display -->
+    @if (session('success'))
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-green-600 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                <div class="flex-1">
+                    <p class="font-semibold text-green-900">{{ session('success') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Import Warnings Display -->
+    @if (session('warning'))
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+                <div class="flex-1">
+                    <p class="font-semibold text-yellow-900 mb-2">{{ session('warning') }}</p>
+                    @php
+                        $sessionErrors = session('errors');
+                    @endphp
+                    @if (is_array($sessionErrors) && count($sessionErrors) > 0)
+                        <ul class="text-sm text-yellow-800 space-y-1">
+                            @foreach ($sessionErrors as $error)
+                                <li class="flex items-start gap-2">
+                                    <span class="text-yellow-600 mt-0.5">•</span>
+                                    <span>{{ $error }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @elseif (is_array(session('errors')) && count(session('errors')) > 0)
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-red-600 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                </svg>
+                <div class="flex-1">
+                    <h3 class="font-semibold text-red-900 mb-2">Terdapat kesalahan dalam import:</h3>
+                    <ul class="text-sm text-red-800 space-y-1">
+                        @foreach (session('errors') as $error)
+                            <li class="flex items-start gap-2">
+                                <span class="text-red-600 mt-0.5">•</span>
+                                <span>{{ $error }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <!-- KPI Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -163,6 +237,15 @@
     </div>
 
     <script>
+        function openImportModal() {
+            document.getElementById('importModal').classList.remove('hidden');
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').classList.add('hidden');
+            document.getElementById('importForm').reset();
+        }
+
         document.getElementById('searchInput')?.addEventListener('keyup', function() {
             const searchTerm = this.value.toLowerCase();
             const rows = document.querySelectorAll('.material-row');
@@ -194,5 +277,102 @@
             });
             document.getElementById('noResultsMessage').style.display = 'none';
         }
+
+        // Close modal when clicking outside
+        document.getElementById('importModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImportModal();
+            }
+        });
     </script>
+
+    <!-- Import Modal -->
+    <div id="importModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 flex items-center justify-between rounded-t-lg">
+                <h3 class="text-xl font-semibold text-white flex items-center space-x-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    <span>Import Material dari CSV</span>
+                </h3>
+                <button onclick="closeImportModal()" class="text-white hover:text-gray-200 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-6">
+                <form id="importForm" action="{{ route('material.import') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    
+                    <div class="mb-4">
+                        <label for="file" class="block text-sm font-medium text-gray-700 mb-2">
+                            Pilih File CSV
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="file" 
+                                id="file" 
+                                name="file" 
+                                accept=".csv,.txt" 
+                                required
+                                class="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg focus:outline-none focus:border-purple-600 transition cursor-pointer"
+                                onchange="updateFileName(this)"
+                            >
+                            <p class="mt-2 text-sm text-gray-600">
+                                Format: CSV atau TXT (max 5MB)<br>
+                                <span class="text-purple-600 font-medium">Gunakan template yang disediakan</span>
+                            </p>
+                        </div>
+                        <p id="fileName" class="mt-2 text-sm text-gray-700"></p>
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <h4 class="font-semibold text-blue-900 text-sm mb-2">Format CSV:</h4>
+                        <p class="text-xs text-blue-800">No,Kategori,Item,Satuan,Supplier (Hanya BARANG),Act Number,Harga,Qty,Jumlah</p>
+                        <p class="text-xs text-blue-700 mt-2">
+                            <strong>Kategori:</strong> BARANG, JASA, TOL, atau LAINNYA<br>
+                            <strong>Supplier:</strong> Hanya untuk BARANG (kosongkan untuk JASA/TOL/LAINNYA)<br>
+                            <strong>Harga:</strong> Angka tanpa simbol (contoh: 50000)<br>
+                            <strong>Qty:</strong> Untuk BARANG masuk stok, JASA/TOL/LAINNYA otomatis 0
+                        </p>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button 
+                            type="submit" 
+                            class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium flex items-center justify-center space-x-2"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            <span>Import</span>
+                        </button>
+                        <button 
+                            type="button" 
+                            onclick="closeImportModal()" 
+                            class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition font-medium"
+                        >
+                            Batal
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateFileName(input) {
+            const fileName = document.getElementById('fileName');
+            if (input.files && input.files[0]) {
+                fileName.textContent = '✓ File dipilih: ' + input.files[0].name;
+                fileName.classList.remove('text-red-600');
+                fileName.classList.add('text-green-600');
+            } else {
+                fileName.textContent = '';
+            }
+        }
+
 @endsection
