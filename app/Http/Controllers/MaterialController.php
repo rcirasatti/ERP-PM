@@ -131,7 +131,7 @@ class MaterialController extends Controller
      */
     public function exportTemplate()
     {
-        $headers = ['No', 'Kategori', 'Item', 'Satuan', 'Supplier', 'Act Number', 'Harga', 'Qty', 'Jumlah'];
+        $headers = ['No', 'Kategori', 'Item', 'Satuan', 'Supplier', 'Harga', 'Qty', 'Jumlah'];
         
         $callback = function() use ($headers) {
             $file = fopen('php://output', 'w');
@@ -139,10 +139,10 @@ class MaterialController extends Controller
             
             // Add sample rows with examples
             $samples = [
-                ['1', 'BARANG', 'Besi Plat 10mm', 'Pcs', 'PT Besi Makmur', 'ACT001', '50000', '10', '500000'],
-                ['2', 'BARANG', 'Semen Putih', 'Kg', 'PT Semen Indonesia', '', '25000', '100', '2500000'],
-                ['3', 'JASA', 'Jasa Pemasangan', 'Jam', '', '', '150000', '0', '0'],
-                ['4', 'TOL', 'Tol Jakarta-Surabaya', 'Pcs', '', '', '500000', '0', '0'],
+                ['1', 'BARANG', 'Besi Plat 10mm', 'Pcs', 'PT Besi Makmur', '50000', '10', '500000'],
+                ['2', 'BARANG', 'Semen Putih', 'Kg', 'PT Semen Indonesia', '25000', '100', '2500000'],
+                ['3', 'JASA', 'Jasa Pemasangan', 'Jam', '', '150000', '0', '0'],
+                ['4', 'TOL', 'Tol Jakarta-Surabaya', 'Pcs', '', '500000', '0', '0'],
             ];
             
             foreach ($samples as $row) {
@@ -188,8 +188,8 @@ class MaterialController extends Controller
                 
                 try {
                     // Ensure we have enough columns
-                    if (count($data) < 9) {
-                        throw new \Exception("Jumlah kolom tidak sesuai (minimum 9 kolom diperlukan)");
+                    if (count($data) < 8) {
+                        throw new \Exception("Jumlah kolom tidak sesuai (minimum 8 kolom diperlukan)");
                     }
                     
                     // Map CSV columns to variables
@@ -198,10 +198,9 @@ class MaterialController extends Controller
                     $item = trim($data[2] ?? '');
                     $satuan = trim($data[3] ?? '');
                     $supplier_name = trim($data[4] ?? ''); // Hanya untuk BARANG
-                    $actNumber = trim($data[5] ?? '');
-                    $harga = $data[6] ?? 0;
-                    $qty = $data[7] ?? 0;
-                    $jumlah = $data[8] ?? 0;
+                    $harga = $data[5] ?? 0;
+                    $qty = $data[6] ?? 0;
+                    $jumlah = $data[7] ?? 0;
                     
                     // Debug: log raw data if kategori empty
                     if (empty($kategori)) {
@@ -271,24 +270,14 @@ class MaterialController extends Controller
                         'supplier_id' => $supplier_id,
                     ];
                     
-                    // Add act_number if provided
-                    if (!empty($actNumber)) {
-                        $materialData['act_number'] = $actNumber;
-                    }
-                    
-                    // Check if material already exists by act_number or by name & supplier
-                    $existing = null;
-                    if (!empty($actNumber)) {
-                        $existing = Material::where('act_number', $actNumber)->first();
+                    // Check if material already exists by name & supplier
+                    $query = Material::where('nama', $item);
+                    if ($supplier_id) {
+                        $query->where('supplier_id', $supplier_id);
                     } else {
-                        $query = Material::where('nama', $item);
-                        if ($supplier_id) {
-                            $query->where('supplier_id', $supplier_id);
-                        } else {
-                            $query->whereNull('supplier_id');
-                        }
-                        $existing = $query->first();
+                        $query->whereNull('supplier_id');
                     }
+                    $existing = $query->first();
                     
                     if ($existing) {
                         // Update existing material
