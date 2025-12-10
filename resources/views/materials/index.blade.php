@@ -297,7 +297,7 @@
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
             <h3 class="text-lg font-bold text-gray-900 mb-6">Import Material dari CSV</h3>
 
-            <form id="importForm" action="{{ route('material.import') }}" method="POST" enctype="multipart/form-data">
+            <form id="importForm" enctype="multipart/form-data">
                 @csrf
                 
                 <div class="mb-6">
@@ -320,7 +320,7 @@
 
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                     <h4 class="font-semibold text-blue-900 text-sm mb-2">Format CSV:</h4>
-                    <p class="text-xs text-blue-800 mb-3">No, Kategori, Item, Satuan, Supplier (Hanya BARANG), Act Number, Harga, Qty, Jumlah</p>
+                    <p class="text-xs text-blue-800 mb-3">No, Kategori, Item, Satuan, Supplier (Hanya BARANG), Harga, Qty, Jumlah</p>
                     <p class="text-xs text-blue-700 space-y-1">
                         <span class="block"><strong>Kategori:</strong> BARANG, JASA, TOL, atau LAINNYA</span>
                         <span class="block"><strong>Supplier:</strong> Hanya untuk BARANG (kosongkan untuk JASA/TOL/LAINNYA)</span>
@@ -330,10 +330,11 @@
 
                 <div class="flex gap-3">
                     <button 
-                        type="submit" 
-                        class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium"
+                        type="button" 
+                        onclick="previewImportFile()"
+                        class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
                     >
-                        Import
+                        Preview
                     </button>
                     <button 
                         type="button" 
@@ -356,5 +357,323 @@
             </form>
         </div>
     </div>
+
+    <!-- Confirmation Modal for Duplicates -->
+    <div id="confirmModal" class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center" style="display: none;">
+        <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Preview Import - Konfirmasi Perubahan</h3>
+            
+            <div id="confirmContent" class="space-y-6">
+                <!-- Akan diisi secara dinamis oleh JavaScript -->
+            </div>
+
+            <div class="flex gap-3 mt-6 border-t border-gray-200 pt-6">
+                <button 
+                    type="button" 
+                    onclick="confirmImport()"
+                    class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
+                >
+                    Lanjutkan Import
+                </button>
+                <button 
+                    type="button" 
+                    onclick="closeConfirmModal()" 
+                    class="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition font-medium"
+                >
+                    Batal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let previewData = null;
+
+        function openImportModal() {
+            document.getElementById('importModal').style.display = 'flex';
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').style.display = 'none';
+            document.getElementById('importForm').reset();
+            document.getElementById('fileName').textContent = '';
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').style.display = 'none';
+            previewData = null;
+        }
+
+        function updateFileName(input) {
+            const fileName = document.getElementById('fileName');
+            if (input.files && input.files[0]) {
+                fileName.textContent = '✓ File dipilih: ' + input.files[0].name;
+                fileName.classList.remove('text-red-600');
+                fileName.classList.add('text-green-600');
+            } else {
+                fileName.textContent = '';
+            }
+        }
+
+        async function previewImportFile() {
+            const fileInput = document.getElementById('file');
+            if (!fileInput.files || !fileInput.files[0]) {
+                alert('Pilih file terlebih dahulu');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('_token', document.querySelector('input[name="_token"]').value);
+
+            try {
+                const response = await fetch('{{ route("material.import-preview") }}', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert('Error: ' + (data.message || 'Terjadi kesalahan'));
+                    return;
+                }
+
+                previewData = {
+                    file: fileInput.files[0],
+                    preview: data
+                };
+
+                showConfirmModal(data);
+                closeImportModal();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function showConfirmModal(data) {
+            const content = document.getElementById('confirmContent');
+            let html = '';
+
+            // Tampilkan error jika ada
+            if (data.errors && data.errors.length > 0) {
+                html += `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-red-900 mb-2">⚠️ Ada kesalahan:</h4>
+                        <ul class="text-sm text-red-800 space-y-1">
+                            ${data.errors.map(err => `<li>• ${err}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Tampilkan item yang duplikat
+            if (data.duplicates && data.duplicates.length > 0) {
+                html += `
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-yellow-900 mb-3">🔄 Item yang Sudah Ada (akan diproses)</h4>
+                        <div class="space-y-3">
+                            ${data.duplicates.map(dup => {
+                                let priceAlert = '';
+                                if (dup.priceChanged) {
+                                    priceAlert = `
+                                        <div class="bg-orange-100 border-l-4 border-orange-500 p-2 mt-2">
+                                            <span class="text-xs font-semibold text-orange-900">💰 PERUBAHAN HARGA:</span><br/>
+                                            <span class="text-xs text-orange-800">
+                                                Dari: Rp ${Number(dup.oldPrice).toLocaleString('id-ID')} 
+                                                → Ke: Rp ${Number(dup.newPrice).toLocaleString('id-ID')}
+                                            </span>
+                                        </div>
+                                    `;
+                                }
+                                return `
+                                    <div class="bg-white border border-yellow-300 rounded p-3">
+                                        <div class="font-medium text-gray-900">${dup.nama}</div>
+                                        <div class="text-xs text-gray-600 mt-1">Supplier: ${dup.supplier}</div>
+                                        ${dup.addStok > 0 ? `
+                                            <div class="bg-blue-100 p-2 mt-2 rounded">
+                                                <span class="text-xs font-semibold text-blue-900">📦 STOK AKAN DITAMBAHKAN:</span><br/>
+                                                <span class="text-xs text-blue-800">
+                                                    Stok sekarang: <strong>${Number(dup.currentStok).toLocaleString('id-ID')}</strong><br/>
+                                                    Tambah: <strong>+ ${Number(dup.addStok).toLocaleString('id-ID')}</strong><br/>
+                                                    Total baru: <strong>${Number(dup.newStok).toLocaleString('id-ID')}</strong>
+                                                </span>
+                                            </div>
+                                        ` : ''}
+                                        ${priceAlert}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Tampilkan item baru
+            if (data.newItems && data.newItems.length > 0) {
+                html += `
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-green-900 mb-3">✨ Item Baru yang Akan Ditambahkan</h4>
+                        <div class="space-y-2">
+                            ${data.newItems.map(item => `
+                                <div class="bg-white border border-green-300 rounded p-2 text-sm">
+                                    <strong>${item.nama}</strong> (${item.supplier})
+                                    ${item.qty > 0 ? ` - Qty: ${Number(item.qty).toLocaleString('id-ID')}` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Summary
+            html += `
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-gray-900 mb-2">📊 Summary</h4>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>• Duplikat ditemukan: <strong>${data.totalDuplicates}</strong></li>
+                        <li>• Item baru: <strong>${data.totalNew}</strong></li>
+                        ${data.errors && data.errors.length > 0 ? `<li>• Error: <strong>${data.errors.length}</strong></li>` : ''}
+                    </ul>
+                </div>
+            `;
+
+            content.innerHTML = html;
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+
+        async function confirmImport() {
+            if (!previewData || !previewData.file) {
+                alert('File tidak ditemukan');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', previewData.file);
+            formData.append('_token', document.querySelector('input[name="_token"]').value);
+
+            try {
+                const response = await fetch('{{ route("material.import") }}', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Import gagal');
+                }
+
+                // Show success modal with detailed results
+                showSuccessModal(data);
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function showSuccessModal(data) {
+            closeConfirmModal();
+            
+            const stats = data.stats;
+            let itemsHtml = '';
+
+            // Group items by type
+            const baruItems = data.items.filter(item => item.type === 'baru');
+            const stokItems = data.items.filter(item => item.type === 'stok_ditambah');
+
+            if (baruItems.length > 0) {
+                itemsHtml += `
+                    <div class="space-y-2 mb-3">
+                        <h4 class="font-semibold text-green-900">✨ Item Baru Ditambahkan (${baruItems.length}):</h4>
+                        <ul class="text-sm text-green-800 space-y-1 max-h-40 overflow-y-auto">
+                            ${baruItems.map(item => `
+                                <li class="flex items-center gap-2">
+                                    <span class="text-green-600">✓</span>
+                                    <span>${item.nama}${item.qty > 0 ? ` (Qty: ${Number(item.qty).toLocaleString('id-ID')})` : ''}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            if (stokItems.length > 0) {
+                itemsHtml += `
+                    <div class="space-y-2">
+                        <h4 class="font-semibold text-blue-900">📦 Stok Ditambahkan (${stokItems.length}):</h4>
+                        <ul class="text-sm text-blue-800 space-y-1 max-h-40 overflow-y-auto">
+                            ${stokItems.map(item => `
+                                <li class="flex items-center gap-2">
+                                    <span class="text-blue-600">+</span>
+                                    <span>${item.nama} (+${Number(item.qty).toLocaleString('id-ID')})</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            const successHTML = `
+                <div class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+                    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 p-8">
+                        <div class="text-center mb-6">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                                <svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-2">Import Berhasil! 🎉</h3>
+                            <p class="text-gray-600">Semua data telah diproses dengan sukses</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="bg-blue-50 rounded-lg p-4 text-center border border-blue-200">
+                                <div class="text-3xl font-bold text-blue-600">${stats.totalProcessed}</div>
+                                <div class="text-xs text-blue-800 mt-1">Total Diproses</div>
+                            </div>
+                            <div class="bg-green-50 rounded-lg p-4 text-center border border-green-200">
+                                <div class="text-3xl font-bold text-green-600">${stats.newItems}</div>
+                                <div class="text-xs text-green-800 mt-1">Item Baru</div>
+                            </div>
+                            <div class="bg-cyan-50 rounded-lg p-4 text-center border border-cyan-200">
+                                <div class="text-3xl font-bold text-cyan-600">${stats.stokAdded}</div>
+                                <div class="text-xs text-cyan-800 mt-1">Stok Ditambahkan</div>
+                            </div>
+                            <div class="bg-purple-50 rounded-lg p-4 text-center border border-purple-200">
+                                <div class="text-3xl font-bold text-purple-600">${stats.pricesUpdated}</div>
+                                <div class="text-xs text-purple-800 mt-1">Harga Diperbarui</div>
+                            </div>
+                        </div>
+
+                        ${itemsHtml}
+
+                        <div class="border-t border-gray-200 pt-6 mt-6">
+                            <button 
+                                type="button" 
+                                onclick="location.reload()"
+                                class="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
+                            >
+                                ✓ Selesai - Refresh Halaman
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', successHTML);
+        }
+
+        document.getElementById('importModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImportModal();
+            }
+        });
+
+        document.getElementById('confirmModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeConfirmModal();
+            }
+        });
+    </script>
 
 @endsection

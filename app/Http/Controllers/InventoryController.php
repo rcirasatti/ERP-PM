@@ -15,7 +15,18 @@ class InventoryController extends Controller
     public function index()
     {
         $inventories = Inventory::with('material')->get();
-        return view('inventories.index', compact('inventories'));
+        
+        // Hitung material BARANG tanpa stok (tidak punya inventory record atau stok = 0)
+        $materialsWithoutStock = Material::where('type', Material::TYPE_BARANG)
+            ->where('track_inventory', true)
+            ->leftJoin('inventories', 'materials.id', '=', 'inventories.material_id')
+            ->where(function ($q) {
+                $q->whereNull('inventories.id')
+                  ->orWhere('inventories.stok', 0);
+            })
+            ->count();
+        
+        return view('inventories.index', compact('inventories', 'materialsWithoutStock'));
     }
 
     /**

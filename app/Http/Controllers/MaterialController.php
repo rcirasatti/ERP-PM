@@ -159,6 +159,134 @@ class MaterialController extends Controller
     }
 
     /**
+     * Preview import CSV file to detect duplicates and price changes
+     */
+    public function previewImport(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt|max:5120'
+        ]);
+
+        $file = $request->file('file');
+        $path = $file->getRealPath();
+        
+        $duplicates = [];
+        $priceChanges = [];
+        $newItems = [];
+        $errors = [];
+        $rowNumber = 1;
+        
+        if (($handle = fopen($path, 'r')) !== FALSE) {
+            // Skip header row
+            $header = fgetcsv($handle);
+            
+            while (($data = fgetcsv($handle)) !== FALSE) {
+                $rowNumber++;
+                
+                // Skip empty rows
+                if (empty(array_filter($data))) {
+                    continue;
+                }
+                
+                try {
+                    if (count($data) < 8) {
+                        throw new \Exception("Jumlah kolom tidak sesuai");
+                    }
+                    
+                    $kategori = trim($data[1] ?? '');
+                    $item = trim($data[2] ?? '');
+                    $satuan = trim($data[3] ?? '');
+                    $supplier_name = trim($data[4] ?? '');
+                    $harga = $data[5] ?? 0;
+                    $qty = $data[6] ?? 0;
+                    
+                    if (empty($kategori) || empty($item) || empty($satuan) || empty($harga)) {
+                        throw new \Exception("Data tidak lengkap");
+                    }
+                    
+                    $kategori = strtoupper($kategori);
+                    $validTypes = array_keys(Material::getTypes());
+                    if (!in_array($kategori, $validTypes)) {
+                        throw new \Exception("Kategori '{$kategori}' tidak valid");
+                    }
+                    
+                    if (!is_numeric($harga) || $harga < 0) {
+                        throw new \Exception("Harga harus angka positif");
+                    }
+                    
+                    // Find or create supplier
+                    $supplier_id = null;
+                    if ($kategori === Material::TYPE_BARANG && !empty($supplier_name)) {
+                        $supplier = Supplier::where('nama', $supplier_name)->first();
+                        if (!$supplier) {
+                            $supplier = Supplier::create([
+                                'nama' => $supplier_name,
+                                'kontak' => '',
+                                'email' => '',
+                                'telepon' => '',
+                                'alamat' => '',
+                            ]);
+                        }
+                        $supplier_id = $supplier->id;
+                    }
+                    
+                    // Check if material exists
+                    $query = Material::where('nama', $item);
+                    if ($supplier_id) {
+                        $query->where('supplier_id', $supplier_id);
+                    } else {
+                        $query->whereNull('supplier_id');
+                    }
+                    $existing = $query->first();
+                    
+                    if ($existing) {
+                        $qtyValue = ($kategori === Material::TYPE_BARANG && !empty($qty)) ? (float) $qty : 0;
+                        $inventory = $existing->inventory;
+                        $currentStok = $inventory?->stok ?? 0;
+                        $newStok = $currentStok + $qtyValue;
+                        
+                        $priceChanged = $existing->harga != $harga;
+                        
+                        $duplicates[] = [
+                            'row' => $rowNumber,
+                            'nama' => $item,
+                            'supplier' => $supplier_name ?: 'Tidak ada',
+                            'oldPrice' => $existing->harga,
+                            'newPrice' => (float) $harga,
+                            'priceChanged' => $priceChanged,
+                            'currentStok' => $currentStok,
+                            'addStok' => $qtyValue,
+                            'newStok' => $newStok,
+                            'materialId' => $existing->id,
+                        ];
+                    } else {
+                        $newItems[] = [
+                            'row' => $rowNumber,
+                            'nama' => $item,
+                            'supplier' => $supplier_name ?: 'Tidak ada',
+                            'harga' => (float) $harga,
+                            'qty' => ($kategori === Material::TYPE_BARANG && !empty($qty)) ? (float) $qty : 0,
+                        ];
+                    }
+                    
+                } catch (\Exception $e) {
+                    $errors[] = "Baris {$rowNumber}: " . $e->getMessage();
+                }
+            }
+            
+            fclose($handle);
+        }
+        
+        return response()->json([
+            'duplicates' => $duplicates,
+            'newItems' => $newItems,
+            'errors' => $errors,
+            'totalDuplicates' => count($duplicates),
+            'totalNew' => count($newItems),
+        ]);
+    }
+
+    /**
      * Import materials from CSV file
      */
     public function import(Request $request)
@@ -172,7 +300,11 @@ class MaterialController extends Controller
         
         $errors = [];
         $success = 0;
+        $newItemsAdded = 0;
+        $stokAdded = 0;
+        $pricesUpdated = 0;
         $rowNumber = 1;
+        $importedItems = [];
         
         if (($handle = fopen($path, 'r')) !== FALSE) {
             // Skip header row
@@ -197,15 +329,10 @@ class MaterialController extends Controller
                     $kategori = trim($data[1] ?? '');
                     $item = trim($data[2] ?? '');
                     $satuan = trim($data[3] ?? '');
-                    $supplier_name = trim($data[4] ?? ''); // Hanya untuk BARANG
+                    $supplier_name = trim($data[4] ?? '');
                     $harga = $data[5] ?? 0;
                     $qty = $data[6] ?? 0;
                     $jumlah = $data[7] ?? 0;
-                    
-                    // Debug: log raw data if kategori empty
-                    if (empty($kategori)) {
-                        Log::warning("Row {$rowNumber} has empty kategori. Raw data: " . json_encode($data));
-                    }
                     
                     // Validation
                     if (empty($kategori)) {
@@ -232,7 +359,6 @@ class MaterialController extends Controller
                     }
                     
                     // Normalize qty based on category
-                    // Hanya BARANG yang bisa memiliki stok, sisanya qty = 0
                     $qtyValue = 0;
                     if ($kategori === Material::TYPE_BARANG && !empty($qty)) {
                         $qtyValue = (float) $qty;
@@ -256,7 +382,6 @@ class MaterialController extends Controller
                         }
                         $supplier_id = $supplier->id;
                     } else if ($kategori !== Material::TYPE_BARANG && !empty($supplier_name)) {
-                        // Warn user bahwa supplier untuk non-BARANG diabaikan
                         throw new \Exception("Supplier '{$supplier_name}' diabaikan karena kategori {$kategori} tidak memerlukan supplier");
                     }
                     
@@ -280,23 +405,40 @@ class MaterialController extends Controller
                     $existing = $query->first();
                     
                     if ($existing) {
-                        // Update existing material
-                        $existing->update($materialData);
+                        // Check if harga berubah
+                        $priceChanged = $existing->harga != $materialData['harga'];
+                        
+                        // Update material dengan harga baru jika berbeda
+                        if ($priceChanged) {
+                            $existing->update($materialData);
+                            $pricesUpdated++;
+                        }
+                        
                         $material = $existing;
+                        $isNew = false;
                     } else {
                         // Create new material
                         $material = Material::create($materialData);
+                        $newItemsAdded++;
+                        $isNew = true;
                     }
                     
                     // Handle inventory for BARANG type
                     if ($kategori === Material::TYPE_BARANG) {
-                        // Check if inventory record exists
                         $inventory = Inventory::where('material_id', $material->id)->first();
                         
                         if ($inventory) {
-                            // Update stok jika qty lebih besar dari 0
+                            // TAMBAHKAN stok, jangan replace
                             if ($qtyValue > 0) {
-                                $inventory->update(['stok' => $qtyValue]);
+                                $newStok = $inventory->stok + $qtyValue;
+                                $inventory->update(['stok' => $newStok]);
+                                $stokAdded++;
+                                
+                                $importedItems[] = [
+                                    'nama' => $item,
+                                    'type' => 'stok_ditambah',
+                                    'qty' => $qtyValue,
+                                ];
                             }
                         } else if ($qtyValue > 0) {
                             // Create new inventory only if qty > 0
@@ -304,6 +446,28 @@ class MaterialController extends Controller
                                 'material_id' => $material->id,
                                 'stok' => $qtyValue,
                             ]);
+                            
+                            if ($isNew) {
+                                $importedItems[] = [
+                                    'nama' => $item,
+                                    'type' => 'baru',
+                                    'qty' => $qtyValue,
+                                ];
+                            }
+                        } elseif ($isNew && $qtyValue == 0) {
+                            $importedItems[] = [
+                                'nama' => $item,
+                                'type' => 'baru',
+                                'qty' => 0,
+                            ];
+                        }
+                    } else {
+                        if ($isNew) {
+                            $importedItems[] = [
+                                'nama' => $item,
+                                'type' => 'baru',
+                                'qty' => 0,
+                            ];
                         }
                     }
                     
@@ -317,16 +481,18 @@ class MaterialController extends Controller
             fclose($handle);
         }
         
-        $message = "Import selesai! {$success} material berhasil diproses.";
-        
-        if (!empty($errors)) {
-            return back()->with([
-                'warning' => $message,
-                'errors' => $errors
-            ]);
-        }
-        
-        return back()->with('success', $message);
+        // Return JSON response
+        return response()->json([
+            'success' => true,
+            'stats' => [
+                'totalProcessed' => $success,
+                'newItems' => $newItemsAdded,
+                'stokAdded' => $stokAdded,
+                'pricesUpdated' => $pricesUpdated,
+            ],
+            'items' => $importedItems,
+            'errors' => $errors,
+        ]);
     }
 }
 

@@ -39,10 +39,10 @@
             <p class="text-xs text-green-600 mt-1">Unit keseluruhan</p>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
-            <p class="text-gray-600 text-sm">Rata-rata Stok</p>
-            <p class="text-3xl font-bold text-gray-900 mt-2">{{ $inventories->count() > 0 ? round($inventories->avg('stok'), 2) : 0 }}</p>
-            <p class="text-xs text-blue-600 mt-1">Per item</p>
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
+            <p class="text-gray-600 text-sm">Barang Tanpa Stok</p>
+            <p class="text-3xl font-bold text-red-600 mt-2">{{ $materialsWithoutStock }}</p>
+            <p class="text-xs text-red-600 mt-1">Material BARANG dengan stok 0</p>
         </div>
     </div>
 
@@ -78,6 +78,15 @@
                         <tr class="hover:bg-gray-50 transition inventory-row">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="font-medium text-gray-900">{{ $inventory->material->nama ?? 'N/A' }}</div>
+                                @if ($inventory->stok === 0 || $inventory->stok == 0)
+                                    <div class="inline-block mt-1 px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
+                                        Stok: 0 - Tidak Tersedia
+                                    </div>
+                                @elseif ($inventory->stok > 0)
+                                    <div class="inline-block mt-1 px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
+                                        Stok: {{ number_format($inventory->stok, 2) }}
+                                    </div>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="inline-block px-3 py-1 
