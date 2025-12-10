@@ -29,13 +29,13 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
             <p class="text-gray-600 text-sm">Total Inventory</p>
-            <p class="text-3xl font-bold text-gray-900 mt-2">{{ $inventories->count() }}</p>
+            <p class="text-3xl font-bold text-gray-900 mt-2">{{ $totalInventories }}</p>
             <p class="text-xs text-gray-600 mt-1">Item terdaftar</p>
         </div>
 
         <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
             <p class="text-gray-600 text-sm">Total Stok</p>
-            <p class="text-3xl font-bold text-gray-900 mt-2">{{ $inventories->sum('stok') }}</p>
+            <p class="text-3xl font-bold text-gray-900 mt-2">{{ $totalStok }}</p>
             <p class="text-xs text-green-600 mt-1">Unit keseluruhan</p>
         </div>
 
@@ -150,6 +150,11 @@
                 </svg>
                 <h3 class="text-xl font-semibold text-gray-900 mb-2">Data tidak tersedia</h3>
                 <p class="text-gray-600">Tidak ada inventory yang sesuai dengan pencarian Anda.</p>
+            </div>
+            
+            <!-- Pagination Links -->
+            <div class="px-6 py-4 border-t border-gray-200">
+                {{ $inventories->links() }}
             </div>
         @else
             <div class="p-12 text-center">

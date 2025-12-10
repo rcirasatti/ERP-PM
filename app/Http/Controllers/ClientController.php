@@ -12,8 +12,14 @@ class ClientController extends Controller
      */
     public function index()
     {
-        $clients = Client::all();
-        return view('clients.index', compact('clients'));
+        // Hitung KPI sebelum pagination
+        $totalClients = Client::count();
+        $latestClient = Client::orderBy('created_at', 'desc')->first();
+        
+        // Data dengan pagination
+        $clients = Client::orderBy('created_at', 'desc')->paginate(15);
+        
+        return view('clients.index', compact('clients', 'totalClients', 'latestClient'));
     }
 
     /**

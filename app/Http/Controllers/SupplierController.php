@@ -12,8 +12,14 @@ class SupplierController extends Controller
      */
     public function index()
     {
-        $suppliers = Supplier::all();
-        return view('suppliers.index', compact('suppliers'));
+        // Hitung KPI sebelum pagination
+        $totalSuppliers = Supplier::count();
+        $latestSupplier = Supplier::orderBy('created_at', 'desc')->first();
+        
+        // Data dengan pagination
+        $suppliers = Supplier::orderBy('created_at', 'desc')->paginate(15);
+        
+        return view('suppliers.index', compact('suppliers', 'totalSuppliers', 'latestSupplier'));
     }
 
     /**

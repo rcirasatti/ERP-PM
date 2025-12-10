@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Material;
 use App\Models\Inventory;
 use App\Models\Supplier;
+use App\Exports\MaterialTemplateExport;
+use App\Imports\MaterialImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -16,9 +18,17 @@ class MaterialController extends Controller
      */
     public function index()
     {
-        $materials = Material::with('supplier', 'inventory')->orderBy('created_at', 'desc')->get();
-        $materialsNoStock = $materials->whereNotIn('id', DB::table('inventories')->pluck('material_id'))->count();
-        return view('materials.index', compact('materials', 'materialsNoStock'));
+        // Hitung KPI sebelum pagination
+        $allMaterials = Material::with('supplier', 'inventory')->get();
+        $materialsNoStock = $allMaterials->whereNotIn('id', DB::table('inventories')->pluck('material_id'))->count();
+        $totalMaterials = $allMaterials->count();
+        $trackInventory = $allMaterials->where('track_inventory', true)->count();
+        $nonTrackInventory = $allMaterials->where('track_inventory', false)->count();
+        
+        // Data dengan pagination
+        $materials = Material::with('supplier', 'inventory')->orderBy('created_at', 'desc')->paginate(15);
+        
+        return view('materials.index', compact('materials', 'materialsNoStock', 'totalMaterials', 'trackInventory', 'nonTrackInventory'));
     }
 
     /**
@@ -127,372 +137,86 @@ class MaterialController extends Controller
     }
 
     /**
-     * Export template CSV for material import
+     * Export template Excel for material import
      */
     public function exportTemplate()
     {
-        $headers = ['No', 'Kategori', 'Item', 'Satuan', 'Supplier', 'Harga', 'Qty', 'Jumlah'];
-        
-        $callback = function() use ($headers) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, $headers);
-            
-            // Add sample rows with examples
-            $samples = [
-                ['1', 'BARANG', 'Besi Plat 10mm', 'Pcs', 'PT Besi Makmur', '50000', '10', '500000'],
-                ['2', 'BARANG', 'Semen Putih', 'Kg', 'PT Semen Indonesia', '25000', '100', '2500000'],
-                ['3', 'JASA', 'Jasa Pemasangan', 'Jam', '', '150000', '0', '0'],
-                ['4', 'TOL', 'Tol Jakarta-Surabaya', 'Pcs', '', '500000', '0', '0'],
-            ];
-            
-            foreach ($samples as $row) {
-                fputcsv($file, $row);
-            }
-            
-            fclose($file);
-        };
-        
-        return response()->stream($callback, 200, [
-            "Content-Type" => "text/csv",
-            "Content-Disposition" => "attachment; filename=template_material.csv"
-        ]);
+        $export = new MaterialTemplateExport();
+        return $export->download('template_material.xlsx');
     }
 
     /**
-     * Preview import CSV file to detect duplicates and price changes
+     * Preview import Excel file to detect duplicates and price changes
      */
     public function previewImport(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:csv,txt|max:5120'
+            'file' => 'required|file|mimes:xlsx,xls|max:5120'
         ]);
 
         $file = $request->file('file');
-        $path = $file->getRealPath();
         
-        $duplicates = [];
-        $priceChanges = [];
-        $newItems = [];
-        $errors = [];
-        $rowNumber = 1;
-        
-        if (($handle = fopen($path, 'r')) !== FALSE) {
-            // Skip header row
-            $header = fgetcsv($handle);
-            
-            while (($data = fgetcsv($handle)) !== FALSE) {
-                $rowNumber++;
-                
-                // Skip empty rows
-                if (empty(array_filter($data))) {
-                    continue;
-                }
-                
-                try {
-                    if (count($data) < 8) {
-                        throw new \Exception("Jumlah kolom tidak sesuai");
-                    }
-                    
-                    $kategori = trim($data[1] ?? '');
-                    $item = trim($data[2] ?? '');
-                    $satuan = trim($data[3] ?? '');
-                    $supplier_name = trim($data[4] ?? '');
-                    $harga = $data[5] ?? 0;
-                    $qty = $data[6] ?? 0;
-                    
-                    if (empty($kategori) || empty($item) || empty($satuan) || empty($harga)) {
-                        throw new \Exception("Data tidak lengkap");
-                    }
-                    
-                    $kategori = strtoupper($kategori);
-                    $validTypes = array_keys(Material::getTypes());
-                    if (!in_array($kategori, $validTypes)) {
-                        throw new \Exception("Kategori '{$kategori}' tidak valid");
-                    }
-                    
-                    if (!is_numeric($harga) || $harga < 0) {
-                        throw new \Exception("Harga harus angka positif");
-                    }
-                    
-                    // Find or create supplier
-                    $supplier_id = null;
-                    if ($kategori === Material::TYPE_BARANG && !empty($supplier_name)) {
-                        $supplier = Supplier::where('nama', $supplier_name)->first();
-                        if (!$supplier) {
-                            $supplier = Supplier::create([
-                                'nama' => $supplier_name,
-                                'kontak' => '',
-                                'email' => '',
-                                'telepon' => '',
-                                'alamat' => '',
-                            ]);
-                        }
-                        $supplier_id = $supplier->id;
-                    }
-                    
-                    // Check if material exists
-                    $query = Material::where('nama', $item);
-                    if ($supplier_id) {
-                        $query->where('supplier_id', $supplier_id);
-                    } else {
-                        $query->whereNull('supplier_id');
-                    }
-                    $existing = $query->first();
-                    
-                    if ($existing) {
-                        $qtyValue = ($kategori === Material::TYPE_BARANG && !empty($qty)) ? (float) $qty : 0;
-                        $inventory = $existing->inventory;
-                        $currentStok = $inventory?->stok ?? 0;
-                        $newStok = $currentStok + $qtyValue;
-                        
-                        $priceChanged = $existing->harga != $harga;
-                        
-                        $duplicates[] = [
-                            'row' => $rowNumber,
-                            'nama' => $item,
-                            'supplier' => $supplier_name ?: 'Tidak ada',
-                            'oldPrice' => $existing->harga,
-                            'newPrice' => (float) $harga,
-                            'priceChanged' => $priceChanged,
-                            'currentStok' => $currentStok,
-                            'addStok' => $qtyValue,
-                            'newStok' => $newStok,
-                            'materialId' => $existing->id,
-                        ];
-                    } else {
-                        $newItems[] = [
-                            'row' => $rowNumber,
-                            'nama' => $item,
-                            'supplier' => $supplier_name ?: 'Tidak ada',
-                            'harga' => (float) $harga,
-                            'qty' => ($kategori === Material::TYPE_BARANG && !empty($qty)) ? (float) $qty : 0,
-                        ];
-                    }
-                    
-                } catch (\Exception $e) {
-                    $errors[] = "Baris {$rowNumber}: " . $e->getMessage();
-                }
-            }
-            
-            fclose($handle);
+        try {
+            $import = new MaterialImport(previewMode: true);
+            $import->import($file);
+
+            return response()->json([
+                'duplicates' => $import->duplicates,
+                'newItems' => $import->newItems,
+                'errors' => $import->errors,
+                'totalDuplicates' => count($import->duplicates),
+                'totalNew' => count($import->newItems),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'duplicates' => [],
+                'newItems' => [],
+                'errors' => ['Error membaca file: ' . $e->getMessage()],
+                'totalDuplicates' => 0,
+                'totalNew' => 0,
+            ], 422);
         }
-        
-        return response()->json([
-            'duplicates' => $duplicates,
-            'newItems' => $newItems,
-            'errors' => $errors,
-            'totalDuplicates' => count($duplicates),
-            'totalNew' => count($newItems),
-        ]);
     }
 
     /**
-     * Import materials from CSV file
+     * Import materials from Excel file
      */
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:csv,txt|max:5120'
+            'file' => 'required|file|mimes:xlsx,xls|max:5120'
         ]);
 
         $file = $request->file('file');
-        $path = $file->getRealPath();
         
-        $errors = [];
-        $success = 0;
-        $newItemsAdded = 0;
-        $stokAdded = 0;
-        $pricesUpdated = 0;
-        $rowNumber = 1;
-        $importedItems = [];
-        
-        if (($handle = fopen($path, 'r')) !== FALSE) {
-            // Skip header row
-            $header = fgetcsv($handle);
-            
-            while (($data = fgetcsv($handle)) !== FALSE) {
-                $rowNumber++;
-                
-                // Skip empty rows
-                if (empty(array_filter($data))) {
-                    continue;
-                }
-                
-                try {
-                    // Ensure we have enough columns
-                    if (count($data) < 8) {
-                        throw new \Exception("Jumlah kolom tidak sesuai (minimum 8 kolom diperlukan)");
-                    }
-                    
-                    // Map CSV columns to variables
-                    $no = $data[0] ?? '';
-                    $kategori = trim($data[1] ?? '');
-                    $item = trim($data[2] ?? '');
-                    $satuan = trim($data[3] ?? '');
-                    $supplier_name = trim($data[4] ?? '');
-                    $harga = $data[5] ?? 0;
-                    $qty = $data[6] ?? 0;
-                    $jumlah = $data[7] ?? 0;
-                    
-                    // Validation
-                    if (empty($kategori)) {
-                        throw new \Exception("Kategori tidak boleh kosong (Kolom 2)");
-                    }
-                    
-                    if (empty($item)) {
-                        throw new \Exception("Item tidak boleh kosong (Kolom 3)");
-                    }
-                    
-                    if (empty($satuan)) {
-                        throw new \Exception("Satuan tidak boleh kosong (Kolom 4)");
-                    }
-                    
-                    if (empty($harga) || !is_numeric($harga) || $harga < 0) {
-                        throw new \Exception("Harga harus berupa angka positif (Kolom 7)");
-                    }
-                    
-                    // Normalize category
-                    $kategori = strtoupper($kategori);
-                    $validTypes = array_keys(Material::getTypes());
-                    if (!in_array($kategori, $validTypes)) {
-                        throw new \Exception("Kategori '{$kategori}' tidak valid. Gunakan: " . implode(', ', $validTypes));
-                    }
-                    
-                    // Normalize qty based on category
-                    $qtyValue = 0;
-                    if ($kategori === Material::TYPE_BARANG && !empty($qty)) {
-                        $qtyValue = (float) $qty;
-                        if ($qtyValue < 0) {
-                            $qtyValue = 0;
-                        }
-                    }
-                    
-                    // Find or create supplier - HANYA untuk BARANG
-                    $supplier_id = null;
-                    if ($kategori === Material::TYPE_BARANG && !empty($supplier_name)) {
-                        $supplier = Supplier::where('nama', $supplier_name)->first();
-                        if (!$supplier) {
-                            $supplier = Supplier::create([
-                                'nama' => $supplier_name,
-                                'kontak' => '',
-                                'email' => '',
-                                'telepon' => '',
-                                'alamat' => '',
-                            ]);
-                        }
-                        $supplier_id = $supplier->id;
-                    } else if ($kategori !== Material::TYPE_BARANG && !empty($supplier_name)) {
-                        throw new \Exception("Supplier '{$supplier_name}' diabaikan karena kategori {$kategori} tidak memerlukan supplier");
-                    }
-                    
-                    // Prepare material data
-                    $materialData = [
-                        'nama' => $item,
-                        'satuan' => $satuan,
-                        'harga' => (float) $harga,
-                        'type' => $kategori,
-                        'track_inventory' => ($kategori === Material::TYPE_BARANG),
-                        'supplier_id' => $supplier_id,
-                    ];
-                    
-                    // Check if material already exists by name & supplier
-                    $query = Material::where('nama', $item);
-                    if ($supplier_id) {
-                        $query->where('supplier_id', $supplier_id);
-                    } else {
-                        $query->whereNull('supplier_id');
-                    }
-                    $existing = $query->first();
-                    
-                    if ($existing) {
-                        // Check if harga berubah
-                        $priceChanged = $existing->harga != $materialData['harga'];
-                        
-                        // Update material dengan harga baru jika berbeda
-                        if ($priceChanged) {
-                            $existing->update($materialData);
-                            $pricesUpdated++;
-                        }
-                        
-                        $material = $existing;
-                        $isNew = false;
-                    } else {
-                        // Create new material
-                        $material = Material::create($materialData);
-                        $newItemsAdded++;
-                        $isNew = true;
-                    }
-                    
-                    // Handle inventory for BARANG type
-                    if ($kategori === Material::TYPE_BARANG) {
-                        $inventory = Inventory::where('material_id', $material->id)->first();
-                        
-                        if ($inventory) {
-                            // TAMBAHKAN stok, jangan replace
-                            if ($qtyValue > 0) {
-                                $newStok = $inventory->stok + $qtyValue;
-                                $inventory->update(['stok' => $newStok]);
-                                $stokAdded++;
-                                
-                                $importedItems[] = [
-                                    'nama' => $item,
-                                    'type' => 'stok_ditambah',
-                                    'qty' => $qtyValue,
-                                ];
-                            }
-                        } else if ($qtyValue > 0) {
-                            // Create new inventory only if qty > 0
-                            Inventory::create([
-                                'material_id' => $material->id,
-                                'stok' => $qtyValue,
-                            ]);
-                            
-                            if ($isNew) {
-                                $importedItems[] = [
-                                    'nama' => $item,
-                                    'type' => 'baru',
-                                    'qty' => $qtyValue,
-                                ];
-                            }
-                        } elseif ($isNew && $qtyValue == 0) {
-                            $importedItems[] = [
-                                'nama' => $item,
-                                'type' => 'baru',
-                                'qty' => 0,
-                            ];
-                        }
-                    } else {
-                        if ($isNew) {
-                            $importedItems[] = [
-                                'nama' => $item,
-                                'type' => 'baru',
-                                'qty' => 0,
-                            ];
-                        }
-                    }
-                    
-                    $success++;
-                    
-                } catch (\Exception $e) {
-                    $errors[] = "Baris {$rowNumber}: " . $e->getMessage();
-                }
-            }
-            
-            fclose($handle);
+        try {
+            $import = new MaterialImport(previewMode: false);
+            $import->import($file);
+
+            return response()->json([
+                'success' => true,
+                'stats' => [
+                    'totalProcessed' => $import->success,
+                    'newItems' => $import->newItemsAdded,
+                    'stokAdded' => $import->stokAdded,
+                    'pricesUpdated' => $import->pricesUpdated,
+                ],
+                'items' => $import->importedItems,
+                'errors' => $import->errors,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'stats' => [
+                    'totalProcessed' => 0,
+                    'newItems' => 0,
+                    'stokAdded' => 0,
+                    'pricesUpdated' => 0,
+                ],
+                'items' => [],
+                'errors' => ['Error import file: ' . $e->getMessage()],
+            ], 422);
         }
-        
-        // Return JSON response
-        return response()->json([
-            'success' => true,
-            'stats' => [
-                'totalProcessed' => $success,
-                'newItems' => $newItemsAdded,
-                'stokAdded' => $stokAdded,
-                'pricesUpdated' => $pricesUpdated,
-            ],
-            'items' => $importedItems,
-            'errors' => $errors,
-        ]);
     }
 }
 

@@ -21,21 +21,21 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
             <p class="text-gray-600 text-sm">Total Supplier</p>
-            <p class="text-3xl font-bold text-gray-900 mt-2">{{ $suppliers->count() }}</p>
+            <p class="text-3xl font-bold text-gray-900 mt-2">{{ $totalSuppliers }}</p>
             <p class="text-xs text-gray-600 mt-1">Terdaftar di sistem</p>
         </div>
 
         <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
             <p class="text-gray-600 text-sm">Supplier Aktif</p>
-            <p class="text-3xl font-bold text-gray-900 mt-2">{{ $suppliers->count() }}</p>
+            <p class="text-3xl font-bold text-gray-900 mt-2">{{ $totalSuppliers }}</p>
             <p class="text-xs text-green-600 mt-1">Siap bermitra</p>
         </div>
 
         <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
             <p class="text-gray-600 text-sm">Data Terbaru</p>
             <p class="text-sm font-medium text-gray-900 mt-2">
-                @if ($suppliers->count() > 0)
-                    {{ $suppliers->first()->nama }}
+                @if ($latestSupplier)
+                    {{ $latestSupplier->nama }}
                 @else
                     Belum ada data
                 @endif
@@ -123,6 +123,11 @@
                 </svg>
                 <h3 class="text-xl font-semibold text-gray-900 mb-2">Data tidak tersedia</h3>
                 <p class="text-gray-600">Tidak ada supplier yang sesuai dengan pencarian Anda.</p>
+            </div>
+            
+            <!-- Pagination Links -->
+            <div class="px-6 py-4 border-t border-gray-200">
+                {{ $suppliers->links() }}
             </div>
         @else
             <div class="p-12 text-center">

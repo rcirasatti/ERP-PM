@@ -17,14 +17,16 @@ class PenawaranController extends Controller
      */
     public function index()
     {
-        $penawaran = Penawaran::with('client')->orderBy('created_at', 'DESC')->get();
-        
-        // Calculate KPI data using grand_total_with_ppn
-        $totalPenawaran = $penawaran->count();
-        $totalValue = $penawaran->sum(function($item) {
+        // Calculate KPI data sebelum pagination
+        $allPenawaran = Penawaran::all();
+        $totalPenawaran = $allPenawaran->count();
+        $totalValue = $allPenawaran->sum(function($item) {
             return $item->grand_total_with_ppn ?? ($item->grand_total * 1.11);
         });
-        $pendingPenawaran = $penawaran->where('status', 'draft')->count();
+        $pendingPenawaran = $allPenawaran->where('status', 'draft')->count();
+        
+        // Data dengan pagination
+        $penawaran = Penawaran::with('client')->orderBy('created_at', 'DESC')->paginate(15);
 
         return view('penawaran.index', compact('penawaran', 'totalPenawaran', 'totalValue', 'pendingPenawaran'));
     }

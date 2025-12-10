@@ -150,6 +150,11 @@
                 <h3 class="text-xl font-semibold text-gray-900 mb-2">Data tidak tersedia</h3>
                 <p class="text-gray-600">Tidak ada penawaran yang sesuai dengan pencarian Anda.</p>
             </div>
+            
+            <!-- Pagination Links -->
+            <div class="px-6 py-4 border-t border-gray-200">
+                {{ $penawaran->links() }}
+            </div>
         @else
             <div class="p-8 text-center">
                 <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

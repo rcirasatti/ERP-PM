@@ -14,7 +14,10 @@ class InventoryController extends Controller
      */
     public function index()
     {
-        $inventories = Inventory::with('material')->get();
+        // Hitung KPI sebelum pagination
+        $allInventories = Inventory::with('material')->get();
+        $totalInventories = $allInventories->count();
+        $totalStok = $allInventories->sum('stok');
         
         // Hitung material BARANG tanpa stok (tidak punya inventory record atau stok = 0)
         $materialsWithoutStock = Material::where('type', Material::TYPE_BARANG)
@@ -26,7 +29,10 @@ class InventoryController extends Controller
             })
             ->count();
         
-        return view('inventories.index', compact('inventories', 'materialsWithoutStock'));
+        // Data dengan pagination
+        $inventories = Inventory::with('material')->orderBy('created_at', 'desc')->paginate(15);
+        
+        return view('inventories.index', compact('inventories', 'materialsWithoutStock', 'totalInventories', 'totalStok'));
     }
 
     /**
