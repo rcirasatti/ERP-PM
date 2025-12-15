@@ -28,6 +28,17 @@
                 @enderror
             </div>
 
+            <!-- Kode Material -->
+            <div>
+                <label for="kode" class="block text-sm font-medium text-gray-700 mb-2">Kode Item (Opsional)</label>
+                <input type="text" name="kode" id="kode" value="{{ old('kode', $material->kode) }}"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition @error('kode') border-red-500 @enderror"
+                    placeholder="Contoh: BHMA101">
+                @error('kode')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
             <!-- Tipe Material -->
             <div>
                 <label for="type" class="block text-sm font-medium text-gray-700 mb-2">Tipe Material</label>

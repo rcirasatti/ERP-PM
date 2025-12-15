@@ -37,6 +37,12 @@
                         <p class="text-xl font-semibold text-gray-900">{{ $material->nama }}</p>
                     </div>
 
+                    <!-- Kode -->
+                    <div class="pb-6 border-b border-gray-200">
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Kode Item</p>
+                        <p class="text-lg text-gray-900">{{ $material->kode ?? '-' }}</p>
+                    </div>
+
                     <!-- Tipe Item Penawaran -->
                     <div class="pb-6 border-b border-gray-200">
                         <p class="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">Tipe Item Penawaran</p>

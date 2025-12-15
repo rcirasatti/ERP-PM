@@ -123,7 +123,8 @@
             <table class="w-full min-w-max">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Nama</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Kode</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap"></th>Nama</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Tipe</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Supplier</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider whitespace-nowrap">Satuan</th>
@@ -138,6 +139,9 @@
                             $hasStok = $stok > 0;
                         @endphp
                         <tr class="hover:bg-gray-50 transition material-row">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-mono text-gray-600">{{ $material->kode ?? '-' }}</div>
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center gap-3">
                                     <div>
@@ -325,7 +329,7 @@
 
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                     <h4 class="font-semibold text-blue-900 text-sm mb-2">Format Excel:</h4>
-                    <p class="text-xs text-blue-800 mb-3">No, Kategori, Item, Satuan, Supplier, Harga, Qty</p>
+                    <p class="text-xs text-blue-800 mb-3">No, Kategori, Kode, Item, Satuan, Supplier, Harga, Qty</p>
                     <p class="text-xs text-blue-700 space-y-1">
                         <span class="block"><strong>Kategori:</strong> BARANG, JASA, TOL, atau LAINNYA</span>
                         <span class="block"><strong>Supplier:</strong> Hanya untuk BARANG (kosongkan untuk JASA/TOL/LAINNYA)</span>
@@ -365,44 +369,48 @@
     </div>
 
     <!-- Confirmation Modal for Duplicates -->
-    <div id="confirmModal" class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center" style="display: none;">
-        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+    <div id="confirmModal" style="position: fixed; inset: 0; z-index: 50; background-color: rgba(0,0,0,0.5); display: none; flex; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-width: 800px; width: 100%; margin: 0 16px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
             <!-- Header -->
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white flex-shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="bg-white/20 p-2 rounded-lg">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div style="background: linear-gradient(to right, #2563eb, #4f46e5); padding: 24px; color: white;">
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <div style="background: rgba(255,255,255,0.2); padding: 8px; border-radius: 8px;">
+                        <svg class="w-6 h-6" style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Preview Import</h3>
-                        <p class="text-blue-100 text-sm">Tinjau data sebelum mengimport</p>
+                        <h3 style="font-size: 18px; font-weight: bold; margin: 0;">Preview Import</h3>
+                        <p style="color: #dbeafe; font-size: 14px; margin: 4px 0 0 0;">Tinjau data sebelum mengimport</p>
                     </div>
                 </div>
             </div>
             
             <!-- Content - Scrollable -->
-            <div id="confirmContent" class="flex-1 overflow-y-auto p-6">
+            <div id="confirmContent" style="flex: 1; overflow-y: auto; padding: 24px; background: white;">
                 <!-- Akan diisi secara dinamis oleh JavaScript -->
             </div>
 
             <!-- Footer -->
-            <div class="flex gap-3 px-6 py-4 bg-gray-50 border-t border-gray-200 flex-shrink-0">
+            <div style="display: flex; gap: 12px; padding: 16px 24px; background: #f3f4f6; border-top: 1px solid #e5e7eb;">
                 <button 
                     type="button" 
                     onclick="confirmImport()"
-                    class="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium flex items-center justify-center gap-2"
+                    style="flex: 1; padding: 12px 16px; background: #16a34a; color: white; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;"
+                    onmouseover="this.style.background='#15803d'"
+                    onmouseout="this.style.background='#16a34a'"
                 >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5" style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
                     Konfirmasi Import
                 </button>
                 <button 
                     type="button" 
-                    onclick="closeConfirmModal()" 
-                    class="flex-1 px-4 py-3 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
+                    onclick="closeConfirmModal()"
+                    style="flex: 1; padding: 12px 16px; background: white; color: #374151; border: 1px solid #d1d5db; border-radius: 8px; font-weight: 500; cursor: pointer;"
+                    onmouseover="this.style.background='#f9fafb'"
+                    onmouseout="this.style.background='white'"
                 >
                     Batal
                 </button>
@@ -498,33 +506,33 @@
             
             // Stats Cards
             html += `
-                <div class="grid grid-cols-3 gap-4 mb-6">
-                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 text-center">
-                        <div class="inline-flex items-center justify-center w-10 h-10 bg-green-100 rounded-full mb-2">
-                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+                    <div style="background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%); border: 1px solid #86efac; border-radius: 12px; padding: 16px; text-align: center;">
+                        <div style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #bbf7d0; border-radius: 50%; margin-bottom: 8px;">
+                            <svg style="width: 20px; height: 20px; color: #16a34a;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
                         </div>
-                        <div class="text-2xl font-bold text-green-700">${data.totalNew}</div>
-                        <div class="text-xs text-green-600 font-medium">Item Baru</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #15803d;">${data.totalNew}</div>
+                        <div style="font-size: 12px; color: #16a34a; font-weight: 500; margin-top: 4px;">Item Baru</div>
                     </div>
-                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 text-center">
-                        <div class="inline-flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full mb-2">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div style="background: linear-gradient(135deg, #dbeafe 0%, #f0f9ff 100%); border: 1px solid #93c5fd; border-radius: 12px; padding: 16px; text-align: center;">
+                        <div style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #bfdbfe; border-radius: 50%; margin-bottom: 8px;">
+                            <svg style="width: 20px; height: 20px; color: #2563eb;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                             </svg>
                         </div>
-                        <div class="text-2xl font-bold text-blue-700">${data.totalDuplicates}</div>
-                        <div class="text-xs text-blue-600 font-medium">Akan Update</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #1d4ed8;">${data.totalDuplicates}</div>
+                        <div style="font-size: 12px; color: #2563eb; font-weight: 500; margin-top: 4px;">Akan Update</div>
                     </div>
-                    <div class="bg-gradient-to-br ${hasErrors ? 'from-red-50 to-rose-50 border-red-200' : 'from-gray-50 to-slate-50 border-gray-200'} border rounded-xl p-4 text-center">
-                        <div class="inline-flex items-center justify-center w-10 h-10 ${hasErrors ? 'bg-red-100' : 'bg-gray-100'} rounded-full mb-2">
-                            <svg class="w-5 h-5 ${hasErrors ? 'text-red-600' : 'text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div style="background: linear-gradient(135deg, ${hasErrors ? '#fee2e2 0%, #fef2f2 100%' : '#f3f4f6 0%, #f9fafb 100%'}); border: 1px solid ${hasErrors ? '#fca5a5' : '#e5e7eb'}; border-radius: 12px; padding: 16px; text-align: center;">
+                        <div style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: ${hasErrors ? '#fecaca' : '#e5e7eb'}; border-radius: 50%; margin-bottom: 8px;">
+                            <svg style="width: 20px; height: 20px; color: ${hasErrors ? '#dc2626' : '#9ca3af'};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                             </svg>
                         </div>
-                        <div class="text-2xl font-bold ${hasErrors ? 'text-red-700' : 'text-gray-400'}">${hasErrors ? data.errors.length : 0}</div>
-                        <div class="text-xs ${hasErrors ? 'text-red-600' : 'text-gray-400'} font-medium">Error</div>
+                        <div style="font-size: 24px; font-weight: bold; color: ${hasErrors ? '#b91c1c' : '#9ca3af'};">${hasErrors ? data.errors.length : 0}</div>
+                        <div style="font-size: 12px; color: ${hasErrors ? '#dc2626' : '#9ca3af'}; font-weight: 500; margin-top: 4px;">Error</div>
                     </div>
                 </div>
             `;
@@ -532,17 +540,17 @@
             // Error Alert
             if (hasErrors) {
                 html += `
-                    <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
-                        <div class="flex items-start gap-3">
-                            <div class="bg-red-100 p-1.5 rounded-lg flex-shrink-0">
-                                <svg class="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+                        <div style="display: flex; gap: 12px;">
+                            <div style="background: #fee2e2; padding: 6px; border-radius: 6px; flex-shrink: 0;">
+                                <svg style="width: 16px; height: 16px; color: #dc2626;" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
                                 </svg>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <h4 class="text-sm font-semibold text-red-800 mb-2">Baris Bermasalah</h4>
-                                <div class="text-sm text-red-700 space-y-1 max-h-24 overflow-y-auto">
-                                    ${data.errors.map(err => `<p class="truncate">• ${err}</p>`).join('')}
+                            <div style="flex: 1;">
+                                <h4 style="font-size: 14px; font-weight: 600; color: #7f1d1d; margin: 0 0 8px 0;">Baris Bermasalah</h4>
+                                <div style="font-size: 14px; color: #991b1b; max-height: 96px; overflow-y: auto;">
+                                    ${data.errors.map(err => `<p style="margin: 4px 0; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">• ${err}</p>`).join('')}
                                 </div>
                             </div>
                         </div>
@@ -553,40 +561,38 @@
             // New Items Section
             if (data.newItems && data.newItems.length > 0) {
                 html += `
-                    <div class="mb-6">
-                        <div class="flex items-center gap-2 mb-3">
-                            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                            <h4 class="font-semibold text-gray-900">Item Baru</h4>
-                            <span class="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">${data.newItems.length} item</span>
+                    <div style="margin-bottom: 24px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                            <div style="width: 12px; height: 12px; background: #16a34a; border-radius: 50%;"></div>
+                            <h4 style="font-weight: 600; color: #111827; margin: 0; flex: 1;">Item Baru</h4>
+                            <span style="font-size: 12px; color: #6b7280; background: #f3f4f6; padding: 4px 8px; border-radius: 9999px;">${data.newItems.length} item</span>
                         </div>
-                        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                            <table class="w-full text-sm">
-                                <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
+                        <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
+                            <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+                                <thead style="background: linear-gradient(to right, #f3f4f6, #f9fafb);">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nama Item</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Supplier</th>
-                                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Harga</th>
-                                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Qty</th>
+                                        <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #4b5563; text-transform: uppercase;">Nama Item</th>
+                                        <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #4b5563; text-transform: uppercase;">Supplier</th>
+                                        <th style="padding: 12px 16px; text-align: right; font-size: 12px; font-weight: 600; color: #4b5563; text-transform: uppercase;">Harga</th>
+                                        <th style="padding: 12px 16px; text-align: right; font-size: 12px; font-weight: 600; color: #4b5563; text-transform: uppercase;">Qty</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100">
-                                    ${data.newItems.slice(0, 10).map((item, index) => `
-                                        <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-green-50/50 transition">
-                                            <td class="px-4 py-3">
-                                                <span class="font-medium text-gray-900">${item.nama}</span>
-                                            </td>
-                                            <td class="px-4 py-3 text-gray-600">${item.supplier}</td>
-                                            <td class="px-4 py-3 text-right font-medium text-gray-900">Rp ${Number(item.harga).toLocaleString('id-ID')}</td>
-                                            <td class="px-4 py-3 text-right">
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <tbody>
+                                    ${data.newItems.slice(0, 10).map((item, idx) => `
+                                        <tr style="background: ${idx % 2 === 0 ? 'white' : '#fafbfc'}; border-bottom: 1px solid #e5e7eb;">
+                                            <td style="padding: 12px 16px;"><span style="font-weight: 500; color: #111827;">${item.nama}</span></td>
+                                            <td style="padding: 12px 16px; color: #4b5563;">${item.supplier}</td>
+                                            <td style="padding: 12px 16px; text-align: right; font-weight: 500; color: #111827;">Rp ${Number(item.harga).toLocaleString('id-ID')}</td>
+                                            <td style="padding: 12px 16px; text-align: right;">
+                                                <span style="display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; background: #dcfce7; color: #166534;">
                                                     ${Number(item.qty).toLocaleString('id-ID')}
                                                 </span>
                                             </td>
                                         </tr>
                                     `).join('')}
                                     ${data.newItems.length > 10 ? `
-                                        <tr class="bg-gray-50">
-                                            <td colspan="4" class="px-4 py-2 text-center text-sm text-gray-500">
+                                        <tr style="background: #f9fafb;">
+                                            <td colspan="4" style="padding: 8px 16px; text-align: center; font-size: 12px; color: #6b7280;">
                                                 ...dan ${data.newItems.length - 10} item lainnya
                                             </td>
                                         </tr>
@@ -601,49 +607,49 @@
             // Update Items Section
             if (data.duplicates && data.duplicates.length > 0) {
                 html += `
-                    <div class="mb-4">
-                        <div class="flex items-center gap-2 mb-3">
-                            <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-                            <h4 class="font-semibold text-gray-900">Item Update</h4>
-                            <span class="ml-auto text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">${data.duplicates.length} item</span>
+                    <div style="margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                            <div style="width: 12px; height: 12px; background: #3b82f6; border-radius: 50%;"></div>
+                            <h4 style="font-weight: 600; color: #111827; margin: 0; flex: 1;">Item Update</h4>
+                            <span style="font-size: 12px; color: #6b7280; background: #f3f4f6; padding: 4px 8px; border-radius: 9999px;">${data.duplicates.length} item</span>
                         </div>
-                        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                            <table class="w-full text-sm">
-                                <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
+                        <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
+                            <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+                                <thead style="background: linear-gradient(to right, #f3f4f6, #f9fafb);">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nama Item</th>
-                                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Perubahan Harga</th>
-                                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Tambah Stok</th>
+                                        <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #4b5563; text-transform: uppercase;">Nama Item</th>
+                                        <th style="padding: 12px 16px; text-align: center; font-size: 12px; font-weight: 600; color: #4b5563; text-transform: uppercase;">Perubahan Harga</th>
+                                        <th style="padding: 12px 16px; text-align: center; font-size: 12px; font-weight: 600; color: #4b5563; text-transform: uppercase;">Tambah Stok</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100">
-                                    ${data.duplicates.slice(0, 10).map((dup, index) => `
-                                        <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-blue-50/50 transition">
-                                            <td class="px-4 py-3">
-                                                <span class="font-medium text-gray-900">${dup.nama}</span>
-                                                <span class="text-gray-400 text-xs block">${dup.supplier}</span>
+                                <tbody>
+                                    ${data.duplicates.slice(0, 10).map((dup, idx) => `
+                                        <tr style="background: ${idx % 2 === 0 ? 'white' : '#fafbfc'}; border-bottom: 1px solid #e5e7eb;">
+                                            <td style="padding: 12px 16px;">
+                                                <span style="font-weight: 500; color: #111827;">${dup.nama}</span>
+                                                <span style="display: block; color: #9ca3af; font-size: 12px;">${dup.supplier}</span>
                                             </td>
-                                            <td class="px-4 py-3 text-center">
+                                            <td style="padding: 12px 16px; text-align: center;">
                                                 ${dup.priceChanged ? `
-                                                    <div class="flex items-center justify-center gap-1">
-                                                        <span class="text-gray-400 line-through text-xs">Rp ${Number(dup.oldPrice).toLocaleString('id-ID')}</span>
-                                                        <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                                        <span class="text-green-600 font-semibold text-xs">Rp ${Number(dup.newPrice).toLocaleString('id-ID')}</span>
+                                                    <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                                        <span style="color: #9ca3af; text-decoration: line-through; font-size: 12px;">Rp ${Number(dup.oldPrice).toLocaleString('id-ID')}</span>
+                                                        <svg style="width: 12px; height: 12px; color: #9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                                        <span style="color: #16a34a; font-weight: 600; font-size: 12px;">Rp ${Number(dup.newPrice).toLocaleString('id-ID')}</span>
                                                     </div>
-                                                ` : `<span class="text-gray-400 text-xs">—</span>`}
+                                                ` : `<span style="color: #9ca3af; font-size: 12px;">—</span>`}
                                             </td>
-                                            <td class="px-4 py-3 text-center">
+                                            <td style="padding: 12px 16px; text-align: center;">
                                                 ${dup.addStok > 0 ? `
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                                                    <span style="display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; background: #dbeafe; color: #1e40af;">
                                                         +${Number(dup.addStok).toLocaleString('id-ID')}
                                                     </span>
-                                                ` : `<span class="text-gray-400 text-xs">—</span>`}
+                                                ` : `<span style="color: #9ca3af; font-size: 12px;">—</span>`}
                                             </td>
                                         </tr>
                                     `).join('')}
                                     ${data.duplicates.length > 10 ? `
-                                        <tr class="bg-gray-50">
-                                            <td colspan="3" class="px-4 py-2 text-center text-sm text-gray-500">
+                                        <tr style="background: #f9fafb;">
+                                            <td colspan="3" style="padding: 8px 16px; text-align: center; font-size: 12px; color: #6b7280;">
                                                 ...dan ${data.duplicates.length - 10} item lainnya
                                             </td>
                                         </tr>
@@ -658,14 +664,14 @@
             // Empty State
             if (totalItems === 0 && !hasErrors) {
                 html += `
-                    <div class="text-center py-12">
-                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div style="text-align: center; padding: 48px 0;">
+                        <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: #f3f4f6; border-radius: 50%; margin-bottom: 16px;">
+                            <svg style="width: 32px; height: 32px; color: #9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                         </div>
-                        <h4 class="text-lg font-medium text-gray-900 mb-1">Tidak Ada Data</h4>
-                        <p class="text-gray-500">File tidak berisi data yang valid untuk diimport</p>
+                        <h4 style="font-size: 18px; font-weight: 500; color: #111827; margin: 0 0 4px 0;">Tidak Ada Data</h4>
+                        <p style="color: #6b7280; margin: 0;">File tidak berisi data yang valid untuk diimport</p>
                     </div>
                 `;
             }
@@ -718,28 +724,28 @@
             // Show details in a cleaner table format
             if (baruItems.length > 0 || stokItems.length > 0) {
                 detailsHtml = `
-                    <div class="bg-gray-50 rounded-lg p-4 max-h-60 overflow-y-auto">
-                        <table class="w-full text-sm">
+                    <div style="background: #f3f4f6; border-radius: 8px; padding: 16px; max-height: 240px; overflow-y: auto;">
+                        <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
                             <thead>
-                                <tr class="text-left text-gray-500 text-xs uppercase">
-                                    <th class="pb-2">Item</th>
-                                    <th class="pb-2 text-center">Status</th>
-                                    <th class="pb-2 text-right">Qty</th>
+                                <tr style="text-align: left; color: #6b7280; font-size: 12px; text-transform: uppercase;">
+                                    <th style="padding-bottom: 8px;">Item</th>
+                                    <th style="padding-bottom: 8px; text-align: center;">Status</th>
+                                    <th style="padding-bottom: 8px; text-align: right;">Qty</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200">
+                            <tbody style="border-top: 1px solid #e5e7eb;">
                                 ${baruItems.map(item => `
-                                    <tr>
-                                        <td class="py-2 text-gray-900">${item.nama}</td>
-                                        <td class="py-2 text-center"><span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">Baru</span></td>
-                                        <td class="py-2 text-right text-gray-600">${item.qty > 0 ? Number(item.qty).toLocaleString('id-ID') : '-'}</td>
+                                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                                        <td style="padding: 8px 0; color: #111827;">${item.nama}</td>
+                                        <td style="padding: 8px 0; text-align: center;"><span style="display: inline-block; padding: 4px 8px; background: #dcfce7; color: #166534; border-radius: 4px; font-size: 12px;">Baru</span></td>
+                                        <td style="padding: 8px 0; text-align: right; color: #4b5563;">${item.qty > 0 ? Number(item.qty).toLocaleString('id-ID') : '-'}</td>
                                     </tr>
                                 `).join('')}
                                 ${stokItems.map(item => `
-                                    <tr>
-                                        <td class="py-2 text-gray-900">${item.nama}</td>
-                                        <td class="py-2 text-center"><span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">Stok +</span></td>
-                                        <td class="py-2 text-right text-blue-600 font-medium">+${Number(item.qty).toLocaleString('id-ID')}</td>
+                                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                                        <td style="padding: 8px 0; color: #111827;">${item.nama}</td>
+                                        <td style="padding: 8px 0; text-align: center;"><span style="display: inline-block; padding: 4px 8px; background: #dbeafe; color: #1e40af; border-radius: 4px; font-size: 12px;">Stok +</span></td>
+                                        <td style="padding: 8px 0; text-align: right; color: #2563eb; font-weight: 500;">+${Number(item.qty).toLocaleString('id-ID')}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -752,16 +758,16 @@
             let errorsHtml = '';
             if (hasErrors) {
                 errorsHtml = `
-                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
-                        <div class="flex items-start gap-2">
-                            <svg class="w-5 h-5 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                        <div style="display: flex; gap: 8px;">
+                            <svg style="width: 20px; height: 20px; color: #d97706; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                             </svg>
                             <div>
-                                <p class="text-sm font-medium text-amber-800">Beberapa baris dilewati karena error:</p>
-                                <ul class="mt-1 text-xs text-amber-700">
-                                    ${data.errors.slice(0, 5).map(err => `<li>• ${err}</li>`).join('')}
-                                    ${data.errors.length > 5 ? `<li class="text-amber-600">...dan ${data.errors.length - 5} error lainnya</li>` : ''}
+                                <p style="font-size: 14px; font-weight: 500; color: #b45309; margin: 0 0 4px 0;">Beberapa baris dilewati karena error:</p>
+                                <ul style="font-size: 12px; color: #92400e; list-style: none; padding: 0; margin: 0;">
+                                    ${data.errors.slice(0, 5).map(err => `<li style="margin: 2px 0;">• ${err}</li>`).join('')}
+                                    ${data.errors.length > 5 ? `<li style="margin: 2px 0; color: #d97706;">...dan ${data.errors.length - 5} error lainnya</li>` : ''}
                                 </ul>
                             </div>
                         </div>
@@ -770,55 +776,55 @@
             }
 
             const successHTML = `
-                <div id="successModal" class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
-                    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden">
+                <div id="successModal" style="position: fixed; inset: 0; z-index: 50; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
+                    <div style="background: white; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-width: 500px; width: 100%; margin: 0 16px; overflow: hidden;">
                         <!-- Header -->
-                        <div class="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-8 text-center text-white">
-                            <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
-                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <div style="background: linear-gradient(to right, #10b981, #059669); padding: 32px 24px; text-align: center; color: white;">
+                            <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: rgba(255,255,255,0.2); border-radius: 50%; margin-bottom: 16px;">
+                                <svg style="width: 32px; height: 32px; color: white;" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                                 </svg>
                             </div>
-                            <h3 class="text-2xl font-bold">Import Berhasil!</h3>
-                            <p class="text-green-100 mt-1">Data material telah diperbarui</p>
+                            <h3 style="font-size: 24px; font-weight: bold; margin: 0 0 4px 0;">Import Berhasil!</h3>
+                            <p style="color: #d1fae5; font-size: 14px; margin: 0;">Data material telah diperbarui</p>
                         </div>
                         
                         <!-- Stats -->
-                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-100">
-                            <div class="grid grid-cols-4 gap-3 text-center">
-                                <div>
-                                    <div class="text-2xl font-bold text-gray-900">${stats.totalProcessed}</div>
-                                    <div class="text-xs text-gray-500">Diproses</div>
-                                </div>
-                                <div>
-                                    <div class="text-2xl font-bold text-green-600">${stats.newItems}</div>
-                                    <div class="text-xs text-gray-500">Item Baru</div>
-                                </div>
-                                <div>
-                                    <div class="text-2xl font-bold text-blue-600">${stats.stokAdded}</div>
-                                    <div class="text-xs text-gray-500">Stok +</div>
-                                </div>
-                                <div>
-                                    <div class="text-2xl font-bold text-purple-600">${stats.pricesUpdated}</div>
-                                    <div class="text-xs text-gray-500">Harga Update</div>
-                                </div>
+                        <div style="padding: 16px 24px; background: #f3f4f6; border-bottom: 1px solid #f0f0f0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 20px; font-weight: bold; color: #111827;">${stats.totalProcessed}</div>
+                                <div style="font-size: 12px; color: #6b7280;">Diproses</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 20px; font-weight: bold; color: #16a34a;">${stats.newItems}</div>
+                                <div style="font-size: 12px; color: #6b7280;">Item Baru</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 20px; font-weight: bold; color: #2563eb;">${stats.stokAdded}</div>
+                                <div style="font-size: 12px; color: #6b7280;">Stok +</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 20px; font-weight: bold; color: #9333ea;">${stats.pricesUpdated}</div>
+                                <div style="font-size: 12px; color: #6b7280;">Harga Update</div>
                             </div>
                         </div>
                         
                         <!-- Details -->
-                        <div class="px-6 py-4">
+                        <div style="padding: 24px;">
                             ${errorsHtml}
                             ${detailsHtml}
                         </div>
                         
                         <!-- Footer -->
-                        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                        <div style="padding: 16px 24px; background: #f3f4f6; border-top: 1px solid #e5e7eb;">
                             <button 
                                 type="button" 
                                 onclick="location.reload()"
-                                class="w-full px-4 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition font-medium flex items-center justify-center gap-2"
+                                style="width: 100%; padding: 12px 16px; background: #111827; color: white; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px;"
+                                onmouseover="this.style.background='#1f2937'"
+                                onmouseout="this.style.background='#111827'"
                             >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                 </svg>
                                 Refresh Halaman

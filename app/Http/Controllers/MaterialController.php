@@ -50,6 +50,7 @@ class MaterialController extends Controller
         
         // Validasi dinamis berdasarkan tipe
         $rules = [
+            'kode' => 'nullable|string|max:50',
             'nama' => 'required|string|max:255',
             'satuan' => 'required|string|max:50',
             'harga' => 'required|numeric|min:0',
@@ -102,6 +103,7 @@ class MaterialController extends Controller
         
         // Validasi dinamis berdasarkan tipe
         $rules = [
+            'kode' => 'nullable|string|max:50',
             'nama' => 'required|string|max:255',
             'satuan' => 'required|string|max:50',
             'harga' => 'required|numeric|min:0',

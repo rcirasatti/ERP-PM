@@ -64,6 +64,7 @@ class MaterialImport
         $headerNames = [
             'no' => ['no', 'nomor', 'number'],
             'kategori' => ['kategori', 'category', 'tipe', 'type'],
+            'kode' => ['kode', 'code', 'kode material'],
             'item' => ['item', 'nama', 'name', 'material'],
             'satuan' => ['satuan', 'unit', 'uom'],
             'supplier' => ['supplier', 'vendor', 'pemasok'],
@@ -89,11 +90,12 @@ class MaterialImport
     {
         // Map Excel columns to variables
         $kategori = trim((string) ($row[$headerMap['kategori'] ?? 1] ?? ''));
-        $item = trim((string) ($row[$headerMap['item'] ?? 2] ?? ''));
-        $satuan = trim((string) ($row[$headerMap['satuan'] ?? 3] ?? ''));
-        $supplier_name = trim((string) ($row[$headerMap['supplier'] ?? 4] ?? ''));
-        $harga = $row[$headerMap['harga'] ?? 5] ?? 0;
-        $qty = $row[$headerMap['qty'] ?? 6] ?? 0;
+        $kode = trim((string) ($row[$headerMap['kode'] ?? 2] ?? ''));
+        $item = trim((string) ($row[$headerMap['item'] ?? 3] ?? ''));
+        $satuan = trim((string) ($row[$headerMap['satuan'] ?? 4] ?? ''));
+        $supplier_name = trim((string) ($row[$headerMap['supplier'] ?? 5] ?? ''));
+        $harga = $row[$headerMap['harga'] ?? 6] ?? 0;
+        $qty = $row[$headerMap['qty'] ?? 7] ?? 0;
 
         // Validation
         if (empty($kategori)) {
@@ -158,13 +160,13 @@ class MaterialImport
         $existing = $query->first();
 
         if ($this->previewMode) {
-            $this->handlePreview($existing, $rowNumber, $item, $supplier_name, $harga, $qtyValue, $kategori);
+            $this->handlePreview($existing, $rowNumber, $item, $supplier_name, $harga, $qtyValue, $kategori, $kode);
         } else {
-            $this->handleImport($existing, $item, $satuan, $harga, $kategori, $supplier_id, $qtyValue);
+            $this->handleImport($existing, $item, $satuan, $harga, $kategori, $supplier_id, $qtyValue, $kode);
         }
     }
 
-    protected function handlePreview($existing, int $rowNumber, string $item, string $supplier_name, float $harga, float $qtyValue, string $kategori): void
+    protected function handlePreview($existing, int $rowNumber, string $item, string $supplier_name, float $harga, float $qtyValue, string $kategori, string $kode = ''): void
     {
         if ($existing) {
             $inventory = $existing->inventory;
@@ -175,6 +177,7 @@ class MaterialImport
             $this->duplicates[] = [
                 'row' => $rowNumber,
                 'nama' => $item,
+                'kode' => $kode,
                 'supplier' => $supplier_name ?: 'Tidak ada',
                 'oldPrice' => $existing->harga,
                 'newPrice' => $harga,
@@ -188,6 +191,7 @@ class MaterialImport
             $this->newItems[] = [
                 'row' => $rowNumber,
                 'nama' => $item,
+                'kode' => $kode,
                 'supplier' => $supplier_name ?: 'Tidak ada',
                 'harga' => $harga,
                 'qty' => $qtyValue,
@@ -195,9 +199,10 @@ class MaterialImport
         }
     }
 
-    protected function handleImport($existing, string $item, string $satuan, float $harga, string $kategori, ?int $supplier_id, float $qtyValue): void
+    protected function handleImport($existing, string $item, string $satuan, float $harga, string $kategori, ?int $supplier_id, float $qtyValue, string $kode = ''): void
     {
         $materialData = [
+            'kode' => $kode ?: null,
             'nama' => $item,
             'satuan' => $satuan,
             'harga' => $harga,
@@ -208,10 +213,13 @@ class MaterialImport
 
         if ($existing) {
             $priceChanged = $existing->harga != $harga;
+            $kodeChanged = $existing->kode != ($kode ?: null);
 
-            if ($priceChanged) {
+            if ($priceChanged || $kodeChanged) {
                 $existing->update($materialData);
-                $this->pricesUpdated++;
+                if ($priceChanged) {
+                    $this->pricesUpdated++;
+                }
             }
 
             $material = $existing;
