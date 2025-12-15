@@ -110,6 +110,18 @@ class MaterialImport
             throw new \Exception("Satuan tidak boleh kosong");
         }
 
+        // Validate unique kode (if provided)
+        if (!empty($kode)) {
+            $existingKode = Material::where('kode', $kode)->first();
+            if ($existingKode) {
+                // Check if it's the same item (by nama) - allow update
+                $isSameItem = Material::where('kode', $kode)->where('nama', $item)->exists();
+                if (!$isSameItem) {
+                    throw new \Exception("Kode '{$kode}' sudah digunakan oleh material lain: {$existingKode->nama}");
+                }
+            }
+        }
+
         // Clean and validate harga
         $harga = $this->cleanNumber($harga);
         if ($harga < 0) {

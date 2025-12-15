@@ -67,6 +67,16 @@ class MaterialController extends Controller
         
         $validated = $request->validate($rules);
         
+        // Check kode uniqueness with custom message
+        if (!empty($validated['kode'])) {
+            $existingMaterial = Material::where('kode', $validated['kode'])->first();
+            if ($existingMaterial) {
+                return redirect()->back()->withInput()->withErrors([
+                    'kode' => "Kode '{$validated['kode']}' sudah digunakan oleh material: {$existingMaterial->nama}"
+                ]);
+            }
+        }
+        
         // Set track_inventory default berdasarkan tipe
         if (!isset($validated['track_inventory'])) {
             $validated['track_inventory'] = ($type === Material::TYPE_BARANG);
@@ -119,6 +129,18 @@ class MaterialController extends Controller
         }
         
         $validated = $request->validate($rules);
+        
+        // Check kode uniqueness with custom message (exclude current material)
+        if (!empty($validated['kode'])) {
+            $existingMaterial = Material::where('kode', $validated['kode'])
+                ->where('id', '!=', $material->id)
+                ->first();
+            if ($existingMaterial) {
+                return redirect()->back()->withInput()->withErrors([
+                    'kode' => "Kode '{$validated['kode']}' sudah digunakan oleh material: {$existingMaterial->nama}"
+                ]);
+            }
+        }
         
         // Set track_inventory default berdasarkan tipe
         if (!isset($validated['track_inventory'])) {
