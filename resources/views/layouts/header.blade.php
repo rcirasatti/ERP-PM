@@ -33,10 +33,10 @@
                 <!-- Dropdown Menu -->
                 <div
                     class="absolute right-0 w-48 mt-2 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                    <a href="#"
-                        class="block px-4 py-2 text-gray-700 hover:bg-gray-100 first:rounded-t-lg">Profile</a>
-                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Settings</a>
-                    <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Help</a>
+                    <a href="{{ route('profile.show') }}"
+                        class="block px-4 py-2 text-gray-700 hover:bg-gray-100 first:rounded-t-lg">Lihat Profil</a>
+                  
+                  
                     <hr class="my-2">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

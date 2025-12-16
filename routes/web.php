@@ -13,6 +13,7 @@ use App\Http\Controllers\TugasController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProfileController;
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -22,6 +23,11 @@ Route::middleware('guest')->group(function () {
 
 // Protected Routes (require authentication)
 Route::middleware('auth')->group(function () {
+    // Profile
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
