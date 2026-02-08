@@ -39,6 +39,8 @@
         <div class="pt-4">
             <p class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-widest">Project Management</p>
         </div>
+        
+        @if(userIsAdmin())
         <a href="{{ route('penawaran.index') }}"
             class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('penawaran.*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,6 +50,8 @@
             </svg>
             <span>Penawaran</span>
         </a>
+        @endif
+        
         <a href="{{ route('proyek.index') }}"
             class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('proyek.*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,10 +61,6 @@
             </svg>
             <span>Projects</span>
         </a>
-
-
-
-
 
         <div class="pt-4">
             <p class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-widest">Finance</p>
@@ -85,6 +85,7 @@
             <span>Pengeluaran</span>
         </a>
 
+        @if(userIsAdmin())
         <div class="pt-4">
             <p class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-widest">Master Data</p>
         </div>
@@ -127,5 +128,20 @@
             </svg>
             <span>Inventory</span>
         </a>
+
+        <div class="pt-4">
+            <p class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-widest">Pengaturan</p>
+        </div>
+
+        <a href="{{ route('user.index') }}"
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('user.*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                </path>
+            </svg>
+            <span>Manajemen User</span>
+        </a>
+        @endif
     </nav>
 </div>

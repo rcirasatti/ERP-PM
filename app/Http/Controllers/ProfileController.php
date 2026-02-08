@@ -21,8 +21,8 @@ class ProfileController extends Controller
             // Create profil if doesn't exist
             $profil = Profil::create([
                 'user_id' => $user->id,
-                'nama_depan' => '',
-                'nama_belakang' => '',
+                'nama_depan' => explode(' ', $user->name)[0] ?? '',
+                'nama_belakang' => explode(' ', $user->name)[1] ?? '',
                 'telepon' => '',
             ]);
         }
@@ -53,24 +53,24 @@ class ProfileController extends Controller
             $profil->user_id = $user->id;
         }
 
-        // Hapus password dari array untuk profil update
-        $profilData = $validated;
-        unset($profilData['email'], $profilData['password']);
-        $profil->update($profilData);
+        // Update profil fields
+        $profil->nama_depan = $validated['nama_depan'];
+        $profil->nama_belakang = $validated['nama_belakang'];
+        $profil->telepon = $validated['telepon'] ?? null;
+        $profil->save();
 
-        // Update user data (email dan password)
-        $userData = [
-            'email' => $validated['email'],
-        ];
+        // Update user name (gabungan nama depan + belakang)
+        $user->name = trim($validated['nama_depan'] . ' ' . $validated['nama_belakang']);
+        $user->email = $validated['email'];
 
         // Hanya update password jika diisi
         if (!empty($validated['password'])) {
-            $userData['password'] = Hash::make($validated['password']);
+            $user->password = Hash::make($validated['password']);
         }
 
-        $user->update($userData);
+        $user->save();
 
-        return redirect()->route('profile.edit')->with('success', 'Profil berhasil diperbarui');
+        return redirect()->route('profile.show')->with('success', 'Profil berhasil diperbarui');
     }
 
     /**
@@ -82,7 +82,13 @@ class ProfileController extends Controller
         $profil = Profil::where('user_id', $user->id)->first();
 
         if (!$profil) {
-            return redirect()->route('profile.edit')->with('info', 'Silakan lengkapi profil Anda terlebih dahulu');
+            // Buat profil default dari nama user
+            $profil = Profil::create([
+                'user_id' => $user->id,
+                'nama_depan' => explode(' ', $user->name)[0] ?? $user->name,
+                'nama_belakang' => explode(' ', $user->name)[1] ?? '',
+                'telepon' => '',
+            ]);
         }
 
         return view('profile.show', compact('profil'));
