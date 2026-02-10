@@ -12,6 +12,13 @@ class Inventory extends Model
     protected $fillable = ['material_id', 'stok'];
     public $timestamps = true;
     
+    protected function casts(): array
+    {
+        return [
+            'stok' => 'integer',
+        ];
+    }
+    
     public function material(): BelongsTo
     {
         return $this->belongsTo(Material::class);

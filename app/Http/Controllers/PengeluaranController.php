@@ -203,6 +203,50 @@ class PengeluaranController extends Controller
     }
 
     /**
+     * Download bukti file with authorization
+     */
+    public function downloadBukti(Pengeluaran $pengeluaran)
+    {
+        if (!auth()->check()) {
+            abort(401, 'Silakan login terlebih dahulu');
+        }
+
+        $user = auth()->user();
+        if (!in_array($user->role, ['admin', 'manager'])) {
+            abort(403, 'Anda tidak memiliki izin untuk mengakses file ini');
+        }
+
+        $filePath = storage_path('app/public/' . $pengeluaran->bukti_file);
+        if (!file_exists($filePath)) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        return response()->download($filePath, basename($pengeluaran->bukti_file));
+    }
+
+    /**
+     * Preview bukti file in browser with authorization
+     */
+    public function previewBukti(Pengeluaran $pengeluaran)
+    {
+        if (!auth()->check()) {
+            abort(401, 'Silakan login terlebih dahulu');
+        }
+
+        $user = auth()->user();
+        if (!in_array($user->role, ['admin', 'manager'])) {
+            abort(403, 'Anda tidak memiliki izin untuk mengakses file ini');
+        }
+
+        $filePath = storage_path('app/public/' . $pengeluaran->bukti_file);
+        if (!file_exists($filePath)) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        return response()->file($filePath);
+    }
+
+    /**
      * Update ProyekBudget realisasi berdasarkan total pengeluaran
      * Public method untuk digunakan di seeder dan testing
      */

@@ -79,7 +79,7 @@ class InventoryController extends Controller
     {
         $validated = $request->validate([
             'material_id' => 'required|exists:materials,id',
-            'stok' => 'required|numeric|min:0'
+            'stok' => 'required|integer|min:0'
         ]);
 
         // Check if inventory already exists for this material
@@ -121,7 +121,7 @@ class InventoryController extends Controller
     {
         $validated = $request->validate([
             'material_id' => 'required|exists:materials,id|unique:inventories,material_id,' . $inventory->id,
-            'stok' => 'required|numeric|min:0'
+            'stok' => 'required|integer|min:0'
         ]);
 
         $inventory->update($validated);

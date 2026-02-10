@@ -127,7 +127,7 @@
                         @if($pengeluaran->bukti_file)
                             <div class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                                 <p class="text-sm text-green-800 font-medium">File saat ini:</p>
-                                <a href="{{ asset('storage/' . $pengeluaran->bukti_file) }}" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm">
+                                <a href="{{ route('pengeluaran.preview-bukti', $pengeluaran->id) }}" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm">
                                     {{ basename($pengeluaran->bukti_file) }}
                                 </a>
                             </div>

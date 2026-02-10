@@ -78,6 +78,8 @@ Route::middleware('auth')->group(function () {
 
         // Pengeluaran Management
         Route::resource('pengeluaran', PengeluaranController::class);
+        Route::get('pengeluaran/{pengeluaran}/download-bukti', [PengeluaranController::class, 'downloadBukti'])->name('pengeluaran.download-bukti');
+        Route::get('pengeluaran/{pengeluaran}/preview-bukti', [PengeluaranController::class, 'previewBukti'])->name('pengeluaran.preview-bukti');
 
         // Finance/Budget
         Route::get('finance/budget', [FinanceController::class, 'budget'])->name('finance.budget');

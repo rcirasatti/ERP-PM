@@ -114,7 +114,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 @if($item->bukti_file)
-                                    <a href="{{ asset('storage/' . $item->bukti_file) }}" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium text-xs inline-flex items-center gap-1">
+                                    <a href="{{ route('pengeluaran.preview-bukti', $item->id) }}" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium text-xs inline-flex items-center gap-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>

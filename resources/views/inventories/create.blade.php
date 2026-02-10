@@ -53,7 +53,7 @@
                     <!-- Stok -->
                     <div>
                         <label for="stok" class="block text-sm font-medium text-gray-700 mb-2">Stok *</label>
-                        <input type="number" id="stok" name="stok" value="{{ old('stok') }}" placeholder="Masukkan jumlah stok" step="0.01" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('stok') border-red-500 @enderror" required>
+                        <input type="number" id="stok" name="stok" value="{{ old('stok') }}" placeholder="Masukkan jumlah stok" step="1" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 @error('stok') border-red-500 @enderror" required>
                         @error('stok')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -93,7 +93,7 @@
                     </li>
                     <li class="flex space-x-2">
                         <span class="text-blue-600 font-bold">•</span>
-                        <span><strong>Format:</strong> Gunakan titik (.) untuk angka desimal jika diperlukan</span>
+                        <span><strong>Format:</strong> Stok harus berupa bilangan bulat (tidak boleh desimal)</span>
                     </li>
                 </ul>
                 
