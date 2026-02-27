@@ -44,6 +44,20 @@
         </div>
     </div>
 
+    <!-- Info: Alternative Manual Method -->
+    <div class="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start">
+        <svg class="w-5 h-5 text-blue-600 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zm-11-1a1 1 0 100 2 1 1 0 000-2zM8 7a1 1 0 100 2 1 1 0 000-2zm1 5a1 1 0 11-2 0 1 1 0 012 0z" clip-rule="evenodd"/>
+        </svg>
+        <div>
+            <h3 class="font-medium text-blue-900 mb-1">📋 Butuh Template Excel?</h3>
+            <p class="text-sm text-blue-800 mb-2">Belum punya file Excel? Download template BoQ standar kami dan isi dengan data material Anda.</p>
+            <a href="{{ route('penawaran.boq-template') }}" class="text-sm font-medium text-blue-700 hover:text-blue-900 underline">
+                Download template Excel →
+            </a>
+        </div>
+    </div>
+
     <!-- Main Form Container -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Left: Form Section -->
@@ -63,7 +77,7 @@
                         <select id="client_id" name="client_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             <option value="">-- Pilih Klien --</option>
                             @foreach($clients as $client)
-                                <option value="{{ $client->id }}">{{ $client->name }}</option>
+                                <option value="{{ $client->id }}">{{ $client->nama }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -281,7 +295,19 @@
 
             <!-- Predictions Card -->
             <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Prediksi AI</h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Prediksi AI</h3>
+                    <div class="group relative">
+                        <svg class="w-5 h-5 text-gray-400 cursor-help hover:text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                        </svg>
+                        <div class="hidden group-hover:block absolute right-0 w-64 bg-gray-900 text-white text-sm rounded p-3 z-10">
+                            <p class="font-semibold mb-2">Tentang Prediksi AI:</p>
+                            <p class="mb-2">Nilai di bawah menunjukkan estimasi actual cost berdasarkan data historis. Jika lebih tinggi dari total penawaran, ada risiko overrun biaya.</p>
+                            <p class="text-xs opacity-90">LR (Linear Regression) vs MA (Moving Average) = metode prediksi berbeda</p>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="space-y-6">
                     <!-- Linear Regression Prediction -->
@@ -341,8 +367,8 @@
     </div>
 
     <!-- Loading & Error States -->
-    <div id="loadingState" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-        <div class="bg-white rounded-lg p-8 text-center">
+    <div id="loadingState" class="hidden fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm bg-black/50">
+        <div class="bg-white rounded-lg shadow-xl p-8 text-center">
             <svg class="h-12 w-12 text-blue-600 animate-spin mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 018-8V0c4.418 0 8 3.582 8 8h-2zm15.535-8.172a.5.5 0 00-.707.707L19.586 6l-1.414-1.414a.5.5 0 00-.707.707L18.879 6.707 17.465 8.12a.5.5 0 00.707.707L19.586 7.414l1.414 1.414a.5.5 0 00.707-.707L20.293 7.414l1.414-1.414a.5.5 0 000-.707z"/>
             </svg>
@@ -350,8 +376,8 @@
         </div>
     </div>
 
-    <div id="errorState" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-        <div class="bg-white rounded-lg p-8 max-w-md">
+    <div id="errorState" class="hidden fixed inset-0 z-40 flex items-center justify-center backdrop-blur-sm bg-black/50">
+        <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
             <div class="flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mx-auto mb-4">
                 <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -366,7 +392,26 @@
             </button>
         </div>
     </div>
-</div>
+
+    <!-- Success Modal -->
+    <div id="successState" class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/50">
+        <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
+            <div class="flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mx-auto mb-4">
+                <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 text-center mb-2">Berhasil</h3>
+            <div id="successMessage" class="text-gray-600 text-center text-sm mb-6">
+                <!-- Success message filled by JS -->
+            </div>
+            <button onclick="closeSuccess()" class="w-full px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700">
+                OK
+            </button>
+        </div>
+    </div>
+
+    </div>
 
 @push('scripts')
 <script>
@@ -416,15 +461,13 @@ function clearFile() {
 // ============================================
 
 async function handlePreview() {
-    if (!uploadedFile || !document.getElementById('client_id').value) {
-        showError('Pilih klien terlebih dahulu');
+    if (!uploadedFile) {
+        showError('Pilih file terlebih dahulu');
         return;
     }
 
     const formData = new FormData();
     formData.append('boq_file', uploadedFile);
-    formData.append('client_id', document.getElementById('client_id').value);
-    formData.append('tanggal_penawaran', document.getElementById('tanggal_penawaran').value);
 
     showLoading('Mengekstrak data BoQ...');
 
@@ -439,8 +482,8 @@ async function handlePreview() {
 
         const data = await response.json();
 
-        if (!response.ok) {
-            throw new Error(data.message || 'Gagal mengekstrak preview');
+        if (!response.ok || !data.success) {
+            throw new Error(data.data?.errors?.[0] || data.message || 'Gagal mengekstrak preview');
         }
 
         previewData = data.data;
@@ -512,7 +555,12 @@ async function analyzeWithDSS() {
         return;
     }
 
-    showLoading('Menganalisis dengan AI DSS...');
+    if (!document.getElementById('client_id').value) {
+        showError('Pilih klien terlebih dahulu');
+        return;
+    }
+
+    showLoading('Menyimpan penawaran draft dan menganalisis dengan AI DSS...');
 
     try {
         // First, save penawaran as draft
@@ -526,7 +574,6 @@ async function analyzeWithDSS() {
                 client_id: document.getElementById('client_id').value,
                 tanggal_penawaran: document.getElementById('tanggal_penawaran').value,
                 items: previewData.items,
-                grand_total: previewData.grand_total
             })
         });
 
@@ -536,9 +583,11 @@ async function analyzeWithDSS() {
             throw new Error(draftData.message || 'Gagal menyimpan draft penawaran');
         }
 
-        penawaranId = draftData.data.id;
+        penawaranId = draftData.data.penawaran_id;
 
         // Now analyze with DSS
+        showLoading('Menganalisis data dengan AI...');
+        
         const analysisResponse = await fetch('{{ url("/api/dss/analyze") }}', {
             method: 'POST',
             headers: {
@@ -606,16 +655,9 @@ function displayAnalysisResults(data) {
     document.getElementById('maVariance').textContent = maVariance + '%';
     document.getElementById('maVariance').className = 'font-semibold ' + (maVariance > 0 ? 'text-red-600' : 'text-green-600');
 
-    // Recommendation
-    let recommendation = '';
-    if (data.risk_level === 'Tinggi') {
-        recommendation = `⚠️ Risiko tinggi terdeteksi. Pertimbangkan untuk merevisi keseluruhan proposal atau menambah margin keamanan.`;
-    } else if (data.risk_level === 'Sedang') {
-        recommendation = `⚡ Risiko sedang. Prediksi menunjukkan kemungkinan overrun ${Math.abs(Math.round(lrVariance))}%. Sebaiknya review kembali estimasi biaya.`;
-    } else {
-        recommendation = `✓ Risiko rendah. Penawaran ini memiliki margin keamanan yang baik untuk dikontrak.`;
-    }
-    document.getElementById('recommendation').textContent = recommendation;
+    // Recommendation - gunakan langsung dari API, jangan calculate ulang
+    // API sudah account untuk historical data dengan benar
+    document.getElementById('recommendation').textContent = data.recommendation || 'Rekomendasi tidak tersedia';
 }
 
 // ============================================
@@ -639,7 +681,7 @@ async function submitDecision(decision) {
             },
             body: JSON.stringify({
                 penawaran_id: penawaranId,
-                decision: decision,
+                user_decision: decision,
                 notes: ''
             })
         });
@@ -650,16 +692,34 @@ async function submitDecision(decision) {
             throw new Error(data.message || 'Gagal menyimpan keputusan');
         }
 
-        // Success - redirect or show confirmation
-        showSuccess('Keputusan berhasil disimpan. Mengarahkan ke penawaran...');
+        // Success - show detailed message with materials info
+        let message = data.message || 'Keputusan berhasil disimpan.';
+        
+        if (decision === 'approve' && data.data?.materials_created > 0) {
+            message = `✓ ${message} <br><strong>${data.data.materials_created} material baru telah dibuat otomatis.</strong>`;
+            
+            if (data.data.materials_info?.materials?.length > 0) {
+                message += '<br><br><strong>Material Baru:</strong><ul style="margin-top: 0.5rem; margin-left: 1rem;">';
+                data.data.materials_info.materials.forEach(m => {
+                    message += `<li>${m.kode} - ${m.nama} (${m.satuan})</li>`;
+                });
+                message += '</ul>';
+            }
+        }
+
+        showSuccessModal(message);
         setTimeout(() => {
             window.location.href = '{{ route("penawaran.index") }}';
         }, 2000);
 
     } catch (error) {
         showError(error.message);
+        hideLoading();  // Make sure loading is hidden on error too
     } finally {
-        hideLoading();
+        // Force hide any lingering loading state
+        setTimeout(() => {
+            hideLoading();
+        }, 100);
     }
 }
 
@@ -685,10 +745,20 @@ function closeError() {
     document.getElementById('errorState').classList.add('hidden');
 }
 
-function showSuccess(message) {
-    // You could use a toast library here instead
-    alert(message);
+function showSuccessModal(message) {
+    document.getElementById('successMessage').innerHTML = message;
+    document.getElementById('successState').classList.remove('hidden');
 }
+
+function closeSuccess() {
+    document.getElementById('successState').classList.add('hidden');
+}
+
+function showSuccess(message) {
+    showToast(message, 'success', 4000);
+}
+
+// ============================================
 
 // Enable drag-drop on dropZone
 document.getElementById('dropZone')?.addEventListener('click', () => {

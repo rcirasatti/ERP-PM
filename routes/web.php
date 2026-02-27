@@ -50,15 +50,17 @@ Route::middleware('auth')->group(function () {
         Route::resource('inventory', InventoryController::class);
         Route::get('inventory-log', [InventoryController::class, 'log'])->name('inventory.log');
 
-        // Penawaran (Admin only)
-        Route::resource('penawaran', PenawaranController::class);
-        Route::put('penawaran/{penawaran}/update-status', [PenawaranController::class, 'updateStatus'])->name('penawaran.updateStatus');
-        
-        // Penawaran BoQ Upload (New DSS workflow)
+        // Penawaran BoQ Upload (New DSS workflow) - MUST BE BEFORE resource()
         Route::get('penawaran/create-boq', [PenawaranController::class, 'showCreateBoq'])->name('penawaran.create-boq');
         Route::post('penawaran/boq/preview', [PenawaranController::class, 'uploadBoqPreview'])->name('penawaran.boq-preview');
         Route::post('penawaran/boq/store', [PenawaranController::class, 'storeFromBoq'])->name('penawaran.boq-store');
+        Route::post('penawaran/analyze-manual', [PenawaranController::class, 'analyzeManual'])->name('penawaran.analyze-manual');
         Route::get('penawaran/boq/template', [PenawaranController::class, 'exportBoqTemplate'])->name('penawaran.boq-template');
+
+        // Penawaran (Admin only)
+        Route::resource('penawaran', PenawaranController::class);
+        Route::delete('penawaran/{penawaran}', [PenawaranController::class, 'destroy'])->name('penawaran.destroy');
+        Route::put('penawaran/{penawaran}/update-status', [PenawaranController::class, 'updateStatus'])->name('penawaran.updateStatus');
         
         // Penawaran Documents
         Route::prefix('penawaran/{penawaran}/documents')->group(function () {

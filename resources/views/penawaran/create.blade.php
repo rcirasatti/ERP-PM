@@ -10,7 +10,32 @@
             <span>/</span>
             <span class="text-gray-900">Buat Penawaran</span>
         </div>
-        <h1 class="text-3xl font-bold text-gray-900">Buat Penawaran Baru</h1>
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Buat Penawaran Baru</h1>
+                <p class="text-gray-600 text-sm mt-1">Masukkan data penawaran secara manual</p>
+            </div>
+            <a href="{{ route('penawaran.create-boq') }}" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium text-sm flex items-center space-x-2" title="Atau buat menggunakan file Excel BoQ">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span>Buat via Upload BoQ</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Info: Alternative BoQ Method -->
+    <div class="mb-8 bg-purple-50 border border-purple-200 rounded-lg p-4 flex items-start">
+        <svg class="w-5 h-5 text-purple-600 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zm-11-1a1 1 0 100 2 1 1 0 000-2zM8 7a1 1 0 100 2 1 1 0 000-2zm1 5a1 1 0 11-2 0 1 1 0 012 0z" clip-rule="evenodd"/>
+        </svg>
+        <div>
+            <h3 class="font-medium text-purple-900 mb-1">💡 Tips: Buat dengan Upload Excel BoQ</h3>
+            <p class="text-sm text-purple-800 mb-2">Lebih cepat? Upload file Excel dengan daftar material untuk membuat penawaran otomatis dengan AI Cost Overrun Analysis.</p>
+            <a href="{{ route('penawaran.create-boq') }}" class="text-sm font-medium text-purple-700 hover:text-purple-900 underline">
+                Pergi ke form upload BoQ →
+            </a>
+        </div>
     </div>
 
     <!-- Form Section -->
@@ -127,6 +152,12 @@
                     </div>
 
                     <div class="space-y-3">
+                        <button type="button" onclick="analyzeManualPenawaran()" class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                            Analisis dengan AI DSS
+                        </button>
                         <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
                             Simpan Penawaran
                         </button>
@@ -387,5 +418,144 @@
         document.addEventListener('DOMContentLoaded', function() {
             addItem();
         });
-    </script>
-@endsection
+
+        // ============================================
+        // AI DSS ANALYSIS FOR MANUAL PENAWARAN
+        // ============================================
+        async function analyzeManualPenawaran() {
+            // Collect form data
+            const clientId = document.getElementById('client_id').value;
+            const tanggal = document.getElementById('tanggal').value;
+            
+            if (!clientId) {
+                alert('Pilih client terlebih dahulu');
+                return;
+            }
+
+            // Collect items
+            const items = [];
+            document.querySelectorAll('.item-row').forEach((row, index) => {
+                const materialId = row.querySelector('.material-id-input').value;
+                const jumlah = row.querySelector('.jumlah-input').value;
+                const hargaAsli = row.querySelector('.harga-asli-input').value;
+                const margin = row.querySelector('.margin-input').value;
+
+                if (materialId && jumlah && hargaAsli) {
+                    items.push({
+                        material_id: materialId,
+                        jumlah: parseInt(jumlah),
+                        harga_asli: parseFloat(hargaAsli),
+                        persentase_margin: parseFloat(margin) || 0
+                    });
+                }
+            });
+
+            if (items.length === 0) {
+                alert('Tambahkan minimal satu item');
+                return;
+            }
+
+            // Send to API for analysis
+            try {
+                const response = await fetch('{{ route("penawaran.analyze-manual") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        client_id: parseInt(clientId),
+                        tanggal: tanggal,
+                        items: items
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Gagal menganalisis penawaran');
+                }
+
+                // Show analysis results
+                showAnalysisResults(data);
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function showAnalysisResults(data) {
+            // Create a modal or navigate to analysis page
+            // For now, we'll create a modal that shows DSS results similar to BoQ
+            const analysisHTML = `
+                <div class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/50">
+                    <div class="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full mx-4 max-h-96 overflow-y-auto">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4">Hasil Analisis AI DSS</h2>
+                        
+                        <div class="space-y-4">
+                            <!-- Risk Level -->
+                            <div class="p-4 ${getRiskBgColor(data.risk_level)} rounded-lg">
+                                <label class="text-sm font-medium text-gray-600 block mb-2">Tingkat Risiko</label>
+                                <div class="flex items-center gap-2">
+                                    <span class="${getRiskBadgeClass(data.risk_level)} px-4 py-2 rounded-full text-white font-semibold">
+                                        ${getRiskEmoji(data.risk_level)} ${data.risk_level}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Recommendation -->
+                            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <label class="text-sm font-medium text-blue-900 block mb-2">Rekomendasi AI</label>
+                                <p class="text-sm text-blue-800">${data.recommendation || 'Silakan tinjau faktor risiko di atas.'}</p>
+                            </div>
+
+                            <!-- Predictions -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="p-3 bg-gray-50 rounded">
+                                    <p class="text-xs text-gray-600 mb-1">Prediksi LR</p>
+                                    <p class="text-sm font-bold text-gray-900">Rp ${data.predictions?.lr ? data.predictions.lr.toLocaleString('id-ID') : 0}</p>
+                                </div>
+                                <div class="p-3 bg-gray-50 rounded">
+                                    <p class="text-xs text-gray-600 mb-1">Prediksi MA</p>
+                                    <p class="text-sm font-bold text-gray-900">Rp ${data.predictions?.ma ? data.predictions.ma.toLocaleString('id-ID') : 0}</p>
+                                </div>
+                            </div>
+
+                            <!-- Buttons -->
+                            <div class="flex gap-3 pt-4 border-t border-gray-200">
+                                <button onclick="closeAnalysisModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300">
+                                    Kembali
+                                </button>
+                                <button type="submit" form="penawaranForm" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">
+                                    Simpan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', analysisHTML);
+        }
+
+        function closeAnalysisModal() {
+            document.querySelector('[style*="fixed"][style*="z-50"]')?.remove();
+        }
+
+        function getRiskBgColor(risk) {
+            if (risk === 'Tinggi') return 'bg-red-50 border border-red-200';
+            if (risk === 'Sedang') return 'bg-yellow-50 border border-yellow-200';
+            return 'bg-green-50 border border-green-200';
+        }
+
+        function getRiskBadgeClass(risk) {
+            if (risk === 'Tinggi') return 'bg-red-600';
+            if (risk === 'Sedang') return 'bg-yellow-600';
+            return 'bg-green-600';
+        }
+
+        function getRiskEmoji(risk) {
+            if (risk === 'Tinggi') return '🔴';
+            if (risk === 'Sedang') return '⚠️';
+            return '✓';
+        }

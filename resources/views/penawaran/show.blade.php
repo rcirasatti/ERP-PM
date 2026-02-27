@@ -325,7 +325,7 @@
             
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '/quotations/' + penawaranId;
+            form.action = '/penawaran/' + penawaranId;
             form.innerHTML = '@csrf @method("DELETE")';
             document.body.appendChild(form);
             form.submit();

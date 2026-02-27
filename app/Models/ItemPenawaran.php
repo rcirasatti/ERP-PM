@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ItemPenawaran extends Model
 {
     protected $table = 'item_penawaran';
-    protected $fillable = ['penawaran_id', 'material_id', 'jumlah', 'harga_asli', 'persentase_margin', 'harga_jual'];
+    protected $fillable = ['penawaran_id', 'material_id', 'nama', 'satuan', 'jumlah', 'harga_asli', 'persentase_margin', 'harga_jual'];
     protected $casts = [
         'jumlah' => 'integer',
         'harga_asli' => 'decimal:2',

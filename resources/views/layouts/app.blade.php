@@ -206,5 +206,8 @@
             scrollbar-width: none;  /* Firefox */
         }
     </style>
+
+    <!-- Stack for page-specific scripts -->
+    @stack('scripts')
 </body>
 </html>

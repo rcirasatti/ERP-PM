@@ -242,5 +242,66 @@ class MaterialController extends Controller
             ], 422);
         }
     }
-}
 
+    /**
+     * Store a newly created material via API (for BoQ workflow)
+     */
+    public function apiStore(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'kode' => 'nullable|string|max:50|unique:materials,kode',
+                'nama' => 'required|string|max:255',
+                'satuan' => 'required|string|max:50',
+                'harga_beli' => 'required|numeric|min:0',
+            ]);
+
+            // Check kode uniqueness
+            if (!empty($validated['kode'])) {
+                $existing = Material::where('kode', $validated['kode'])->first();
+                if ($existing) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Kode '{$validated['kode']}' sudah digunakan"
+                    ], 422);
+                }
+            }
+
+            // Create material
+            $material = Material::create([
+                'kode' => $validated['kode'] ?? 'MAT-' . strtoupper(str_random(6)),
+                'nama' => $validated['nama'],
+                'satuan' => $validated['satuan'],
+                'harga' => $validated['harga_beli'],
+                'supplier_id' => null,
+                'type' => Material::TYPE_BARANG,
+                'track_inventory' => true,
+            ]);
+
+            // Create inventory entry
+            Inventory::create([
+                'material_id' => $material->id,
+                'stok' => 0,
+                'min_stok' => 0,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Material berhasil dibuat',
+                'data' => [
+                    'id' => $material->id,
+                    'kode' => $material->kode,
+                    'nama' => $material->nama,
+                    'satuan' => $material->satuan,
+                    'harga' => $material->harga,
+                ]
+            ], 201);
+
+        } catch (\Exception $e) {
+            \Log::error('Error creating material: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat material: ' . $e->getMessage()
+            ], 500);
+        }
+    }}
