@@ -55,9 +55,10 @@ Route::middleware('auth')->group(function () {
         Route::put('penawaran/{penawaran}/update-status', [PenawaranController::class, 'updateStatus'])->name('penawaran.updateStatus');
         
         // Penawaran BoQ Upload (New DSS workflow)
-        Route::post('penawaran/boq/preview', [PenawaranController::class, 'uploadBoqPreview'])->name('penawaran.boq.preview');
-        Route::post('penawaran/boq/store', [PenawaranController::class, 'storeFromBoq'])->name('penawaran.boq.store');
-        Route::get('penawaran/boq/template', [PenawaranController::class, 'exportBoqTemplate'])->name('penawaran.boq.template');
+        Route::get('penawaran/create-boq', [PenawaranController::class, 'showCreateBoq'])->name('penawaran.create-boq');
+        Route::post('penawaran/boq/preview', [PenawaranController::class, 'uploadBoqPreview'])->name('penawaran.boq-preview');
+        Route::post('penawaran/boq/store', [PenawaranController::class, 'storeFromBoq'])->name('penawaran.boq-store');
+        Route::get('penawaran/boq/template', [PenawaranController::class, 'exportBoqTemplate'])->name('penawaran.boq-template');
         
         // Penawaran Documents
         Route::prefix('penawaran/{penawaran}/documents')->group(function () {

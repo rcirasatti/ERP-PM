@@ -11,7 +11,8 @@ use App\Models\LogInventory;
 use App\Imports\BoqImport;
 use App\Exports\BoqTemplateExport;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class PenawaranController extends Controller
 {
@@ -316,10 +317,49 @@ class PenawaranController extends Controller
      */
     public function exportBoqTemplate()
     {
-        return Excel::download(
-            new BoqTemplateExport(),
-            'Template_BoQ_Penawaran.xlsx'
-        );
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('BoQ Template');
+        
+        // Header row
+        $headers = ['kode', 'nama', 'satuan', 'jumlah', 'harga_satuan', 'persentase_margin'];
+        $sheet->fromArray($headers, NULL, 'A1');
+        
+        // Sample data
+        $sampleData = [
+            ['MAT001', 'Batu Bata', 'pcs', 50000, 2000, 10],
+            ['MAT002', 'Semen', 'kg', 20000, 1500, 10],
+            ['JAR001', 'Jasa Tukang', 'hari', 30, 350000, 15],
+        ];
+        $sheet->fromArray($sampleData, NULL, 'A2');
+        
+        // Style header
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '4472C4']],
+            'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
+        ];
+        $sheet->getStyle('A1:F1')->applyFromArray($headerStyle);
+        
+        // Auto size columns
+        $sheet->getColumnDimension('A')->setWidth(15);
+        $sheet->getColumnDimension('B')->setWidth(25);
+        $sheet->getColumnDimension('C')->setWidth(12);
+        $sheet->getColumnDimension('D')->setWidth(12);
+        $sheet->getColumnDimension('E')->setWidth(15);
+        $sheet->getColumnDimension('F')->setWidth(18);
+        
+        // Create writer
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'Template_BoQ_Penawaran.xlsx';
+        
+        // Output to browser
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $fileName . '"');
+        header('Cache-Control: max-age=0');
+        
+        $writer->save('php://output');
+        exit;
     }
 
     /**
@@ -482,5 +522,18 @@ class PenawaranController extends Controller
                 'message' => 'Error membuat penawaran: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Show form to create penawaran with BoQ
+     * (Phase 2: UI for DSS workflow)
+     */
+    public function showCreateBoq()
+    {
+        $clients = Client::orderBy('nama')->get();
+        
+        return view('penawaran.create_boq', [
+            'clients' => $clients
+        ]);
     }
 }
