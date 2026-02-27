@@ -419,7 +419,7 @@ class DSSController extends Controller
 
     /**
      * Auto-create materials dari BOQ items yang tidak punya material_id
-     * Dijalankan ketika penawaran disetujui
+     * Dijalankan ketika penawaran disetujui atau di-revisi
      * 
      * @return array Info tentang material yang dibuat
      */
@@ -433,21 +433,30 @@ class DSSController extends Controller
         ];
 
         try {
+            \Log::info("Starting createMaterialsFromBoQItems for penawaran {$penawaran->id}");
+            
             // Get semua items yang tidak punya material_id
             $itemsWithoutMaterial = ItemPenawaran::where('penawaran_id', $penawaran->id)
                 ->whereNull('material_id')
                 ->get();
 
+            \Log::info("Found {$itemsWithoutMaterial->count()} items without material_id");
+
             foreach ($itemsWithoutMaterial as $item) {
                 try {
+                    \Log::info("Processing item {$item->id}: nama='{$item->nama}', satuan='{$item->satuan}'");
+                    
                     // Create material baru
                     $material = Material::create([
                         'kode' => 'BOQ-' . $penawaran->no_penawaran . '-' . $item->id,
                         'nama' => $item->nama ?? 'Material BoQ Item',
                         'satuan' => $item->satuan ?? 'pcs',
                         'supplier_id' => null, // Dari BOQ, belum ada supplier
-                        'harga_beli' => $item->harga_asli,
+                        'harga' => $item->harga_asli,  // Use 'harga' not 'harga_beli'
+                        'type' => 'BARANG',  // Default type untuk BoQ items
                     ]);
+
+                    \Log::info("Created material {$material->id} with kode {$material->kode}");
 
                     // Create inventory entry untuk material ini
                     Inventory::create([
@@ -461,6 +470,8 @@ class DSSController extends Controller
                         'material_id' => $material->id,
                     ]);
 
+                    \Log::info("Updated item {$item->id} with material_id {$material->id}");
+
                     $result['created']++;
                     $result['materials'][] = [
                         'id' => $material->id,
@@ -469,12 +480,13 @@ class DSSController extends Controller
                         'satuan' => $material->satuan,
                     ];
                 } catch (\Exception $e) {
+                    \Log::error("Error processing item {$item->id}: " . $e->getMessage());
                     $result['errors'][] = "Item {$item->id} ({$item->nama}): " . $e->getMessage();
                     $result['skipped']++;
                 }
             }
 
-            \Log::info("Materials created for penawaran {$penawaran->id}: " . $result['created'] . " created, " . $result['skipped'] . " skipped");
+            \Log::info("Completed createMaterialsFromBoQItems: {$result['created']} created, {$result['skipped']} skipped");
         } catch (\Exception $e) {
             \Log::error("Error in createMaterialsFromBoQItems: " . $e->getMessage());
             $result['errors'][] = "Kesalahan saat membuat materials: " . $e->getMessage();

@@ -268,18 +268,21 @@
                 // Kalkulasi harga jual = harga asli + (harga asli * margin%)
                 const hargaJual = hargaAsli + (hargaAsli * margin / 100);
                 
-                // Subtotal = harga jual * jumlah
+                // Subtotal = harga jual * jumlah (selling price total)
                 const subtotal = jumlah * hargaJual;
                 
-                // Margin value = subtotal - (harga asli * jumlah)
-                const marginValue = subtotal - (hargaAsli * jumlah);
+                // Cost total = harga asli * jumlah (cost price only)
+                const costTotal = hargaAsli * jumlah;
+                
+                // Margin value = selling total - cost total
+                const marginValue = subtotal - costTotal;
 
                 // Update display
                 row.querySelector('.harga-jual-display').textContent = 'Rp ' + number_format(hargaJual, 0, ',', '.');
                 row.querySelector('.subtotal-display').textContent = 'Rp ' + number_format(subtotal, 0, ',', '.');
 
-                totalBiaya += subtotal;
-                totalMargin += marginValue;
+                totalBiaya += costTotal;  // FIXED: Add cost, not selling price
+                totalMargin += marginValue;  // Add actual margin
                 totalItems++;
             });
 
