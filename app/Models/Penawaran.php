@@ -10,13 +10,29 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Penawaran extends Model
 {
     protected $table = 'penawaran';
-    protected $fillable = ['no_penawaran', 'client_id', 'tanggal', 'status', 'total_margin', 'total_biaya', 'ppn', 'grand_total_with_ppn'];
+    protected $fillable = [
+        'no_penawaran', 
+        'client_id', 
+        'tanggal', 
+        'status', 
+        'ai_status',
+        'total_margin', 
+        'total_biaya', 
+        'ppn', 
+        'grand_total_with_ppn',
+        'ai_prediksi_lr',
+        'ai_prediksi_ma',
+        'margin_status',
+        'ai_notes'
+    ];
     protected $casts = [
         'tanggal' => 'date',
         'total_margin' => 'decimal:2',
         'total_biaya' => 'decimal:2',
         'ppn' => 'decimal:2',
         'grand_total_with_ppn' => 'decimal:2',
+        'ai_prediksi_lr' => 'decimal:2',
+        'ai_prediksi_ma' => 'decimal:2',
     ];
     public $timestamps = true;
 
@@ -42,6 +58,19 @@ class Penawaran extends Model
     public function proyek(): HasOne
     {
         return $this->hasOne(Proyek::class, 'penawaran_id');
+    }
+
+    /**
+     * Get actual costs from the project (feedback loop for ML training)
+     */
+    public function pengeluaran()
+    {
+        return $this->hasManyThrough(
+            Pengeluaran::class,
+            Proyek::class,
+            'penawaran_id',
+            'proyek_id'
+        );
     }
 
     /**

@@ -15,6 +15,7 @@ use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\DSSController;
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -53,6 +54,11 @@ Route::middleware('auth')->group(function () {
         Route::resource('penawaran', PenawaranController::class);
         Route::put('penawaran/{penawaran}/update-status', [PenawaranController::class, 'updateStatus'])->name('penawaran.updateStatus');
         
+        // Penawaran BoQ Upload (New DSS workflow)
+        Route::post('penawaran/boq/preview', [PenawaranController::class, 'uploadBoqPreview'])->name('penawaran.boq.preview');
+        Route::post('penawaran/boq/store', [PenawaranController::class, 'storeFromBoq'])->name('penawaran.boq.store');
+        Route::get('penawaran/boq/template', [PenawaranController::class, 'exportBoqTemplate'])->name('penawaran.boq.template');
+        
         // Penawaran Documents
         Route::prefix('penawaran/{penawaran}/documents')->group(function () {
             Route::get('invoice-gsb', [PenawaranDocumentController::class, 'invoiceGsb'])->name('penawaran.document.invoice-gsb');
@@ -66,6 +72,12 @@ Route::middleware('auth')->group(function () {
 
     // ADMIN & MANAGER ROUTES
     Route::middleware('check.any.role:admin,manager')->group(function () {
+        // DSS (Decision Support System) - AI Prediksi Cost Overrun
+        Route::prefix('api/dss')->group(function () {
+            Route::post('analyze', [DSSController::class, 'analyzePenawaran'])->name('dss.analyze');
+            Route::post('approve', [DSSController::class, 'approvePenawaran'])->name('dss.approve');
+        });
+
         // Projects Management
         Route::resource('proyek', ProyekController::class);
         Route::put('proyek/{proyek}/update-status', [ProyekController::class, 'updateStatus'])->name('proyek.updateStatus');

@@ -8,7 +8,10 @@ use App\Models\Client;
 use App\Models\Material;
 use App\Models\Inventory;
 use App\Models\LogInventory;
+use App\Imports\BoqImport;
+use App\Exports\BoqTemplateExport;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PenawaranController extends Controller
 {
@@ -305,6 +308,179 @@ class PenawaranController extends Controller
                     'updated_at' => now(),
                 ]);
             }
+        }
+    }
+
+    /**
+     * Export template Excel BoQ untuk user
+     */
+    public function exportBoqTemplate()
+    {
+        return Excel::download(
+            new BoqTemplateExport(),
+            'Template_BoQ_Penawaran.xlsx'
+        );
+    }
+
+    /**
+     * Upload dan preview Excel BoQ sebelum analisis AI
+     * 
+     * Flow baru:
+     * 1. User upload Excel BoQ
+     * 2. Baca Grand Total (belum simpan ke database)
+     * 3. Tampilkan tombol "Analisis Prediksi AI"
+     */
+    public function uploadBoqPreview(Request $request)
+    {
+        $validated = $request->validate([
+            'client_id' => 'required|exists:clients,id',
+            'boq_file' => 'required|file|mimes:xlsx,xls,csv',
+            'tanggal' => 'required|date',
+        ]);
+
+        try {
+            // Parse Excel file
+            $boqImport = new BoqImport();
+            Excel::import($boqImport, $validated['boq_file']);
+
+            // Check if there are errors
+            if (!empty($boqImport->errors)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ada error dalam file Excel',
+                    'errors' => $boqImport->errors,
+                ], 422);
+            }
+
+            if (empty($boqImport->items)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File Excel tidak memiliki data item yang valid',
+                ], 422);
+            }
+
+            // Return preview (belum simpan ke database)
+            $client = Client::find($validated['client_id']);
+            $summary = $boqImport->getSummary();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Preview BoQ berhasil dibaca',
+                'data' => [
+                    'client_id' => $validated['client_id'],
+                    'client_name' => $client->nama,
+                    'tanggal' => $validated['tanggal'],
+                    'items' => $boqImport->items,
+                    'summary' => $summary,
+                    'grand_total' => $summary['grand_total'],
+                    'next_action' => 'Klik "Analisis Prediksi AI" untuk mendapatkan rekomendasi risk level',
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error membaca Excel: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Store penawaran dari preview BoQ + hasil analisis AI
+     * 
+     * Flow:
+     * 1. User sudah lihat preview grand total
+     * 2. Sistem sudah menjalankan analisis AI
+     * 3. User confirm approve → simpan ke database dengan status draft
+     */
+    public function storeFromBoq(Request $request)
+    {
+        $validated = $request->validate([
+            'client_id' => 'required|exists:clients,id',
+            'no_penawaran' => 'required|string|unique:penawaran,no_penawaran',
+            'tanggal' => 'required|date',
+            'items' => 'required|array|min:1',
+            'items.*.kode' => 'required|string',
+            'items.*.nama' => 'required|string',
+            'items.*.satuan' => 'required|string',
+            'items.*.jumlah' => 'required|integer|min:1',
+            'items.*.harga_asli' => 'required|numeric|min:0',
+            'items.*.harga_jual' => 'required|numeric|min:0',
+            'items.*.persentase_margin' => 'required|numeric|min:0|max:100',
+        ]);
+
+        try {
+            // Calculate totals
+            $totalBiaya = 0;
+            $totalMargin = 0;
+
+            // Create penawaran dengan status DRAFT
+            $penawaran = Penawaran::create([
+                'no_penawaran' => $validated['no_penawaran'],
+                'client_id' => $validated['client_id'],
+                'tanggal' => $validated['tanggal'],
+                'status' => 'draft', // Important: START as draft
+                'ai_status' => 'pending',
+                'total_biaya' => 0,
+                'total_margin' => 0,
+                'ppn' => 0,
+                'grand_total_with_ppn' => 0,
+            ]);
+
+            // Create items dan hitung total
+            foreach ($validated['items'] as $item) {
+                $hargaAsli = $item['harga_asli'];
+                $hargaJual = $item['harga_jual'];
+                $margin = $item['persentase_margin'];
+
+                $totalBiayaAsli = $hargaAsli * $item['jumlah'];
+                $totalHargaJual = $hargaJual * $item['jumlah'];
+                $marginValue = $totalHargaJual - $totalBiayaAsli;
+
+                ItemPenawaran::create([
+                    'penawaran_id' => $penawaran->id,
+                    'material_id' => null, // Dari BoQ mungkin belum match ke material
+                    'jumlah' => $item['jumlah'],
+                    'harga_asli' => $hargaAsli,
+                    'persentase_margin' => $margin,
+                    'harga_jual' => $hargaJual,
+                ]);
+
+                $totalBiaya += $totalBiayaAsli;
+                $totalMargin += $marginValue;
+            }
+
+            // Calculate PPN & grand total
+            $subtotal = $totalBiaya + $totalMargin;
+            $ppn = $subtotal * 0.11;
+            $grandTotal = $subtotal + $ppn;
+
+            // Update penawaran dengan final totals
+            $penawaran->update([
+                'total_biaya' => $totalBiaya,
+                'total_margin' => $totalMargin,
+                'ppn' => $ppn,
+                'grand_total_with_ppn' => $grandTotal,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Penawaran berhasil dibuat dengan status DRAFT',
+                'data' => [
+                    'penawaran_id' => $penawaran->id,
+                    'no_penawaran' => $penawaran->no_penawaran,
+                    'status' => $penawaran->status,
+                    'ai_status' => $penawaran->ai_status,
+                    'grand_total' => $penawaran->grand_total_with_ppn,
+                    'next_action' => 'Jalankan analisis DSS sebelum approve',
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error membuat penawaran: ' . $e->getMessage(),
+            ], 500);
         }
     }
 }
