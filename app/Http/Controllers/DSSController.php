@@ -10,6 +10,7 @@ use App\Models\Inventory;
 use App\Models\ItemPenawaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DSSController extends Controller
 {
@@ -103,6 +104,7 @@ class DSSController extends Controller
     /**
      * Approve penawaran setelah review hasil DSS
      * Perubahan status: analyzed → approved
+     * CRITICAL FIX: Add transaction wrapper and material validation
      */
     public function approvePenawaran(Request $request)
     {
@@ -113,7 +115,7 @@ class DSSController extends Controller
                 'notes' => 'nullable|string',
             ]);
 
-            $penawaran = Penawaran::find($validated['penawaran_id']);
+            $penawaran = Penawaran::with('items')->find($validated['penawaran_id']);
 
             if ($penawaran->ai_status !== 'analyzed') {
                 return response()->json([
@@ -130,53 +132,99 @@ class DSSController extends Controller
                 'materials' => []
             ];
 
-            // User decision (manajer/direktur)
-            if ($validated['user_decision'] === 'approve') {
-                $penawaran->update([
-                    'status' => 'disetujui',
-                    'ai_status' => 'approved',
-                ]);
-
-                // Auto-create materials for BOQ items without material_id
-                $materialResult = $this->createMaterialsFromBoQItems($penawaran);
-
-                $message = 'Penawaran disetujui dan berlanjut ke tahap proyek.';
-                if ($materialResult['created'] > 0) {
-                    $message .= ' ' . $materialResult['created'] . ' material baru telah dibuat otomatis.';
+            // CRITICAL FIX #3: Wrap entire approval flow in transaction
+            // This ensures data consistency if any step fails
+            $result = DB::transaction(function () use ($penawaran, $validated, &$materialResult) {
+                
+                // CRITICAL FIX #2: Validate all items have material_id before approval
+                if ($validated['user_decision'] === 'approve') {
+                    $itemsWithoutMaterial = $penawaran->items->whereNull('material_id')->count();
+                    
+                    if ($itemsWithoutMaterial > 0) {
+                        throw new \Exception(
+                            "Tidak dapat approve. Masih ada {$itemsWithoutMaterial} item yang belum memiliki material. "
+                            . "Jalankan material creation terlebih dahulu atau assign materials secara manual."
+                        );
+                    }
+                    
+                    // Try to create any materials from BoQ items if needed
+                    $materialResult = $this->createMaterialsFromBoQItems($penawaran);
+                    
+                    if (count($materialResult['errors']) > 0) {
+                        throw new \Exception(
+                            "Material creation failed: " . implode(", ", array_slice($materialResult['errors'], 0, 3))
+                        );
+                    }
                 }
-            } elseif ($validated['user_decision'] === 'reject') {
-                $penawaran->update([
-                    'status' => 'ditolak',
-                    'ai_status' => 'approved',
-                ]);
-
-                $message = 'Penawaran ditolak berdasarkan rekomendasi DSS.';
-            } else {
-                // 'revise' - juga perlu create materials biar user bisa edit dengan material dropdown
-                $penawaran->update([
-                    'ai_status' => 'pending', // Reset untuk dianalisis ulang
-                ]);
-
-                // Auto-create materials so user can revise with proper material selections
-                $materialResult = $this->createMaterialsFromBoQItems($penawaran);
-
-                $message = 'Penawaran dikembalikan untuk revisi.';
-                if ($materialResult['created'] > 0) {
-                    $message .= ' ' . $materialResult['created'] . ' material siap untuk digunakan.';
+                
+                // User decision (manajer/direktur)
+                if ($validated['user_decision'] === 'approve') {
+                    $penawaran->update([
+                        'status' => 'disetujui',
+                        'ai_status' => 'approved',
+                    ]);
+                    
+                    $message = 'Penawaran disetujui dan berlanjut ke tahap proyek.';
+                    if ($materialResult['created'] > 0) {
+                        $message .= ' ' . $materialResult['created'] . ' material baru telah dibuat otomatis.';
+                    }
+                    
+                } elseif ($validated['user_decision'] === 'reject') {
+                    $penawaran->update([
+                        'status' => 'ditolak',
+                        'ai_status' => 'approved',
+                    ]);
+                    
+                    $message = 'Penawaran ditolak berdasarkan rekomendasi DSS.';
+                    
+                } else {
+                    // 'revise' - reset ai_status dan create materials if needed
+                    $materialResult = $this->createMaterialsFromBoQItems($penawaran);
+                    
+                    $penawaran->update([
+                        'ai_status' => 'pending', // Reset untuk dianalisis ulang
+                    ]);
+                    
+                    $message = 'Penawaran dikembalikan untuk revisi.';
+                    if ($materialResult['created'] > 0) {
+                        $message .= ' ' . $materialResult['created'] . ' material siap untuk digunakan.';
+                    }
                 }
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => $message,
-                'data' => [
+                
+                // ✅ CRITICAL FIX #1: Log DSS decision with full audit trail
+                \Log::channel('dss_decisions')->info('DSS Decision Recorded', [
                     'penawaran_id' => $penawaran->id,
-                    'status' => $penawaran->status,
-                    'ai_status' => $penawaran->ai_status,
-                    'materials_created' => ($validated['user_decision'] === 'approve' || $validated['user_decision'] === 'revise') ? $materialResult['created'] : 0,
-                    'materials_info' => ($validated['user_decision'] === 'approve' || $validated['user_decision'] === 'revise') ? $materialResult : null,
-                ]
-            ]);
+                    'no_penawaran' => $penawaran->no_penawaran,
+                    'user_id' => auth()->id(),
+                    'user_email' => auth()?->user()?->email,
+                    'decision' => $validated['user_decision'],
+                    'status_before' => 'analyzed',
+                    'status_after' => $penawaran->status,
+                    'risk_level' => $penawaran->margin_status,
+                    'ai_prediction_lr' => (float) $penawaran->ai_prediksi_lr,
+                    'ai_prediction_ma' => (float) $penawaran->ai_prediksi_ma,
+                    'ai_notes' => $penawaran->ai_notes,
+                    'user_notes' => $validated['notes'] ?? null,
+                    'materials_created' => $materialResult['created'],
+                    'materials_errors' => $materialResult['errors'],
+                    'timestamp' => now(),
+                    'ip_address' => request()->ip(),
+                ]);
+                
+                return [
+                    'success' => true,
+                    'message' => $message,
+                    'data' => [
+                        'penawaran_id' => $penawaran->id,
+                        'status' => $penawaran->status,
+                        'ai_status' => $penawaran->ai_status,
+                        'materials_created' => ($validated['user_decision'] === 'approve' || $validated['user_decision'] === 'revise') ? $materialResult['created'] : 0,
+                        'materials_info' => ($validated['user_decision'] === 'approve' || $validated['user_decision'] === 'revise') ? $materialResult : null,
+                    ]
+                ];
+            });
+            
+            return response()->json($result);
 
         } catch (\Exception $e) {
             return response()->json([

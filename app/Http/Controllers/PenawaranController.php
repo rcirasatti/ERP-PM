@@ -140,6 +140,11 @@ class PenawaranController extends Controller
 
     /**
      * Update the specified resource in storage.
+     * 
+     * NOTE: Inventory NOT reduced here because:
+     * - Client hasn't purchased goods yet (penawaran = estimate only)
+     * - Stock will be tracked when goods actually received from supplier
+     * - Focus here: Budget tracking (estimate vs actual spending via Pengeluaran)
      */
     public function update(Request $request, Penawaran $penawaran)
     {
@@ -154,15 +159,6 @@ class PenawaranController extends Controller
             'items.*.persentase_margin' => 'required|numeric|min:0|max:100',
         ]);
 
-        // Jika penawaran status disetujui, restore inventory barang lama terlebih dahulu
-        if ($penawaran->status === 'disetujui' && $validated['status'] !== 'disetujui') {
-            // Status berubah dari disetujui ke status lain, log dengan status baru
-            $this->restoreInventory($penawaran, $validated['status']);
-        }
-
-        // Get old items for comparison
-        $oldItems = ItemPenawaran::where('penawaran_id', $penawaran->id)->get();
-        
         // Delete old items
         ItemPenawaran::where('penawaran_id', $penawaran->id)->delete();
 
@@ -194,7 +190,7 @@ class PenawaranController extends Controller
             $totalMargin += $marginValue;
         }
 
-        // Update penawaran
+        // Update penawaran with budget figures (no inventory reduction)
         $grandTotal = $totalBiaya + $totalMargin;
         $ppn = $grandTotal * 0.11;
         $grandTotalWithPpn = $grandTotal * 1.11;
@@ -209,12 +205,12 @@ class PenawaranController extends Controller
             'grand_total_with_ppn' => $grandTotalWithPpn,
         ]);
 
-        // Jika penawaran status disetujui, kurangi inventory barang baru
+        $message = 'Penawaran berhasil diubah';
         if ($validated['status'] === 'disetujui') {
-            $this->reduceInventory($penawaran);
+            $message .= ' dan disetujui. Budget reference: Rp ' . number_format($grandTotalWithPpn, 0, ',', '.');
         }
 
-        return redirect()->route('penawaran.show', $penawaran->id)->with('success', 'Penawaran berhasil diubah');
+        return redirect()->route('penawaran.show', $penawaran->id)->with('success', $message);
     }
 
     /**
@@ -228,6 +224,9 @@ class PenawaranController extends Controller
 
     /**
      * Update status penawaran
+     * 
+     * NOTE: Only updates status and budget reference.
+     * Inventory tracking happens when goods received from supplier (separate flow).
      */
     public function updateStatus(Request $request, Penawaran $penawaran)
     {
@@ -238,80 +237,55 @@ class PenawaranController extends Controller
         $oldStatus = $penawaran->status;
         $newStatus = $validated['status'];
 
-        // Jika status berubah dari draft ke disetujui, kurangi stok inventory
-        if ($oldStatus !== 'disetujui' && $newStatus === 'disetujui') {
-            $this->reduceInventory($penawaran);
-        }
-
-        // Jika status berubah dari disetujui ke status lain, tambah kembali stok
-        if ($oldStatus === 'disetujui' && $newStatus !== 'disetujui') {
-            $this->restoreInventory($penawaran, $newStatus);
-        }
-
+        // Just update status - no inventory manipulation
+        // Budget tracking: penawaran.grand_total_with_ppn is reference for project budget
         $penawaran->update([
             'status' => $newStatus,
         ]);
 
-        return redirect()->route('penawaran.show', $penawaran->id)->with('success', 'Status penawaran berhasil diubah menjadi ' . $penawaran->getStatusLabel());
+        Log::info('Penawaran status updated', [
+            'penawaran_id' => $penawaran->id,
+            'no_penawaran' => $penawaran->no_penawaran,
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus,
+            'budget_reference' => $penawaran->grand_total_with_ppn,
+            'updated_by' => auth()->id() ?? 1,
+        ]);
+
+        return redirect()->route('penawaran.show', $penawaran->id)
+            ->with('success', 'Status penawaran berhasil diubah menjadi ' . $penawaran->getStatusLabel());
     }
 
     /**
-     * Reduce inventory when penawaran is approved
+     * DEPRECATED: Inventory methods below are NO LONGER CALLED
+     * 
+     * REASON: Business model clarification shows:
+     * - Penawaran (BoQ) = Budget ESTIMATE, not actual goods purchase
+     * - Client doesn't have stock yet (they'll order from supplier later)
+     * - Inventory tracking will happen at different stage (goods receipt from supplier)
+     * 
+     * Currently, focus is on BUDGET TRACKING:
+     * - penawaran.grand_total_with_ppn = Budget reference
+     * - Pengeluaran (actual spending) = compared against this budget
+     * - Determine overrun/savings in Proyek
+     * 
+     * These methods kept for FUTURE reference when goods receipt module is added
+     * If needed, modify to track goods RECEIVED from supplier, not penawaran approval
      */
-    private function reduceInventory(Penawaran $penawaran)
-    {
-        $penawaran->load('items');
-
-        foreach ($penawaran->items as $item) {
-            $inventory = Inventory::where('material_id', $item->material_id)->first();
-
-            if ($inventory) {
-                $inventory->stok -= $item->jumlah;
-                $inventory->save();
-
-                // Log the inventory change
-                LogInventory::create([
-                    'material_id' => $item->material_id,
-                    'jenis' => 'keluar',
-                    'jumlah' => $item->jumlah,
-                    'tanggal' => now()->toDateString(),
-                    'catatan' => 'Pengurangan stok dari penawaran #' . $penawaran->no_penawaran . ' - ' . $penawaran->client->nama,
-                    'dibuat_oleh' => 1,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-        }
-    }
+    
+    /**
+     * UNUSED: reduceInventory() - stock reduction no longer triggered by penawaran approval
+     * 
+     * @deprecated See comment above
+     */
+    // private function reduceInventory(Penawaran $penawaran) { ... }
 
     /**
-     * Restore inventory when penawaran status is reverted from approved
+     * UNUSED: restoreInventory() - stock restoration no longer needed
+     * 
+     * @deprecated See comment above  
      */
-    private function restoreInventory(Penawaran $penawaran, $newStatus = 'dibatalkan')
-    {
-        $penawaran->load('items');
-
-        foreach ($penawaran->items as $item) {
-            $inventory = Inventory::where('material_id', $item->material_id)->first();
-
-            if ($inventory) {
-                $inventory->stok += $item->jumlah;
-                $inventory->save();
-
-                // Log the inventory restore with the new status
-                LogInventory::create([
-                    'material_id' => $item->material_id,
-                    'jenis' => 'masuk',
-                    'jumlah' => $item->jumlah,
-                    'tanggal' => now()->toDateString(),
-                    'catatan' => 'Pemulihan stok dari penawaran #' . $penawaran->no_penawaran . ' (status ' . $newStatus . ')',
-                    'dibuat_oleh' => 1,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-        }
-    }
+    // private function restoreInventory(Penawaran $penawaran, $newStatus = 'dibatalkan') { ... }
 
     /**
      * Export template Excel BoQ untuk user

@@ -123,27 +123,4 @@ class Penawaran extends Model
         };
     }
 
-    /**
-     * Get grand total (total_biaya + total_margin)
-     */
-    public function getGrandTotalAttribute()
-    {
-        return $this->total_biaya + $this->total_margin;
-    }
-
-    /**
-     * Get PPN 11% value
-     */
-    public function getPpnAttribute()
-    {
-        return $this->grand_total * 0.11;
-    }
-
-    /**
-     * Get grand total with 11% PPN
-     */
-    public function getGrandTotalWithPpnAttribute()
-    {
-        return $this->grand_total * 1.11;
-    }
 }

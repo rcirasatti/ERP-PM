@@ -127,6 +127,14 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'dss_decisions' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/dss_decisions.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 30,
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];
