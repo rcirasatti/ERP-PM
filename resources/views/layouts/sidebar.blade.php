@@ -120,15 +120,6 @@
             <span>Item Penawaran</span>
         </a>
 
-        <a href="{{ route('inventory.index') }}"
-            class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('inventory.*') ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-800' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M20 7l-8-4-8 4m0 0l8 4m-8-4v10l8 4m0-10l8 4m-8-4v10m8-10l-8-4"></path>
-            </svg>
-            <span>Inventory</span>
-        </a>
-
         <div class="pt-4">
             <p class="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-widest">Pengaturan</p>
         </div>

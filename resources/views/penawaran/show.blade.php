@@ -160,9 +160,6 @@
                         <button onclick="changeStatus()" class="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium">
                             Ubah Status
                         </button>
-                        <a href="{{ route('inventory.index') }}?penawaran_id={{ $penawaran->id }}" class="block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-center">
-                            Lihat Riwayat Inventory
-                        </a>
                         <button onclick="showConfirm('Apakah Anda yakin ingin menghapus penawaran ini?', 'Hapus Penawaran', () => deletePenawaran())" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
                             Hapus Penawaran
                         </button>

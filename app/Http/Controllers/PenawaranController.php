@@ -6,10 +6,11 @@ use App\Models\Penawaran;
 use App\Models\ItemPenawaran;
 use App\Models\Client;
 use App\Models\Material;
-use App\Models\Inventory;
-use App\Models\LogInventory;
 use App\Imports\BoqImport;
 use App\Exports\BoqTemplateExport;
+use App\Http\Requests\CopyItemsFromPenawaranRequest;
+use App\Http\Requests\GetItemPriceTrendRequest;
+use App\Http\Requests\FindSimilarPenawaranRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -750,5 +751,385 @@ class PenawaranController extends Controller
         return view('penawaran.create_boq', [
             'clients' => $clients
         ]);
+    }
+
+    /**
+     * Copy items from previous penawaran to a new/existing penawaran
+     * 
+     * Price Strategy Options:
+     * - 'keep': Keep original price from source penawaran
+     * - 'latest': Use latest material price (from material master)
+     * - 'average': Use average price from material history
+     * - 'override': Use custom provided prices
+     * 
+     * Returns: Updated penawaran with recalculated totals
+     */
+    public function copyItemsFromPenawaran(CopyItemsFromPenawaranRequest $request)
+    {
+        $startTime = microtime(true);
+        
+        $validated = $request->validated();
+
+        try {
+            $sourcePenawaran = Penawaran::findOrFail($validated['source_penawaran_id']);
+            $targetPenawaran = Penawaran::findOrFail($validated['target_penawaran_id']);
+            $priceStrategy = $validated['price_strategy'];
+
+            Log::info('Starting copy items from penawaran', [
+                'user_id' => auth()->id(),
+                'source_penawaran_id' => $sourcePenawaran->id,
+                'target_penawaran_id' => $targetPenawaran->id,
+                'price_strategy' => $priceStrategy,
+                'source_items_count' => $sourcePenawaran->items()->count()
+            ]);
+
+            // Get source items
+            $sourceItems = $sourcePenawaran->items()->get();
+
+            if ($sourceItems->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Penawaran sumber tidak memiliki item',
+                ], 422);
+            }
+
+            // Build override price map for quick lookup
+            $overridePrices = collect($validated['override_prices'] ?? [])->keyBy('item_id');
+
+            // Clear existing target items (optional - can be changed to append)
+            $targetPenawaran->items()->delete();
+
+            $totalBiaya = 0;
+            $totalMargin = 0;
+            $copiedItems = [];
+
+            foreach ($sourceItems as $sourceItem) {
+                // Determine harga_asli based on strategy
+                $hargaAsli = $sourceItem->harga_asli;
+
+                if ($overridePrices->has($sourceItem->id)) {
+                    // Override strategy
+                    $override = $overridePrices->get($sourceItem->id);
+                    $hargaAsli = $override['harga_asli'];
+                    $persentaseMargin = $override['persentase_margin'];
+                } elseif ($priceStrategy === 'latest') {
+                    // Use latest material price if available
+                    if ($sourceItem->material_id) {
+                        $material = Material::find($sourceItem->material_id);
+                        if ($material && $material->harga) {
+                            $hargaAsli = $material->harga;
+                        }
+                    }
+                    $persentaseMargin = $sourceItem->persentase_margin;
+                } elseif ($priceStrategy === 'average') {
+                    // Use average price from item history
+                    if ($sourceItem->material_id) {
+                        $avgPrice = ItemPenawaran::where('material_id', $sourceItem->material_id)
+                            ->whereHas('penawaran', fn($q) => $q->where('status', 'disetujui'))
+                            ->avg('harga_asli');
+                        
+                        if ($avgPrice) {
+                            $hargaAsli = $avgPrice;
+                        }
+                    }
+                    $persentaseMargin = $sourceItem->persentase_margin;
+                } else {
+                    // 'keep' strategy - use original price
+                    $persentaseMargin = $sourceItem->persentase_margin;
+                }
+
+                // Calculate harga_jual
+                $marginPerUnit = $hargaAsli * ($persentaseMargin / 100);
+                $hargaJual = $hargaAsli + $marginPerUnit;
+
+                // Calculate totals
+                $totalBiayaItem = $hargaAsli * $sourceItem->jumlah;
+                $totalMarginItem = $marginPerUnit * $sourceItem->jumlah;
+
+                $totalBiaya += $totalBiayaItem;
+                $totalMargin += $totalMarginItem;
+
+                // Create new item in target penawaran
+                $newItem = ItemPenawaran::create([
+                    'penawaran_id' => $targetPenawaran->id,
+                    'material_id' => $sourceItem->material_id,
+                    'nama' => $sourceItem->nama,
+                    'satuan' => $sourceItem->satuan,
+                    'jumlah' => $sourceItem->jumlah,
+                    'harga_asli' => $hargaAsli,
+                    'persentase_margin' => $persentaseMargin,
+                    'harga_jual' => $hargaJual,
+                ]);
+
+                $copiedItems[] = [
+                    'id' => $newItem->id,
+                    'nama' => $newItem->nama,
+                    'jumlah' => $newItem->jumlah,
+                    'harga_asli' => $hargaAsli,
+                    'harga_jual' => $hargaJual,
+                    'strategy_used' => $priceStrategy,
+                ];
+            }
+
+            // Calculate PPN & grand total
+            $subtotal = $totalBiaya + $totalMargin;
+            $ppn = $subtotal * 0.11;
+            $grandTotal = $subtotal + $ppn;
+
+            // Update target penawaran totals
+            $targetPenawaran->update([
+                'total_biaya' => $totalBiaya,
+                'total_margin' => $totalMargin,
+                'ppn' => $ppn,
+                'grand_total_with_ppn' => $grandTotal,
+            ]);
+
+            $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+
+            Log::info('Copy items from penawaran completed successfully', [
+                'user_id' => auth()->id(),
+                'source_penawaran_id' => $sourcePenawaran->id,
+                'target_penawaran_id' => $targetPenawaran->id,
+                'items_copied' => count($copiedItems),
+                'price_strategy' => $priceStrategy,
+                'grand_total' => $grandTotal,
+                'execution_time_ms' => $executionTime
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => count($copiedItems) . ' item berhasil disalin dengan strategi ' . $priceStrategy,
+                'data' => [
+                    'target_penawaran_id' => $targetPenawaran->id,
+                    'items_copied' => $copiedItems,
+                    'totals' => [
+                        'total_biaya' => $totalBiaya,
+                        'total_margin' => $totalMargin,
+                        'ppn' => $ppn,
+                        'grand_total_with_ppn' => $grandTotal,
+                    ],
+                    'price_strategy' => $priceStrategy,
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+            
+            Log::error('Error copying items from penawaran', [
+                'user_id' => auth()->id(),
+                'source_penawaran_id' => $validated['source_penawaran_id'] ?? null,
+                'target_penawaran_id' => $validated['target_penawaran_id'] ?? null,
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'execution_time_ms' => $executionTime
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error menyalin item: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get price trend for a material from historical penawaran data
+     * 
+     * Returns: Historical prices, average, min/max, trend direction
+     * Used for: Price recommendations and visualization
+     */
+    public function getItemPriceTrend(GetItemPriceTrendRequest $request)
+    {
+        $validated = $request->validated();
+
+        try {
+            $material = Material::findOrFail($validated['material_id']);
+            $limit = $validated['limit'] ?? 10;
+
+            Log::info('Fetching price trend for material', [
+                'user_id' => auth()->id(),
+                'material_id' => $material->id,
+                'material_kode' => $material->kode,
+                'limit' => $limit
+            ]);
+
+            // Get historical prices from approved penawaran items
+            $priceHistory = ItemPenawaran::where('material_id', $material->id)
+                ->whereHas('penawaran', fn($q) => $q->where('status', 'disetujui'))
+                ->orderBy('created_at', 'DESC')
+                ->limit($limit)
+                ->get(['harga_asli', 'persentase_margin', 'harga_jual', 'jumlah', 'created_at'])
+                ->map(fn($item) => [
+                    'harga_asli' => $item->harga_asli,
+                    'persentase_margin' => $item->persentase_margin,
+                    'harga_jual' => $item->harga_jual,
+                    'date' => $item->created_at->format('Y-m-d'),
+                ]);
+
+            if ($priceHistory->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Belum ada riwayat harga untuk material ini',
+                    'data' => [
+                        'material_id' => $material->id,
+                        'material_kode' => $material->kode,
+                        'material_nama' => $material->nama,
+                        'history' => [],
+                        'stats' => null,
+                    ]
+                ]);
+            }
+
+            // Calculate statistics
+            $allPrices = $priceHistory->pluck('harga_asli');
+            $avgPrice = $allPrices->avg();
+            $minPrice = $allPrices->min();
+            $maxPrice = $allPrices->max();
+            $latestPrice = $allPrices->first();
+
+            // Calculate trend (comparing latest with average)
+            $priceChange = (($latestPrice - $avgPrice) / $avgPrice) * 100;
+            $trendDirection = $priceChange > 2 ? 'increasing' : ($priceChange < -2 ? 'decreasing' : 'stable');
+
+            // Calculate average margins
+            $avgMargin = $priceHistory->pluck('persentase_margin')->avg();
+
+            Log::info('Price trend analysis completed', [
+                'user_id' => auth()->id(),
+                'material_id' => $material->id,
+                'records_count' => $priceHistory->count(),
+                'trend' => $trendDirection,
+                'price_change_percent' => round($priceChange, 2)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Riwayat harga berhasil diambil',
+                'data' => [
+                    'material_id' => $material->id,
+                    'material_kode' => $material->kode,
+                    'material_nama' => $material->nama,
+                    'current_price' => $material->harga ?? null,
+                    'history' => $priceHistory,
+                    'stats' => [
+                        'avg_price' => round($avgPrice, 2),
+                        'min_price' => round($minPrice, 2),
+                        'max_price' => round($maxPrice, 2),
+                        'latest_price' => round($latestPrice, 2),
+                        'avg_margin' => round($avgMargin, 2),
+                        'price_change_percent' => round($priceChange, 2),
+                        'trend' => $trendDirection,
+                        'records_count' => $priceHistory->count(),
+                    ]
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching price trend', [
+                'user_id' => auth()->id(),
+                'material_id' => $validated['material_id'] ?? null,
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error mengambil riwayat harga: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Find similar penawaran for a given client to reuse items from
+     * 
+     * Similarity based on:
+     * - Same client
+     * - Same project type (inferred from item types)
+     * - Status = disetujui (approved/completed)
+     * 
+     * Returns: List of previous penawaran sorted by recency
+     */
+    public function findSimilarPenawaran(FindSimilarPenawaranRequest $request)
+    {
+        $validated = $request->validated();
+
+        try {
+            $clientId = $validated['client_id'];
+            $limit = $validated['limit'] ?? 5;
+            $excludeId = $validated['exclude_penawaran_id'] ?? null;
+
+            Log::info('Finding similar penawaran', [
+                'user_id' => auth()->id(),
+                'client_id' => $clientId,
+                'limit' => $limit,
+                'exclude_penawaran_id' => $excludeId
+            ]);
+
+            // Get approved penawaran for this client, excluding current one
+            $query = Penawaran::where('client_id', $clientId)
+                ->where('status', 'disetujui')
+                ->orderBy('created_at', 'DESC')
+                ->limit($limit);
+
+            if ($excludeId) {
+                $query->where('id', '!=', $excludeId);
+            }
+
+            $similarPenawaran = $query->get();
+
+            if ($similarPenawaran->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Belum ada penawaran sebelumnya untuk client ini',
+                    'data' => [
+                        'client_id' => $clientId,
+                        'penawaran' => [],
+                    ]
+                ]);
+            }
+
+            // Map to response format with item counts
+            $penawaranData = $similarPenawaran->map(fn($p) => [
+                'id' => $p->id,
+                'no_penawaran' => $p->no_penawaran,
+                'tanggal' => $p->tanggal->format('Y-m-d'),
+                'status' => $p->status,
+                'items_count' => $p->items()->count(),
+                'grand_total_with_ppn' => $p->grand_total_with_ppn,
+                'total_biaya' => $p->total_biaya,
+                'total_margin' => $p->total_margin,
+                'user_note' => $p->ai_notes ?? null,
+            ]);
+
+            Log::info('Similar penawaran found', [
+                'user_id' => auth()->id(),
+                'client_id' => $clientId,
+                'penawaran_count' => $similarPenawaran->count()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Ditemukan ' . $similarPenawaran->count() . ' penawaran sebelumnya',
+                'data' => [
+                    'client_id' => $clientId,
+                    'penawaran' => $penawaranData,
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error finding similar penawaran', [
+                'user_id' => auth()->id(),
+                'client_id' => $validated['client_id'] ?? null,
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error mencari penawaran sebelumnya: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

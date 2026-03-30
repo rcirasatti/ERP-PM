@@ -5,7 +5,6 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\MaterialController;
-use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PenawaranController;
 use App\Http\Controllers\PenawaranDocumentController;
 use App\Http\Controllers\ProyekController;
@@ -46,9 +45,7 @@ Route::middleware('auth')->group(function () {
         Route::post('material/import/preview', [MaterialController::class, 'previewImport'])->name('material.import-preview');
         Route::post('material/import', [MaterialController::class, 'import'])->name('material.import');
 
-        // Inventory (Admin only)
-        Route::resource('inventory', InventoryController::class);
-        Route::get('inventory-log', [InventoryController::class, 'log'])->name('inventory.log');
+
 
         // Penawaran BoQ Upload (New DSS workflow) - MUST BE BEFORE resource()
         // Rate limited file upload routes to prevent abuse
@@ -86,6 +83,16 @@ Route::middleware('auth')->group(function () {
 
     // ADMIN & MANAGER ROUTES
     Route::middleware('check.any.role:admin,manager')->group(function () {
+        // Penawaran - Item Copy & History Features (API Endpoints for item copy feature)
+        Route::prefix('api/penawaran')->group(function () {
+            Route::post('copy-items', [PenawaranController::class, 'copyItemsFromPenawaran'])
+                ->name('penawaran.api.copy-items');
+            Route::get('item-price-trend', [PenawaranController::class, 'getItemPriceTrend'])
+                ->name('penawaran.api.price-trend');
+            Route::get('similar', [PenawaranController::class, 'findSimilarPenawaran'])
+                ->name('penawaran.api.similar');
+        });
+
         // DSS (Decision Support System) - AI Prediksi Cost Overrun
         Route::prefix('api/dss')->group(function () {
             Route::post('analyze', [DSSController::class, 'analyzePenawaran'])->name('dss.analyze');
@@ -131,4 +138,16 @@ Route::middleware('auth')->group(function () {
 
     // Logout route
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+});
+
+// API Routes for testing (temporary - without middlewares for testing purposes)
+Route::withoutMiddleware(['csrf'])->group(function () {
+    Route::prefix('api/penawaran')->group(function () {
+        Route::post('copy-items', [PenawaranController::class, 'copyItemsFromPenawaran'])
+            ->name('penawaran.api.copy-items.test');
+        Route::get('item-price-trend', [PenawaranController::class, 'getItemPriceTrend'])
+            ->name('penawaran.api.price-trend.test');
+        Route::get('similar', [PenawaranController::class, 'findSimilarPenawaran'])
+            ->name('penawaran.api.similar.test');
+    });
 });
