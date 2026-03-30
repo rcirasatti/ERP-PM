@@ -158,7 +158,7 @@
                             </svg>
                             Analisis dengan AI DSS
                         </button>
-                        <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+                        <button type="button" onclick="submitForm()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium" title="Klik untuk menyimpan penawaran">
                             Simpan Penawaran
                         </button>
                         <a href="{{ route('penawaran.index') }}" class="block w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition font-medium text-center">
@@ -239,6 +239,43 @@
 
     <script>
         let itemCount = 0;
+
+        // Prevent form submission when Enter key is pressed in input fields
+        // Only allow explicit button clicks for form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('penawaranForm');
+            if (form) {
+                form.addEventListener('keydown', function(e) {
+                    // If Enter key is pressed
+                    if (e.key === 'Enter') {
+                        // Prevent default form submission
+                        e.preventDefault();
+                        
+                        // Allow Enter only in textarea or if explicitly needed
+                        if (e.target.tagName !== 'TEXTAREA') {
+                            // Don't submit the form, just blur the field
+                            e.target.blur();
+                        }
+                    }
+                });
+            }
+        });
+
+        // Explicit form submission function - triggered only by button click
+        function submitForm() {
+            const form = document.getElementById('penawaranForm');
+            
+            // Validate form before submission
+            if (!form.checkValidity()) {
+                alert('⚠️ Lengkapi semua field yang diperlukan (*) sebelum menyimpan');
+                return;
+            }
+            
+            // Show confirmation dialog
+            if (confirm('Apakah Anda yakin ingin menyimpan penawaran ini?')) {
+                form.submit();
+            }
+        }
 
         function addItem() {
             const container = document.getElementById('itemsContainer');
@@ -423,6 +460,10 @@
         // AI DSS ANALYSIS FOR MANUAL PENAWARAN
         // ============================================
         async function analyzeManualPenawaran() {
+            // Get analyze button for loading state
+            const analyzeBtn = event.target.closest('button');
+            const originalBtnText = analyzeBtn.innerHTML;
+            
             // Collect form data
             const clientId = document.getElementById('client_id').value;
             const tanggal = document.getElementById('tanggal').value;
@@ -442,7 +483,7 @@
 
                 if (materialId && jumlah && hargaAsli) {
                     items.push({
-                        material_id: materialId,
+                        material_id: parseInt(materialId),
                         jumlah: parseInt(jumlah),
                         harga_asli: parseFloat(hargaAsli),
                         persentase_margin: parseFloat(margin) || 0
@@ -454,6 +495,10 @@
                 alert('Tambahkan minimal satu item');
                 return;
             }
+
+            // Show loading state on button
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Menganalisis...';
 
             // Send to API for analysis
             try {
@@ -470,25 +515,43 @@
                     })
                 });
 
+                const contentType = response.headers.get('content-type');
+                
+                // Handle rate limit error (429)
+                if (response.status === 429) {
+                    throw new Error('⏱️ Anda terlalu sering melakukan analisis. Tunggu beberapa saat sebelum mencoba lagi.');
+                }
+                
+                // Check if response is JSON
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    throw new Error(`Server error: ${response.status} - ${text.substring(0, 100)}`);
+                }
+
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.message || 'Gagal menganalisis penawaran');
+                    throw new Error(data.message || `Server error: ${response.status}`);
                 }
 
                 // Show analysis results
                 showAnalysisResults(data);
 
             } catch (error) {
-                alert('Error: ' + error.message);
+                console.error('Analysis error:', error);
+                alert('⚠️ ' + error.message);
+            } finally {
+                // Restore button state
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = originalBtnText;
             }
         }
 
         function showAnalysisResults(data) {
-            // Create a modal or navigate to analysis page
-            // For now, we'll create a modal that shows DSS results similar to BoQ
+            // Create a modal with unique ID for easier removal
+            const modalId = 'analysisModal_' + Date.now();
             const analysisHTML = `
-                <div class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/50">
+                <div id="${modalId}" class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/50">
                     <div class="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full mx-4 max-h-96 overflow-y-auto">
                         <h2 class="text-2xl font-bold text-gray-900 mb-4">Hasil Analisis AI DSS</h2>
                         
@@ -523,7 +586,7 @@
 
                             <!-- Buttons -->
                             <div class="flex gap-3 pt-4 border-t border-gray-200">
-                                <button onclick="closeAnalysisModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300">
+                                <button onclick="closeAnalysisModal('${modalId}')" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300">
                                     Kembali
                                 </button>
                                 <button type="submit" form="penawaranForm" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">
@@ -538,8 +601,11 @@
             document.body.insertAdjacentHTML('beforeend', analysisHTML);
         }
 
-        function closeAnalysisModal() {
-            document.querySelector('[style*="fixed"][style*="z-50"]')?.remove();
+        function closeAnalysisModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.remove();
+            }
         }
 
         function getRiskBgColor(risk) {
@@ -559,3 +625,5 @@
             if (risk === 'Sedang') return '⚠️';
             return '✓';
         }
+    </script>
+@endsection

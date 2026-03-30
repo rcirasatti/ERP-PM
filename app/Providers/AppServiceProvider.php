@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
 use App\Models\Proyek;
 use App\Models\Tugas;
 use App\Helpers\FormatHelper;
@@ -22,6 +24,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Configure custom rate limiters for BoQ uploads
+        RateLimiter::for('boq_upload', function ($request) {
+            return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
+        });
+        
+        RateLimiter::for('boq_store', function ($request) {
+            return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip());
+        });
+        
+        // More relaxed limit for analysis (can be tested frequently during development)
+        RateLimiter::for('boq_analyze', function ($request) {
+            // Development: 30 requests per minute, Production: 5 requests per minute
+            $limit = env('APP_ENV') === 'local' ? 30 : 5;
+            return Limit::perMinute($limit)->by($request->user()?->id ?: $request->ip());
+        });
+        
         // Make FormatHelper available in all views
         \Illuminate\Support\Facades\View::share('formatHelper', new FormatHelper());
         

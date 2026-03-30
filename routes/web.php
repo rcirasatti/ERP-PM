@@ -51,10 +51,21 @@ Route::middleware('auth')->group(function () {
         Route::get('inventory-log', [InventoryController::class, 'log'])->name('inventory.log');
 
         // Penawaran BoQ Upload (New DSS workflow) - MUST BE BEFORE resource()
+        // Rate limited file upload routes to prevent abuse
+        Route::post('penawaran/boq/preview', [PenawaranController::class, 'uploadBoqPreview'])
+            ->name('penawaran.boq-preview')
+            ->middleware('throttle:boq_upload');
+            
+        Route::post('penawaran/boq/store', [PenawaranController::class, 'storeFromBoq'])
+            ->name('penawaran.boq-store')
+            ->middleware('throttle:boq_store');
+            
+        Route::post('penawaran/analyze-manual', [PenawaranController::class, 'analyzeManual'])
+            ->name('penawaran.analyze-manual')
+            ->middleware('throttle:boq_analyze');
+        
+        // Non-rate-limited routes
         Route::get('penawaran/create-boq', [PenawaranController::class, 'showCreateBoq'])->name('penawaran.create-boq');
-        Route::post('penawaran/boq/preview', [PenawaranController::class, 'uploadBoqPreview'])->name('penawaran.boq-preview');
-        Route::post('penawaran/boq/store', [PenawaranController::class, 'storeFromBoq'])->name('penawaran.boq-store');
-        Route::post('penawaran/analyze-manual', [PenawaranController::class, 'analyzeManual'])->name('penawaran.analyze-manual');
         Route::get('penawaran/boq/template', [PenawaranController::class, 'exportBoqTemplate'])->name('penawaran.boq-template');
 
         // Penawaran (Admin only)

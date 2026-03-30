@@ -10,6 +10,7 @@ use App\Imports\MaterialImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class MaterialController extends Controller
 {
@@ -269,7 +270,7 @@ class MaterialController extends Controller
 
             // Create material
             $material = Material::create([
-                'kode' => $validated['kode'] ?? 'MAT-' . strtoupper(str_random(6)),
+                'kode' => $validated['kode'] ?? 'MAT-' . strtoupper(Str::random(6)),
                 'nama' => $validated['nama'],
                 'satuan' => $validated['satuan'],
                 'harga' => $validated['harga_beli'],
