@@ -11,6 +11,7 @@ use App\Models\LogInventory;
 use App\Imports\BoqImport;
 use App\Exports\BoqTemplateExport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
@@ -376,6 +377,8 @@ class PenawaranController extends Controller
      */
     public function uploadBoqPreview(Request $request)
     {
+        $startTime = microtime(true);
+        
         // Enhanced validation with custom rules
         $validated = $request->validate([
             'boq_file' => [
@@ -406,6 +409,13 @@ class PenawaranController extends Controller
 
         $file = $request->file('boq_file');
         
+        Log::info('BoQ file upload preview started', [
+            'user_id' => auth()->id(),
+            'filename' => $file->getClientOriginalName(),
+            'file_size_bytes' => $file->getSize(),
+            'mime_type' => $file->getMimeType()
+        ]);
+        
         try {
             // Additional validation: check file size
             if ($file->getSize() > 5242880) { // 5MB in bytes
@@ -418,6 +428,16 @@ class PenawaranController extends Controller
             
             $import = new BoqImport(previewMode: true);
             $import->import($file);
+
+            $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+
+            Log::info('BoQ file preview processed successfully', [
+                'user_id' => auth()->id(),
+                'item_count' => $import->success,
+                'error_count' => count($import->errors),
+                'grand_total' => $import->grandTotal,
+                'execution_time_ms' => $executionTime
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -432,6 +452,15 @@ class PenawaranController extends Controller
                 ]
             ]);
         } catch (\Exception $e) {
+            $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+            
+            Log::warning('BoQ file preview processing failed', [
+                'user_id' => auth()->id(),
+                'error_message' => $e->getMessage(),
+                'file_size_bytes' => $file->getSize(),
+                'execution_time_ms' => $executionTime
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -454,6 +483,8 @@ class PenawaranController extends Controller
      */
     public function storeFromBoq(Request $request)
     {
+        $startTime = microtime(true);
+        
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
             'tanggal_penawaran' => 'required|date',
@@ -464,6 +495,12 @@ class PenawaranController extends Controller
             'items.*.jumlah' => 'required|integer|min:1',
             'items.*.harga_asli' => 'required|numeric|min:0',
             'items.*.persentase_margin' => 'required|numeric|min:0|max:100',
+        ]);
+
+        Log::info('Starting BoQ import and penawaran creation', [
+            'user_id' => auth()->id(),
+            'client_id' => $validated['client_id'],
+            'items_count' => count($validated['items'])
         ]);
 
         try {
@@ -522,6 +559,17 @@ class PenawaranController extends Controller
                 'grand_total_with_ppn' => $grandTotal,
             ]);
 
+            $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+
+            Log::info('BoQ import and penawaran creation completed successfully', [
+                'user_id' => auth()->id(),
+                'penawaran_id' => $penawaran->id,
+                'no_penawaran' => $penawaran->no_penawaran,
+                'items_count' => count($validated['items']),
+                'grand_total' => $grandTotal,
+                'execution_time_ms' => $executionTime
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Penawaran berhasil dibuat dengan status DRAFT',
@@ -535,6 +583,16 @@ class PenawaranController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+            
+            Log::error('BoQ import and penawaran creation failed', [
+                'user_id' => auth()->id(),
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'execution_time_ms' => $executionTime
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error membuat penawaran: ' . $e->getMessage(),
@@ -548,6 +606,8 @@ class PenawaranController extends Controller
      */
     public function analyzeManual(Request $request)
     {
+        $startTime = microtime(true);
+        
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
             'tanggal' => 'required|date',
@@ -559,6 +619,13 @@ class PenawaranController extends Controller
         ]);
 
         try {
+            Log::info('Starting manual penawaran analysis', [
+                'user_id' => auth()->id(),
+                'client_id' => $validated['client_id'],
+                'items_count' => count($validated['items']),
+                'timestamp' => now()->toDateTimeString()
+            ]);
+
             // Calculate totals
             $totalBiaya = 0;
             $totalMargin = 0;
@@ -590,6 +657,15 @@ class PenawaranController extends Controller
                 'client_id' => $validated['client_id'],
             ]);
 
+            $executionTime = round((microtime(true) - $startTime) * 1000, 2); // ms
+
+            Log::info('Manual penawaran analysis completed successfully', [
+                'user_id' => auth()->id(),
+                'risk_level' => $analysis['risk_level'],
+                'grand_total' => $grandTotal,
+                'execution_time_ms' => $executionTime
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Analisis berhasil',
@@ -609,7 +685,16 @@ class PenawaranController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Error analyzing manual penawaran: ' . $e->getMessage());
+            $executionTime = round((microtime(true) - $startTime) * 1000, 2);
+            
+            Log::error('Error analyzing manual penawaran', [
+                'user_id' => auth()->id(),
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'execution_time_ms' => $executionTime
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error menganalisis penawaran: ' . $e->getMessage(),

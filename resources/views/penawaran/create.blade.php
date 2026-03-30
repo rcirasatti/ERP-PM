@@ -261,18 +261,97 @@
             }
         });
 
+        // ============================================
+        // FORM VALIDATION FUNCTION
+        // ============================================
+        function validateForm() {
+            const errors = [];
+            
+            // 1. Check client is selected
+            const clientId = document.getElementById('client_id').value;
+            if (!clientId || clientId.trim() === '') {
+                errors.push('✗ Pilih Client terlebih dahulu');
+            }
+            
+            // 2. Check date is selected
+            const tanggal = document.getElementById('tanggal').value;
+            if (!tanggal) {
+                errors.push('✗ Pilih Tanggal Penawaran');
+            } else {
+                const selectedDate = new Date(tanggal);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (selectedDate < today) {
+                    errors.push('✗ Tanggal Penawaran tidak boleh di masa lalu');
+                }
+            }
+            
+            // 3. Check status is selected
+            const status = document.getElementById('status').value;
+            if (!status) {
+                errors.push('✗ Pilih Status Penawaran');
+            }
+            
+            // 4. Validate items
+            const items = document.querySelectorAll('.item-row');
+            if (items.length === 0) {
+                errors.push('✗ Tambahkan minimal satu item');
+            } else {
+                let itemHasError = false;
+                items.forEach((row, idx) => {
+                    const materialId = row.querySelector('.material-id-input').value;
+                    const jumlah = row.querySelector('.jumlah-input').value;
+                    const hargaAsli = row.querySelector('.harga-asli-input').value;
+                    const margin = row.querySelector('.margin-input').value;
+                    
+                    if (!materialId) {
+                        errors.push(`✗ Item ${idx + 1}: Pilih Material`);
+                        itemHasError = true;
+                    }
+                    
+                    if (!jumlah || parseInt(jumlah) <= 0) {
+                        errors.push(`✗ Item ${idx + 1}: Jumlah harus lebih dari 0`);
+                        itemHasError = true;
+                    }
+                    
+                    if (!hargaAsli || parseFloat(hargaAsli) <= 0) {
+                        errors.push(`✗ Item ${idx + 1}: Harga Asli tidak valid`);
+                        itemHasError = true;
+                    }
+                    
+                    if (margin < 0 || margin > 100) {
+                        errors.push(`✗ Item ${idx + 1}: Margin harus antara 0-100%`);
+                        itemHasError = true;
+                    }
+                });
+            }
+            
+            return {
+                isValid: errors.length === 0,
+                errors: errors
+            };
+        }
+
         // Explicit form submission function - triggered only by button click
         function submitForm() {
             const form = document.getElementById('penawaranForm');
             
-            // Validate form before submission
-            if (!form.checkValidity()) {
-                alert('⚠️ Lengkapi semua field yang diperlukan (*) sebelum menyimpan');
+            // Run comprehensive validation
+            const validation = validateForm();
+            
+            if (!validation.isValid) {
+                // Show all validation errors
+                const errorMessage = 'Perbaiki kesalahan berikut sebelum menyimpan:\n\n' + validation.errors.join('\n');
+                alert(errorMessage);
+                console.warn('Form validation errors:', validation.errors);
                 return;
             }
             
             // Show confirmation dialog
-            if (confirm('Apakah Anda yakin ingin menyimpan penawaran ini?')) {
+            const totalItems = document.querySelectorAll('.item-row').length;
+            const grandTotal = document.getElementById('grandTotalWithPpn').textContent;
+            
+            if (confirm(`Apakah Anda yakin ingin menyimpan penawaran ini?\n\n📋 Item: ${totalItems}\n💰 Total: ${grandTotal}`)) {
                 form.submit();
             }
         }

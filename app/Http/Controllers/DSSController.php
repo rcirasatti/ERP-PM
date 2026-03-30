@@ -446,9 +446,25 @@ class DSSController extends Controller
                 try {
                     \Log::info("Processing item {$item->id}: nama='{$item->nama}', satuan='{$item->satuan}'");
                     
-                    // Create material baru
+                    // CHECK: Apakah material dengan kode ini sudah ada (prevent duplicates)
+                    $materialKode = 'BOQ-' . $penawaran->no_penawaran . '-' . $item->id;
+                    $existingMaterial = Material::where('kode', $materialKode)->first();
+                    
+                    if ($existingMaterial) {
+                        \Log::info("Material with kode {$materialKode} already exists (ID: {$existingMaterial->id})");
+                        
+                        // Update item dengan existing material_id
+                        $item->update([
+                            'material_id' => $existingMaterial->id,
+                        ]);
+                        
+                        $result['skipped']++;
+                        continue;
+                    }
+                    
+                    // Create material baru (hanya jika belum ada)
                     $material = Material::create([
-                        'kode' => 'BOQ-' . $penawaran->no_penawaran . '-' . $item->id,
+                        'kode' => $materialKode,
                         'nama' => $item->nama ?? 'Material BoQ Item',
                         'satuan' => $item->satuan ?? 'pcs',
                         'supplier_id' => null, // Dari BOQ, belum ada supplier

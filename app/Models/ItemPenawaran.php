@@ -15,6 +15,12 @@ class ItemPenawaran extends Model
         'persentase_margin' => 'decimal:2',
         'harga_jual' => 'decimal:2',
     ];
+    // Include calculated attributes when serializing to JSON
+    protected $appends = [
+        'total_cost',
+        'total_biaya_asli',
+        'margin_value',
+    ];
     public $timestamps = true;
 
     /**

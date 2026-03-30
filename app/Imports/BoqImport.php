@@ -60,8 +60,9 @@ class BoqImport
                 $rowNumber++;
             }
 
-            // Calculate grand total with PPN
-            $this->grandTotal = ($this->totalBiaya + $this->totalMargin) * 1.11;
+            // Calculate grand total with PPN (consistent with controller calculation)
+            $subtotal = $this->totalBiaya + $this->totalMargin;
+            $this->grandTotal = $subtotal * 1.11;  // Same as subtotal + (subtotal * 0.11)
             $this->success = count($this->items);
 
         } catch (\Exception $e) {
@@ -154,13 +155,17 @@ class BoqImport
      */
     public function getSummary(): array
     {
+        $subtotal = $this->totalBiaya + $this->totalMargin;
+        $ppn = $subtotal * 0.11;
+        $grandTotal = $subtotal + $ppn;
+        
         return [
             'total_items' => count($this->items),
             'total_biaya' => $this->totalBiaya,
             'total_margin' => $this->totalMargin,
-            'subtotal' => $this->totalBiaya + $this->totalMargin,
-            'ppn_11_percent' => ($this->totalBiaya + $this->totalMargin) * 0.11,
-            'grand_total' => $this->grandTotal,
+            'subtotal' => $subtotal,
+            'ppn_11_percent' => $ppn,
+            'grand_total' => $grandTotal,
             'item_count' => count($this->items),
             'error_count' => count($this->errors),
         ];

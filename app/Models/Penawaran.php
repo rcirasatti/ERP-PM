@@ -33,6 +33,8 @@ class Penawaran extends Model
         'grand_total_with_ppn' => 'decimal:2',
         'ai_prediksi_lr' => 'decimal:2',
         'ai_prediksi_ma' => 'decimal:2',
+        'ai_status' => 'string',
+        'margin_status' => 'string',
     ];
     public $timestamps = true;
 
