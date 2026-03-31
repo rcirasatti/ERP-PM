@@ -108,7 +108,7 @@ function renderPriceChart(data) {
 
     // Prepare chart data - using 'date' field from API
     const labels = history.map(d => d.date || new Date(d.created_at).toLocaleDateString('id-ID'));
-    const prices = history.map(d => parseFloat(d.harga_asli));
+    const prices = history.map(d => parseFloat(d.harga_jual));
     
     console.log('Chart labels:', labels);
     console.log('Chart prices:', prices);
@@ -184,7 +184,7 @@ function updatePriceStats(data) {
     const history = data.history || [];
     if (!history || history.length === 0) return;
 
-    const prices = history.map(h => parseFloat(h.harga_asli));
+    const prices = history.map(h => parseFloat(h.harga_jual));
     const max = Math.max(...prices);
     const min = Math.min(...prices);
     const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
@@ -217,7 +217,7 @@ function updatePriceHistoryTable(data) {
         <tr class="hover:bg-gray-50">
             <td class="px-4 py-3 text-gray-900">${material_nama}</td>
             <td class="px-4 py-3 text-gray-600">${item.penawaran_no || '-'}</td>
-            <td class="px-4 py-3 font-medium text-gray-900">Rp ${new Intl.NumberFormat('id-ID').format(Math.round(item.harga_asli))}</td>
+            <td class="px-4 py-3 font-medium text-gray-900">Rp ${new Intl.NumberFormat('id-ID').format(Math.round(item.harga_jual))}</td>
             <td class="px-4 py-3 text-gray-600">${item.date || '-'}</td>
         </tr>
     `).join('');

@@ -983,8 +983,8 @@ class PenawaranController extends Controller
                 ]);
             }
 
-            // Calculate statistics
-            $allPrices = $priceHistory->pluck('harga_asli');
+            // Calculate statistics from selling prices (with margin)
+            $allPrices = $priceHistory->pluck('harga_jual');
             $avgPrice = $allPrices->avg();
             $minPrice = $allPrices->min();
             $maxPrice = $allPrices->max();
@@ -1092,13 +1092,23 @@ class PenawaranController extends Controller
                 ]);
             }
 
-            // Map to response format with item counts
+            // Map to response format with items
             $penawaranData = $similarPenawaran->map(fn($p) => [
                 'id' => $p->id,
                 'no_penawaran' => $p->no_penawaran,
                 'tanggal' => $p->tanggal->format('Y-m-d'),
                 'status' => $p->status,
                 'items_count' => $p->items()->count(),
+                'items' => $p->items->map(fn($item) => [
+                    'id' => $item->id,
+                    'material_id' => $item->material_id,
+                    'material_nama' => $item->material?->nama ?? 'Unknown',
+                    'nama_satuan' => $item->satuan ?? $item->material?->satuan ?? '-',
+                    'jumlah' => $item->jumlah,
+                    'harga_asli' => $item->harga_asli,
+                    'harga_jual' => $item->harga_jual,
+                    'margin' => $item->persentase_margin ?? 0,
+                ]),
                 'grand_total_with_ppn' => $p->grand_total_with_ppn,
                 'total_biaya' => $p->total_biaya,
                 'total_margin' => $p->total_margin,

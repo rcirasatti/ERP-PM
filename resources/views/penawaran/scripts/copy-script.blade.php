@@ -7,10 +7,14 @@ let similarPenawaran = [];
  * Initialize copy modal - load similar penawaran from same client
  */
 function initCopyModal() {
-    const clientId = document.getElementById('clientId')?.value;
-    const currentPenawaranId = document.getElementById('targetPenawaranId')?.value;
+    // Use penawaranClientId and penawaranId from show.blade.php
+    const clientId = typeof penawaranClientId !== 'undefined' ? penawaranClientId : document.getElementById('clientId')?.value;
+    const currentPenawaranId = typeof penawaranId !== 'undefined' ? penawaranId : document.getElementById('targetPenawaranId')?.value;
 
-    if (!clientId) return;
+    if (!clientId) {
+        console.error('clientId not found. penawaranClientId:', penawaranClientId, 'document.getElementById:', document.getElementById('clientId'));
+        return;
+    }
 
     // Fetch similar penawaran using Phase 1 API
     fetch(`/api/penawaran/similar?client_id=${clientId}&limit=10&exclude_penawaran_id=${currentPenawaranId}`)
@@ -112,7 +116,7 @@ function loadSourceItems() {
                 <p class="font-medium text-gray-900">${idx + 1}. ${item.material_nama}</p>
                 <p class="text-xs text-gray-500">${item.nama_satuan} × ${item.jumlah}</p>
             </div>
-            <p class="font-semibold text-gray-900">Rp ${new Intl.NumberFormat('id-ID').format(item.harga_asli)}</p>
+            <p class="font-semibold text-gray-900">Rp ${new Intl.NumberFormat('id-ID').format(item.harga_jual)}</p>
         </div>
     `).join('');
 
@@ -131,24 +135,25 @@ async function submitCopy() {
     const strategy = document.querySelector('input[name="price_strategy"]:checked')?.value;
 
     if (!sourceId || !targetId || !strategy) {
-        showToast('Lengkapi semua field terlebih dahulu', 'warning', 3000);
+        showErrorAlert('Lengkapi semua field terlebih dahulu');
         return;
     }
 
     // Build override prices if strategy is override
-    let overridePrices = {};
+    let overridePrices = [];
     if (strategy === 'override') {
         // Get user input for each item
         const selected = similarPenawaran.find(p => p.id == sourceId);
         if (!selected || !selected.items) return;
 
         for (const item of selected.items) {
-            const priceInput = prompt(`Harga untuk ${item.material_nama}:`, item.harga_asli);
+            const priceInput = prompt(`Harga untuk ${item.material_nama}:`, item.harga_jual);
             if (priceInput === null) return; // User cancelled
-            overridePrices[item.id] = {
-                harga_asli: parseFloat(priceInput) || item.harga_asli,
-                margin: item.margin || 0
-            };
+            overridePrices.push({
+                item_id: item.id,
+                harga_asli: parseFloat(priceInput) || item.harga_jual,
+                persentase_margin: item.margin || 0
+            });
         }
     }
 
@@ -174,7 +179,8 @@ async function submitCopy() {
         }
 
         // Success
-        showSuccessAlert(`✅ Berhasil! ${data.copied_count} item dicopy`);
+        const copiedCount = data.data?.items_copied?.length || data.copied_count || 0;
+        showSuccessAlert(`✅ Berhasil! ${copiedCount} item dicopy`);
         closeCopyModal();
         
         // Reload page to show new items
