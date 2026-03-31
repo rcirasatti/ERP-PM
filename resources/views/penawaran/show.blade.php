@@ -164,7 +164,14 @@
                             <span>Ubah Status</span>
                         </button>
                         
-
+                        @if($penawaran->status === 'draft')
+                        <button onclick="showCopyModal()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center justify-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            <span>Copy dari Penawaran Sebelumnya</span>
+                        </button>
+                        @endif
                         
                         <button onclick="showConfirm('Apakah Anda yakin ingin menghapus penawaran ini?', 'Hapus Penawaran', () => deletePenawaran())" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
                             Hapus Penawaran
@@ -298,13 +305,16 @@
     @endif
 
     <script>
-        // Store penawaran ID untuk digunakan di JavaScript
+        // Store penawaran ID dan client ID untuk digunakan di JavaScript
         const penawaranId = @json($penawaran ? $penawaran->id : null);
+        const penawaranClientId = @json($penawaran ? $penawaran->client_id : null);
+        const penawaranNama = @json($penawaran ? $penawaran->no_penawaran : null);
 
         // Validasi data
         if (!penawaranId) {
             console.error('Error: Penawaran ID tidak ditemukan');
         }
+        console.log('Penawaran loaded:', { penawaranId, penawaranClientId, penawaranNama });
 
         function changeStatus() {
             if (!penawaranId) {
@@ -332,6 +342,28 @@
             form.submit();
         }
     </script>
+
+    <!-- Expose penawaran materials data for price trend component -->
+    <script>
+        window.penawaranMaterials = [
+            @foreach($penawaran->items as $item)
+            {
+                id: {{ $item->material_id }},
+                name: "{{ $item->material->nama ?? 'Unknown' }}"
+            },
+            @endforeach
+        ];
+        console.log('Penawaran materials loaded:', window.penawaranMaterials.length, 'items');
+    </script>
+
+    <!-- Include Price Trend Chart Component -->
+    @include('penawaran.components.price-trend-chart')
+
+    <!-- Include Copy Modal -->
+    @include('penawaran.modals.copy-modal')
+
+    <!-- Include Copy Script -->
+    @include('penawaran.scripts.copy-script')
 
     @endif
 @endsection

@@ -51,13 +51,7 @@
                         </div>
                     </label>
 
-                    <label class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 transition">
-                        <input type="radio" name="price_strategy" value="override" class="w-4 h-4 text-blue-600">
-                        <div class="ml-3">
-                            <p class="font-medium text-gray-900">Harga Manual</p>
-                            <p class="text-sm text-gray-500">Atur harga setiap item secara manual</p>
-                        </div>
-                    </label>
+                  
                 </div>
             </div>
 
