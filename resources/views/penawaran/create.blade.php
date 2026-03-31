@@ -344,19 +344,14 @@
             
             if (!validation.isValid) {
                 // Show all validation errors
-                const errorMessage = 'Perbaiki kesalahan berikut sebelum menyimpan:\n\n' + validation.errors.join('\n');
-                alert(errorMessage);
+                const errorMessage = 'Perbaiki kesalahan berikut sebelum menyimpan: ' + validation.errors.join(', ');
+                showToast(errorMessage, 'error', 4000);
                 console.warn('Form validation errors:', validation.errors);
                 return;
             }
             
-            // Show confirmation dialog
-            const totalItems = document.querySelectorAll('.item-row').length;
-            const grandTotal = document.getElementById('grandTotalWithPpn').textContent;
-            
-            if (confirm(`Apakah Anda yakin ingin menyimpan penawaran ini?\n\n📋 Item: ${totalItems}\n💰 Total: ${grandTotal}`)) {
-                form.submit();
-            }
+            // Submit form directly (no confirmation needed)
+            form.submit();
         }
 
         function addItem() {
@@ -551,7 +546,7 @@
             const tanggal = document.getElementById('tanggal').value;
             
             if (!clientId) {
-                alert('Pilih client terlebih dahulu');
+                showToast('Pilih client terlebih dahulu', 'warning', 3000);
                 return;
             }
 
@@ -574,7 +569,7 @@
             });
 
             if (items.length === 0) {
-                alert('Tambahkan minimal satu item');
+                showToast('Tambahkan minimal satu item', 'warning', 3000);
                 return;
             }
 
@@ -621,7 +616,7 @@
 
             } catch (error) {
                 console.error('Analysis error:', error);
-                alert('⚠️ ' + error.message);
+                showToast(error.message, 'error', 3000);
             } finally {
                 // Restore button state
                 analyzeBtn.disabled = false;

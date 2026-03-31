@@ -131,7 +131,7 @@ async function submitCopy() {
     const strategy = document.querySelector('input[name="price_strategy"]:checked')?.value;
 
     if (!sourceId || !targetId || !strategy) {
-        alert('Lengkapi semua field terlebih dahulu');
+        showToast('Lengkapi semua field terlebih dahulu', 'warning', 3000);
         return;
     }
 

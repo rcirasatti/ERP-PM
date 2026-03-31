@@ -231,7 +231,7 @@
                             if (requiredFields.length > 0) {
                                 e.preventDefault();
                                 const fieldList = requiredFields.join(',\n• ');
-                                alert('⚠️ Field wajib diisi:\n\n• ' + fieldList + '\n\nMohon lengkapi semua field yang diperlukan!');
+                                showToast('Field wajib diisi: ' + fieldList, 'error', 4000);
                                 return false;
                             }
                         });

@@ -471,7 +471,7 @@
                 const data = await response.json();
 
                 if (!response.ok) {
-                    alert('Error: ' + (data.message || 'Terjadi kesalahan'));
+                    showToast(data.message || 'Terjadi kesalahan', 'error', 3000);
                     return;
                 }
 
@@ -483,7 +483,7 @@
                 showConfirmModal(data);
                 closeImportModal();
             } catch (error) {
-                alert('Error: ' + error.message);
+                showToast(error.message, 'error', 3000);
             }
         }
 
@@ -672,7 +672,7 @@
 
         async function confirmImport() {
             if (!previewData || !previewData.file) {
-                alert('File tidak ditemukan');
+                showToast('File tidak ditemukan', 'error', 3000);
                 return;
             }
 
@@ -695,7 +695,7 @@
                 // Show success modal with detailed results
                 showSuccessModal(data);
             } catch (error) {
-                alert('Error: ' + error.message);
+                showToast(error.message, 'error', 3000);
             }
         }
 

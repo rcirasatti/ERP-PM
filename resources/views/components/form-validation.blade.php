@@ -74,7 +74,7 @@
                 e.preventDefault();
                 const uniqueFields = [...new Set(missingFields)];
                 const fieldList = uniqueFields.join(',\n• ');
-                alert('⚠️ Field wajib diisi:\n\n• ' + fieldList + '\n\nMohon lengkapi semua field yang diperlukan!');
+                showToast('Field wajib diisi: ' + fieldList, 'error', 4000);
                 return false;
             }
         });
