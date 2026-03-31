@@ -134,10 +134,6 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200" id="materialTable">
                     @foreach ($materials as $material)
-                        @php
-                            $stok = $material->inventory?->stok ?? 0;
-                            $hasStok = $stok > 0;
-                        @endphp
                         <tr class="hover:bg-gray-50 transition material-row">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm font-mono text-gray-600">{{ $material->kode ?? '-' }}</div>
@@ -146,15 +142,9 @@
                                 <div class="flex items-center gap-3">
                                     <div>
                                         <div class="font-medium text-gray-900">{{ $material->nama }}</div>
-                                        @if ($material->needsInventoryTracking() && !$hasStok)
-                                            <div class="inline-block mt-1 px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
-                                                Stok: 0 - Tidak Tersedia
-                                            </div>
-                                        @elseif ($material->needsInventoryTracking())
-                                            <div class="inline-block mt-1 px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
-                                                Stok: {{ number_format($stok, 2) }}
-                                            </div>
-                                        @endif
+                                        <div class="inline-block mt-1 px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                                            {{ $material->type }}
+                                        </div>
                                     </div>
                                 </div>
                             </td>

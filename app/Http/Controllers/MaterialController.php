@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Material;
-use App\Models\Inventory;
 use App\Models\Supplier;
 use App\Exports\MaterialTemplateExport;
 use App\Imports\MaterialImport;
@@ -19,17 +18,17 @@ class MaterialController extends Controller
      */
     public function index()
     {
-        // Hitung KPI sebelum pagination
-        $allMaterials = Material::with('supplier', 'inventory')->get();
-        $materialsNoStock = $allMaterials->whereNotIn('id', DB::table('inventories')->pluck('material_id'))->count();
+        // Get all materials for stats
+        $allMaterials = Material::with('supplier')->get();
+        $materialsByType = $allMaterials->groupBy('type');
         $totalMaterials = $allMaterials->count();
         $trackInventory = $allMaterials->where('track_inventory', true)->count();
         $nonTrackInventory = $allMaterials->where('track_inventory', false)->count();
         
         // Data dengan pagination
-        $materials = Material::with('supplier', 'inventory')->orderBy('created_at', 'desc')->paginate(15);
+        $materials = Material::with('supplier')->orderBy('created_at', 'desc')->paginate(15);
         
-        return view('materials.index', compact('materials', 'materialsNoStock', 'totalMaterials', 'trackInventory', 'nonTrackInventory'));
+        return view('materials.index', compact('materials', 'totalMaterials', 'trackInventory', 'nonTrackInventory'));
     }
 
     /**
@@ -277,13 +276,6 @@ class MaterialController extends Controller
                 'supplier_id' => null,
                 'type' => Material::TYPE_BARANG,
                 'track_inventory' => true,
-            ]);
-
-            // Create inventory entry
-            Inventory::create([
-                'material_id' => $material->id,
-                'stok' => 0,
-                'min_stok' => 0,
             ]);
 
             return response()->json([

@@ -189,14 +189,17 @@
                         <div class="material-dropdown absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg hidden max-h-48 overflow-y-auto z-10">
                             @foreach ($materials as $material)
                                 @php
-                                    $stok = $material->inventory?->stok ?? 0;
-                                    $isBarang = $material->type === 'BARANG';
-                                    $hasStok = $stok > 0 || !$isBarang; // Jasa/Tol/Lainnya tidak perlu stok
-                                    $stokDisplay = $isBarang ? '[Stok: ' . number_format($stok, 2) . ']' : '[' . $material->type . ']';
+                                    $typeDisplay = match($material->type) {
+                                        'BARANG' => 'Barang',
+                                        'JASA' => 'Jasa',
+                                        'TOL' => 'Tol',
+                                        'LAINNYA' => 'Lainnya',
+                                        default => $material->type
+                                    };
                                 @endphp
-                                <div onclick="selectMaterial(this, {{ $material->id }}, '{{ $material->nama }}', {{ $material->harga }}, '{{ $material->satuan }}')" class="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b last:border-b-0 material-option {{ !$hasStok ? 'opacity-50 cursor-not-allowed' : '' }}" data-material-id="{{ $material->id }}" data-nama="{{ $material->nama }}" data-price="{{ $material->harga }}" data-type="{{ $material->type }}" {{ !$hasStok ? 'onclick="return false;"' : '' }}>
+                                <div onclick="selectMaterial(this, {{ $material->id }}, '{{ $material->nama }}', {{ $material->harga }}, '{{ $material->satuan }}')" class="px-4 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b last:border-b-0 material-option" data-material-id="{{ $material->id }}" data-nama="{{ $material->nama }}" data-price="{{ $material->harga }}" data-type="{{ $material->type }}">
                                     <div class="font-medium text-gray-900">{{ $material->nama }}</div>
-                                    <div class="text-xs text-gray-600">{{ $material->satuan }} - Rp {{ number_format($material->harga, 0, ',', '.') }} {{ $stokDisplay }}</div>
+                                    <div class="text-xs text-gray-600">{{ $material->satuan }} - Rp {{ number_format($material->harga, 0, ',', '.') }} [{{ $typeDisplay }}]</div>
                                 </div>
                             @endforeach
                         </div>

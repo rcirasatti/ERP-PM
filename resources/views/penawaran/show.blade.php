@@ -157,9 +157,22 @@
 
                 <div class="mt-6 space-y-3">
                     @if($penawaran && $penawaran->id)
-                        <button onclick="changeStatus()" class="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium">
-                            Ubah Status
+                        <button onclick="changeStatus()" class="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium flex items-center justify-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                            <span>Ubah Status</span>
                         </button>
+                        
+                        @if($penawaran->status === 'draft')
+                        <button onclick="showCopyModal()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center justify-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            <span>Copy dari Penawaran Sebelumnya</span>
+                        </button>
+                        @endif
+                        
                         <button onclick="showConfirm('Apakah Anda yakin ingin menghapus penawaran ini?', 'Hapus Penawaran', () => deletePenawaran())" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
                             Hapus Penawaran
                         </button>
@@ -328,5 +341,28 @@
             form.submit();
         }
     </script>
+
+    <!-- Expose penawaran materials data for price trend component -->
+    <script>
+        window.penawaranMaterials = [
+            @foreach($penawaran->items as $item)
+            {
+                id: {{ $item->material_id }},
+                name: "{{ $item->material->nama ?? 'Unknown' }}"
+            },
+            @endforeach
+        ];
+        console.log('Penawaran materials loaded:', window.penawaranMaterials.length, 'items');
+    </script>
+
+    <!-- Include Price Trend Chart Component -->
+    @include('penawaran.components.price-trend-chart')
+
+    <!-- Include Copy Modal -->
+    @include('penawaran.modals.copy-modal')
+
+    <!-- Include Copy Script -->
+    @include('penawaran.scripts.copy-script')
+
     @endif
 @endsection

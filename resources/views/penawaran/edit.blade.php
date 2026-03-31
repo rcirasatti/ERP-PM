@@ -158,13 +158,16 @@
                         <option value="">-- Pilih Material --</option>
                         @foreach ($materials as $material)
                             @php
-                                $stok = $material->inventory?->stok ?? 0;
-                                $isBarang = $material->type === 'BARANG';
-                                $hasStok = $stok > 0 || !$isBarang;
-                                $stokDisplay = $isBarang ? '[Stok: ' . number_format($stok, 2) . ']' : '[' . $material->type . ']';
+                                $typeDisplay = match($material->type) {
+                                    'BARANG' => 'Barang',
+                                    'JASA' => 'Jasa',
+                                    'TOL' => 'Tol',
+                                    'LAINNYA' => 'Lainnya',
+                                    default => $material->type
+                                };
                             @endphp
-                            <option value="{{ $material->id }}" data-nama="{{ $material->nama }}" data-price="{{ $material->harga }}" {{ !$hasStok ? 'disabled' : '' }}>
-                                {{ $material->nama }} - {{ $material->satuan }} {{ $stokDisplay }}
+                            <option value="{{ $material->id }}" data-nama="{{ $material->nama }}" data-price="{{ $material->harga }}">
+                                {{ $material->nama }} - {{ $material->satuan }} [{{ $typeDisplay }}]
                             </option>
                         @endforeach
                     </select>

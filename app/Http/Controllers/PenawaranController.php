@@ -43,7 +43,7 @@ class PenawaranController extends Controller
     public function create()
     {
         $clients = Client::all();
-        $materials = Material::with('inventory')->get();
+        $materials = Material::with('supplier')->get();
         $noPenawaran = Penawaran::generateNoPenawaran();
         
         return view('penawaran.create', compact('clients', 'materials', 'noPenawaran'));
@@ -134,7 +134,7 @@ class PenawaranController extends Controller
     {
         $penawaran->load('client', 'items');
         $clients = Client::all();
-        $materials = Material::with('inventory')->get();
+        $materials = Material::with('supplier')->get();
         
         return view('penawaran.edit', compact('penawaran', 'clients', 'materials'));
     }
@@ -956,13 +956,16 @@ class PenawaranController extends Controller
             // Get historical prices from approved penawaran items
             $priceHistory = ItemPenawaran::where('material_id', $material->id)
                 ->whereHas('penawaran', fn($q) => $q->where('status', 'disetujui'))
+                ->with(['penawaran' => fn($q) => $q->select('id', 'no_penawaran')])
                 ->orderBy('created_at', 'DESC')
                 ->limit($limit)
-                ->get(['harga_asli', 'persentase_margin', 'harga_jual', 'jumlah', 'created_at'])
+                ->get(['harga_asli', 'persentase_margin', 'harga_jual', 'jumlah', 'created_at', 'penawaran_id'])
                 ->map(fn($item) => [
                     'harga_asli' => $item->harga_asli,
                     'persentase_margin' => $item->persentase_margin,
                     'harga_jual' => $item->harga_jual,
+                    'jumlah' => $item->jumlah,
+                    'penawaran_no' => $item->penawaran ? $item->penawaran->no_penawaran : '-',
                     'date' => $item->created_at->format('Y-m-d'),
                 ]);
 

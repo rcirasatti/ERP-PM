@@ -6,7 +6,6 @@ use App\Models\Penawaran;
 use App\Models\Proyek;
 use App\Models\Pengeluaran;
 use App\Models\Material;
-use App\Models\Inventory;
 use App\Models\ItemPenawaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -521,13 +520,6 @@ class DSSController extends Controller
                     ]);
 
                     \Log::info("Created material {$material->id} with kode {$material->kode}");
-
-                    // Create inventory entry untuk material ini
-                    Inventory::create([
-                        'material_id' => $material->id,
-                        'stok' => 0,
-                        'min_stok' => 0,
-                    ]);
 
                     // Update item dengan material_id yang baru
                     $item->update([

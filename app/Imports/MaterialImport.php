@@ -4,7 +4,6 @@ namespace App\Imports;
 
 use App\Models\Material;
 use App\Models\Supplier;
-use App\Models\Inventory;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Illuminate\Http\UploadedFile;
 
@@ -181,9 +180,6 @@ class MaterialImport
     protected function handlePreview($existing, int $rowNumber, string $item, string $supplier_name, float $harga, float $qtyValue, string $kategori, string $kode = ''): void
     {
         if ($existing) {
-            $inventory = $existing->inventory;
-            $currentStok = $inventory?->stok ?? 0;
-            $newStok = $currentStok + $qtyValue;
             $priceChanged = $existing->harga != $harga;
 
             $this->duplicates[] = [
@@ -194,9 +190,6 @@ class MaterialImport
                 'oldPrice' => $existing->harga,
                 'newPrice' => $harga,
                 'priceChanged' => $priceChanged,
-                'currentStok' => $currentStok,
-                'addStok' => $qtyValue,
-                'newStok' => $newStok,
                 'materialId' => $existing->id,
             ];
         } else {
@@ -242,42 +235,13 @@ class MaterialImport
             $isNew = true;
         }
 
-        // Handle inventory for BARANG type
-        if ($kategori === Material::TYPE_BARANG) {
-            $inventory = Inventory::where('material_id', $material->id)->first();
-
-            if ($inventory) {
-                if ($qtyValue > 0) {
-                    $newStok = $inventory->stok + $qtyValue;
-                    $inventory->update(['stok' => $newStok]);
-                    $this->stokAdded++;
-
-                    $this->importedItems[] = [
-                        'nama' => $item,
-                        'type' => 'stok_ditambah',
-                        'qty' => $qtyValue,
-                    ];
-                }
-            } else if ($qtyValue > 0) {
-                Inventory::create([
-                    'material_id' => $material->id,
-                    'stok' => $qtyValue,
-                ]);
-
-                if ($isNew) {
-                    $this->importedItems[] = [
-                        'nama' => $item,
-                        'type' => 'baru',
-                        'qty' => $qtyValue,
-                    ];
-                }
-            } elseif ($isNew && $qtyValue == 0) {
-                $this->importedItems[] = [
-                    'nama' => $item,
-                    'type' => 'baru',
-                    'qty' => 0,
-                ];
-            }
+        // Log imported material (no inventory handling - budget system only)
+        if ($isNew) {
+            $this->importedItems[] = [
+                'nama' => $item,
+                'type' => 'baru',
+                'harga' => $harga,
+            ];
         } else {
             if ($isNew) {
                 $this->importedItems[] = [
