@@ -59,6 +59,8 @@ class PenawaranController extends Controller
             'client_id' => 'required|exists:clients,id',
             'tanggal' => 'required|date',
             'status' => 'required|in:draft,disetujui,ditolak,dibatalkan',
+            'wilayah' => 'nullable|string|max:255',
+            'jenis_pekerjaan' => 'nullable|string|max:255',
             'items' => 'required|array|min:1',
             'items.*.material_id' => 'required|exists:materials,id',
             'items.*.jumlah' => 'required|integer|min:1',
@@ -75,6 +77,8 @@ class PenawaranController extends Controller
             'client_id' => $validated['client_id'],
             'tanggal' => $validated['tanggal'],
             'status' => $validated['status'],
+            'wilayah' => $validated['wilayah'],
+            'jenis_pekerjaan' => $validated['jenis_pekerjaan'],
             'total_biaya' => 0, // Will be updated
             'total_margin' => 0, // Will be updated
         ]);
@@ -153,6 +157,8 @@ class PenawaranController extends Controller
             'client_id' => 'required|exists:clients,id',
             'tanggal' => 'required|date',
             'status' => 'required|in:draft,disetujui,ditolak,dibatalkan',
+            'wilayah' => 'nullable|string|max:255',
+            'jenis_pekerjaan' => 'nullable|string|max:255',
             'items' => 'required|array|min:1',
             'items.*.material_id' => 'required|exists:materials,id',
             'items.*.jumlah' => 'required|integer|min:1',
@@ -200,6 +206,8 @@ class PenawaranController extends Controller
             'client_id' => $validated['client_id'],
             'tanggal' => $validated['tanggal'],
             'status' => $validated['status'],
+            'wilayah' => $validated['wilayah'],
+            'jenis_pekerjaan' => $validated['jenis_pekerjaan'],
             'total_biaya' => $totalBiaya,
             'total_margin' => $totalMargin,
             'ppn' => $ppn,
@@ -586,6 +594,8 @@ class PenawaranController extends Controller
         $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
             'tanggal' => 'required|date',
+            'wilayah' => 'nullable|string',
+            'jenis_pekerjaan' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.material_id' => 'required|exists:materials,id',
             'items.*.jumlah' => 'required|integer|min:1',
@@ -630,6 +640,8 @@ class PenawaranController extends Controller
                 'grand_total' => $grandTotal,
                 'subtotal' => $subtotal,
                 'client_id' => $validated['client_id'],
+                'wilayah' => $validated['wilayah'] ?? 'Kota Semarang',
+                'jenis_pekerjaan' => $validated['jenis_pekerjaan'] ?? 'Project / Purchase Order',
             ]);
 
             $executionTime = round((microtime(true) - $startTime) * 1000, 2); // ms
@@ -648,7 +660,6 @@ class PenawaranController extends Controller
                 'recommendation' => $analysis['recommendation'],
                 'predictions' => [
                     'lr' => $analysis['prediksi_lr'],
-                    'ma' => $analysis['prediksi_ma'],
                 ],
                 'data' => [
                     'grand_total' => $grandTotal,
@@ -686,54 +697,61 @@ class PenawaranController extends Controller
         $itemCount = $data['items_count'] ?? 0;
         $grandTotal = $data['grand_total'] ?? 0;
         
-        // Calculate complexity score (0-100)
-        // More items = higher complexity
-        $complexityScore = min(100, $itemCount * 10);
+        // Call Python ML Script
+        $pythonScriptPath = storage_path('app/ml/predict_dss.py');
+        $pythonExecutable = storage_path('app/ml/venv/Scripts/python.exe');
         
-        // Get historical overrun rate (dummy data for now)
-        $historicalOverrunRate = 0.15; // 15% average overrun rate
+        $inputData = json_encode([
+            'jenis_pekerjaan' => $data['jenis_pekerjaan'] ?? 'Project / Purchase Order',
+            'wilayah' => $data['wilayah'] ?? 'Kota Semarang',
+            'grand_total' => $grandTotal
+        ]);
         
-        // Calculate risk level based on complexity and historical data
-        $riskScore = $complexityScore * 0.5 + ($historicalOverrunRate * 100) * 0.5;
+        $process = new \Symfony\Component\Process\Process([$pythonExecutable, $pythonScriptPath, $inputData]);
+        $process->run();
         
-        if ($riskScore >= 60) {
-            $riskLevel = 'Tinggi';
-        } elseif ($riskScore >= 35) {
-            $riskLevel = 'Sedang';
+        $outputStr = '';
+        if (!$process->isSuccessful()) {
+            $outputStr = $process->getErrorOutput();
+            \Log::error("Python ML Process Failed: " . $outputStr);
+            $result = ['success' => false, 'error' => $outputStr];
         } else {
-            $riskLevel = 'Rendah';
+            $outputStr = $process->getOutput();
+            $result = json_decode($outputStr, true);
         }
         
-        // Predictions (dummy ML predictions)
-        // Linear Regression: prediksi dengan variance ±5%
-        $prediksiLR = $grandTotal * (1 + (rand(-5, 5) / 100));
+        // Prediksi Linear Regression (ML Model)
+        if (isset($result['success']) && $result['success']) {
+            $prediksiLR = $result['prediction'];
+        } else {
+            // Fallback
+            $prediksiLR = $grandTotal; // Default to grand total (0% overrun) if model completely fails
+            \Log::error("Python ML Error in PenawaranController: " . ($result['error'] ?? 'Unknown Error'), ['output' => $outputStr]);
+        }
         
-        // Moving Average: prediksi dengan variance ±3%
-        $prediksiMA = $grandTotal * (1 + (rand(-3, 3) / 100));
+        $prediksiMA = 0; // Removing MA completely
         
-        // Margin status
-        $estimatedOverrun = ($prediksiLR - $grandTotal) / $grandTotal * 100;
-        $marginStatus = $estimatedOverrun > 5 ? 'overrun' : 'aman';
+        $estimatedOverrun = (($prediksiLR - $grandTotal) / $grandTotal) * 100;
+        $marginStatus = $estimatedOverrun > 0 ? 'overrun' : 'aman';
         
-        // Generate recommendation
-        switch ($riskLevel) {
-            case 'Tinggi':
-                $recommendation = '⚠️ Risiko tinggi terdeteksi. Kompleksitas tinggi dengan potensi overrun. Sebaiknya lakukan review ulang terhadap estimasi material dan harga.';
-                break;
-            case 'Sedang':
-                $recommendation = '⚡ Risiko sedang. Prediksi menunjukkan kemungkinan overrun ' . abs(round($estimatedOverrun, 1)) . '%. Sebaiknya review kembali estimasi biaya.';
-                break;
-            default:
-                $recommendation = '✓ Risiko rendah. Estimasi biaya terlihat realistis berdasarkan data historis.';
+        // 100% ML Driven Risk Assessment
+        if ($estimatedOverrun > 10) {
+            $riskLevel = 'Tinggi';
+            $recommendation = '🔴 DANGER: Model AI memprediksi potensi kerugian/overrun sebesar ' . round($estimatedOverrun, 1) . '%. Prediksi aktual biaya adalah Rp ' . number_format($prediksiLR, 0, ',', '.') . ' berbanding penawaran Rp ' . number_format($grandTotal, 0, ',', '.') . '. Sangat disarankan untuk merevisi penawaran!';
+        } elseif ($estimatedOverrun > 0) {
+            $riskLevel = 'Sedang';
+            $recommendation = '⚠️ WARNING: Model AI memprediksi kerugian/overrun sebesar ' . round($estimatedOverrun, 1) . '%. Ada potensi biaya membengkak melebihi penawaran. Review kembali harga material dan kuantitas.';
+        } else {
+            $riskLevel = 'Rendah';
+            $recommendation = '✓ Risiko rendah. Estimasi biaya terlihat sangat aman, diprediksi ada penghematan/margin ekstra sebesar ' . abs(round($estimatedOverrun, 1)) . '%.';
         }
         
         return [
             'risk_level' => $riskLevel,
-            'risk_score' => $riskScore,
-            'complexity_score' => $complexityScore,
-            'historical_overrun_rate' => $historicalOverrunRate * 100,
+            'risk_score' => $estimatedOverrun,
+            'complexity_score' => min(100, $itemCount * 10),
+            'historical_overrun_rate' => 0, // removed
             'prediksi_lr' => round($prediksiLR, 0),
-            'prediksi_ma' => round($prediksiMA, 0),
             'margin_status' => $marginStatus,
             'estimated_overrun_percent' => round($estimatedOverrun, 2),
             'recommendation' => $recommendation,

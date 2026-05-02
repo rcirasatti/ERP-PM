@@ -21,9 +21,10 @@ class Penawaran extends Model
         'ppn', 
         'grand_total_with_ppn',
         'ai_prediksi_lr',
-        'ai_prediksi_ma',
         'margin_status',
-        'ai_notes'
+        'ai_notes',
+        'wilayah',
+        'jenis_pekerjaan'
     ];
     protected $casts = [
         'tanggal' => 'date',
@@ -32,7 +33,6 @@ class Penawaran extends Model
         'ppn' => 'decimal:2',
         'grand_total_with_ppn' => 'decimal:2',
         'ai_prediksi_lr' => 'decimal:2',
-        'ai_prediksi_ma' => 'decimal:2',
         'ai_status' => 'string',
         'margin_status' => 'string',
     ];

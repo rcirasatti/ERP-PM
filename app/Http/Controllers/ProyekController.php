@@ -61,13 +61,16 @@ class ProyekController extends Controller
         // Get penawaran data
         $penawaran = Penawaran::findOrFail($validated['penawaran_id']);
 
+        // Use penawaran wilayah as lokasi if not provided
+        $lokasi = $validated['lokasi'] ?? $penawaran->wilayah ?? 'N/A';
+
         // Create project with automatic 'baru' status and 0% progress
         $proyek = Proyek::create([
             'penawaran_id' => $validated['penawaran_id'],
             'client_id' => $penawaran->client_id,
             'nama' => $validated['nama'],
             'deskripsi' => $validated['deskripsi'],
-            'lokasi' => $validated['lokasi'],
+            'lokasi' => $lokasi,
             'tanggal_mulai' => $validated['tanggal_mulai'],
             'tanggal_selesai' => $validated['tanggal_selesai'],
             'status' => 'baru', // Always start as 'baru'

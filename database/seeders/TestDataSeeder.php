@@ -62,7 +62,6 @@ class TestDataSeeder extends Seeder
             'ppn' => 0,
             'grand_total_with_ppn' => 0,
             'ai_prediksi_lr' => 0,
-            'ai_prediksi_ma' => 0,
             'margin_status' => 'aman',
         ]);
 
@@ -113,7 +112,6 @@ class TestDataSeeder extends Seeder
             'ppn' => $ppn,
             'grand_total_with_ppn' => $grandTotal,
             'ai_prediksi_lr' => $grandTotal,
-            'ai_prediksi_ma' => $grandTotal,
         ]);
 
         echo "✓ Created Items in Source Penawaran: " . count($items) . " items\n";

@@ -74,7 +74,7 @@
                         <label for="client_id" class="block text-sm font-medium text-gray-700 mb-2">
                             Klien <span class="text-red-500">*</span>
                         </label>
-                        <select id="client_id" name="client_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <select id="client_id" name="client_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent searchable-select">
                             <option value="">-- Pilih Klien --</option>
                             @foreach($clients as $client)
                                 <option value="{{ $client->id }}">{{ $client->nama }}</option>
@@ -294,46 +294,50 @@
             </div>
 
             <!-- Predictions Card -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Prediksi AI</h3>
+            <div class="bg-white rounded-2xl shadow-lg border border-purple-100 overflow-hidden flex flex-col">
+                <div class="bg-gradient-to-r from-purple-600 to-blue-600 p-5 text-white flex items-center justify-between">
+                    <h3 class="text-lg font-bold flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                        Prediksi Pengeluaran AI
+                    </h3>
                     <div class="group relative">
-                        <svg class="w-5 h-5 text-gray-400 cursor-help hover:text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                        <svg class="w-5 h-5 text-white/70 cursor-help hover:text-white transition" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
                         </svg>
-                        <div class="hidden group-hover:block absolute right-0 w-64 bg-gray-900 text-white text-sm rounded p-3 z-10">
+                        <div class="hidden group-hover:block absolute right-0 top-8 w-64 bg-gray-900 text-white text-sm rounded-lg p-3 z-10 shadow-xl border border-gray-700">
                             <p class="font-semibold mb-2">Tentang Prediksi AI:</p>
-                            <p class="mb-2">Nilai di bawah menunjukkan estimasi actual cost berdasarkan data historis. Jika lebih tinggi dari total penawaran, ada risiko overrun biaya.</p>
-                            <p class="text-xs opacity-90">LR (Linear Regression) vs MA (Moving Average) = metode prediksi berbeda</p>
+                            <p class="mb-2 text-gray-300">Nilai di bawah menunjukkan estimasi actual cost berdasarkan data historis. Jika lebih tinggi dari total penawaran, ada risiko overrun biaya.</p>
+                            <p class="text-[10px] text-gray-400">Prediksi berdasarkan model Machine Learning yang telah ditraining dengan data historis proyek.</p>
                         </div>
                     </div>
                 </div>
                 
-                <div class="space-y-6">
-                    <!-- Linear Regression Prediction -->
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <p class="text-sm text-gray-600 mb-2">Prediksi Biaya Aktual (Linear)</p>
-                        <p id="lrPrediction" class="text-2xl font-bold text-gray-900 mb-2">Rp 0</p>
-                        <div class="flex items-center text-sm">
-                            <span id="lrVariance" class="text-green-600 font-semibold">0%</span>
-                            <span class="text-gray-600 ml-1">(dari estimasi)</span>
-                        </div>
+                <div class="p-5 flex-1 flex flex-col gap-4 bg-purple-50/30">
+                    <!-- Machine Learning Prediction -->
+                    <div class="p-5 rounded-xl border border-purple-200 bg-white shadow-sm flex flex-col justify-center relative overflow-hidden">
+                        <span class="text-xs font-medium text-purple-800 mb-1 uppercase tracking-wide">Estimasi Biaya Aktual</span>
+                        <span id="lrPrediction" class="text-3xl font-black text-purple-900 relative z-10">Rp 0</span>
+                        <svg class="absolute -bottom-6 -right-6 w-32 h-32 text-purple-100 opacity-60 z-0 transform -rotate-12" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path></svg>
                     </div>
 
-                    <!-- Moving Average Prediction -->
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <p class="text-sm text-gray-600 mb-2">Prediksi Biaya Aktual (Moving Avg)</p>
-                        <p id="maPrediction" class="text-2xl font-bold text-gray-900 mb-2">Rp 0</p>
-                        <div class="flex items-center text-sm">
-                            <span id="maVariance" class="text-green-600 font-semibold">0%</span>
-                            <span class="text-gray-600 ml-1">(dari estimasi)</span>
+                    <!-- Variance Indicator -->
+                    <div id="varianceContainer" class="flex items-center p-4 rounded-xl border shadow-sm bg-white">
+                        <div class="flex-1">
+                            <p id="varianceLabel" class="text-xs font-bold text-gray-600 mb-1">Analisis Selisih</p>
+                            <div class="flex items-end gap-2 mt-1">
+                                <span id="lrVarianceNominal" class="text-xl font-bold text-gray-900">Rp 0</span>
+                                <span id="lrVariance" class="text-xs font-bold px-2 py-0.5 rounded-full mb-0.5 bg-gray-100 text-gray-700">0%</span>
+                            </div>
+                        </div>
+                        <div id="varianceIcon" class="flex-shrink-0 bg-gray-50 p-2.5 rounded-full shadow-sm border border-gray-100">
+                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </div>
                     </div>
 
                     <!-- AI Recommendation -->
-                    <div class="p-4 bg-blue-50 border border-blue-200 rounded">
-                        <p class="text-sm font-medium text-blue-900 mb-2">Rekomendasi AI</p>
-                        <p id="recommendation" class="text-sm text-blue-800">
+                    <div class="mt-auto bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl">
+                        <p class="text-xs font-bold text-blue-900 mb-1 uppercase tracking-wide">Kesimpulan Sistem</p>
+                        <p id="recommendation" class="text-sm text-blue-800 leading-relaxed font-medium">
                             <!-- Filled by JS -->
                         </p>
                     </div>
@@ -645,15 +649,25 @@ function displayAnalysisResults(data) {
     document.getElementById('historyOverrun').textContent = data.historical_overrun_rate.toFixed(1) + '%';
 
     // Predictions
-    document.getElementById('lrPrediction').textContent = 'Rp ' + Math.round(data.predictions.linear_regression).toLocaleString('id-ID');
-    const lrVariance = ((data.predictions.linear_regression - data.grand_total) / data.grand_total * 100).toFixed(1);
-    document.getElementById('lrVariance').textContent = lrVariance + '%';
-    document.getElementById('lrVariance').className = 'font-semibold ' + (lrVariance > 0 ? 'text-red-600' : 'text-green-600');
-
-    document.getElementById('maPrediction').textContent = 'Rp ' + Math.round(data.predictions.moving_average).toLocaleString('id-ID');
-    const maVariance = ((data.predictions.moving_average - data.grand_total) / data.grand_total * 100).toFixed(1);
-    document.getElementById('maVariance').textContent = maVariance + '%';
-    document.getElementById('maVariance').className = 'font-semibold ' + (maVariance > 0 ? 'text-red-600' : 'text-green-600');
+    const prediksi = Math.round(data.predictions.machine_learning);
+    const selisih = prediksi - data.grand_total;
+    const isRugi = selisih > 0;
+    const lrVariance = (selisih / data.grand_total * 100).toFixed(1);
+    
+    document.getElementById('lrPrediction').textContent = 'Rp ' + prediksi.toLocaleString('id-ID');
+    document.getElementById('lrVarianceNominal').textContent = 'Rp ' + Math.abs(selisih).toLocaleString('id-ID');
+    document.getElementById('lrVarianceNominal').className = 'text-xl font-bold ' + (isRugi ? 'text-red-600' : 'text-green-600');
+    
+    document.getElementById('lrVariance').textContent = (isRugi ? '+' : '') + lrVariance + '%';
+    document.getElementById('lrVariance').className = 'text-xs font-bold px-2 py-0.5 rounded-full mb-0.5 ' + (isRugi ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700');
+    
+    document.getElementById('varianceLabel').textContent = isRugi ? 'Potensi Overrun (Rugi)' : 'Potensi Penghematan (Aman)';
+    document.getElementById('varianceContainer').className = 'flex items-center p-4 rounded-xl border shadow-sm ' + (isRugi ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200');
+    
+    document.getElementById('varianceIcon').innerHTML = isRugi 
+        ? '<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path></svg>'
+        : '<svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>';
+    document.getElementById('varianceIcon').className = 'flex-shrink-0 bg-white p-2.5 rounded-full shadow-sm';
 
     // Recommendation - gunakan langsung dari API, jangan calculate ulang
     // API sudah account untuk historical data dengan benar

@@ -47,13 +47,14 @@ class DSSController extends Controller
                 'client_id' => $penawaran->client_id,
                 'items_count' => $penawaran->items->count(),
                 'historical_data' => $historicalData,
+                'wilayah' => $penawaran->wilayah,
+                'jenis_pekerjaan' => $penawaran->jenis_pekerjaan,
             ]);
 
             // Update penawaran dengan hasil prediksi
             $penawaran->update([
                 'ai_status' => 'analyzed',
-                'ai_prediksi_lr' => $prediction['prediksi_lr'],
-                'ai_prediksi_ma' => $prediction['prediksi_ma'],
+                'ai_prediksi_lr' => $prediction['prediksi'], // Saved to existing column
                 'margin_status' => $prediction['margin_status'],
                 'ai_notes' => $prediction['ai_notes'],
             ]);
@@ -77,8 +78,7 @@ class DSSController extends Controller
                     'item_count' => $penawaran->items->count(),
                     'complexity_score' => (float) $complexityScore,
                     'historical_overrun_rate' => (float) $historicalOverrunRate * 100,
-                    'ai_prediksi_lr' => (float) $prediction['prediksi_lr'],
-                    'ai_prediksi_ma' => (float) $prediction['prediksi_ma'],
+                    'ai_prediksi_lr' => (float) $prediction['prediksi'],
                     'margin_status' => $prediction['margin_status'],
                     'risk_level' => $prediction['risk_level'],
                     'estimated_actual_cost' => (float) $prediction['estimated_actual_cost'],
@@ -86,8 +86,7 @@ class DSSController extends Controller
                     'ai_notes' => $prediction['ai_notes'],
                     'recommendation' => $prediction['recommendation'],
                     'predictions' => [
-                        'linear_regression' => (float) $prediction['prediksi_lr'],
-                        'moving_average' => (float) $prediction['prediksi_ma'],
+                        'machine_learning' => (float) $prediction['prediksi'],
                     ]
                 ]
             ]);
@@ -201,7 +200,6 @@ class DSSController extends Controller
                     'status_after' => $penawaran->status,
                     'risk_level' => $penawaran->margin_status,
                     'ai_prediction_lr' => (float) $penawaran->ai_prediksi_lr,
-                    'ai_prediction_ma' => (float) $penawaran->ai_prediksi_ma,
                     'ai_notes' => $penawaran->ai_notes,
                     'user_notes' => $validated['notes'] ?? null,
                     'materials_created' => $materialResult['created'],
@@ -285,87 +283,67 @@ class DSSController extends Controller
      */
     private function callPythonDSSAPI($data)
     {
-        // TODO: Integrate dengan Python API
-        // Untuk sekarang, return dummy prediction (hardcoded)
-        
         $quotedCost = $data['grand_total'];
         
-        // Dummy prediction logic: berikan warning untuk proyek besar
-        // atau yang punya karakteristik tertentu
-        $riskFactor = $this->calculateRiskFactor($data);
+        // Execute Python ML Script
+        $pythonScriptPath = storage_path('app/ml/predict_dss.py');
+        $pythonExecutable = storage_path('app/ml/venv/Scripts/python.exe');
         
-        // Linear Regression prediction (mimic: +5% untuk high risk)
-        $prediksiLR = $quotedCost * (1 + ($riskFactor * 0.05));
+        // Buat input JSON
+        $inputData = json_encode([
+            'jenis_pekerjaan' => $data['jenis_pekerjaan'] ?? 'Project / Purchase Order',
+            'wilayah' => $data['wilayah'] ?? 'Kota Semarang',
+            'grand_total' => $quotedCost
+        ]);
         
-        // Moving Average prediction (mimic: +3% lebih konservatif)
-        $prediksiMA = $quotedCost * (1 + ($riskFactor * 0.03));
+        // Eksekusi script menggunakan Symfony Process untuk error handling lebih baik
+        $process = new \Symfony\Component\Process\Process([$pythonExecutable, $pythonScriptPath, $inputData]);
+        $process->run();
         
-        $estimatedActualCost = ($prediksiLR + $prediksiMA) / 2;
+        $outputStr = '';
+        if (!$process->isSuccessful()) {
+            $outputStr = $process->getErrorOutput();
+            \Log::error("Python ML Process Failed in DSSController: " . $outputStr);
+            $result = ['success' => false, 'error' => $outputStr];
+        } else {
+            $outputStr = $process->getOutput();
+            $result = json_decode($outputStr, true);
+        }
+        
+        // Prediksi Machine Learning
+        if (isset($result['success']) && $result['success']) {
+            $prediksi = $result['prediction'];
+        } else {
+            // Fallback ke quotedCost (0% overrun) jika script gagal/error
+            $prediksi = $quotedCost;
+            \Log::error("Python ML Error: " . ($result['error'] ?? 'Unknown Error'), ['output' => $outputStr]);
+        }
+        
+        $estimatedActualCost = $prediksi;
         $overrunPercent = (($estimatedActualCost - $quotedCost) / $quotedCost) * 100;
         
-        // Get historical overrun rate untuk adjust risk assessment
-        $historicalOverrunRate = $this->getHistoricalOverrunRate($data) * 100;
+        // === 100% ML Driven Risk Assessment ===
+        // Sesuai dengan hasil model prediksi: Jika Prediksi Biaya Aktual > Penawaran = Overrun / Rugi
         
-        // === RISK ASSESSMENT LOGIC ===
-        // Historical data adalah PRIMARY factor karena terbukti dari data nyata
-        
-        $marginStatus = 'aman';
-        $riskLevel = 'low';
-        $recommendation = 'Penawaran dapat dilanjutkan.';
-        
-        // STEP 1: Base risk dari historical data (PRIORITAS UTAMA)
-        if ($historicalOverrunRate >= 30) {
-            // 30%+ dari past projects overrun = HIGH RISK
-            $riskLevel = 'high';
+        if ($estimatedActualCost > $quotedCost) {
             $marginStatus = 'overrun';
-            $recommendation = '🔴 DANGER: Data historis menunjukkan ' . round($historicalOverrunRate, 1) . '% projects mengalami overrun/loss. Risiko sangat tinggi!';
-        } elseif ($historicalOverrunRate >= 20) {
-            // 20-30% dari past projects overrun = MEDIUM RISK  
-            $riskLevel = 'medium';
-            $marginStatus = 'overrun';
-            $recommendation = '⚠️ WARNING: Data historis menunjukkan ' . round($historicalOverrunRate, 1) . '% projects mengalami loss. Pertimbangkan untuk revisi estimasi atau penolakan.';
-        } elseif ($historicalOverrunRate >= 15) {
-            // 15-20% dari past projects overrun = MEDIUM RISK
-            $riskLevel = 'medium';
-            $recommendation = '⚠️ Data historis menunjukkan ' . round($historicalOverrunRate, 1) . '% overrun rate. Review estimasi biaya dan scope dengan hati-hati.';
-        }
-        
-        // STEP 2: Upgrade risk jika prediction variance juga tinggi
-        if ($overrunPercent > 15) {
-            // Prediction juga pessimistic = VERY HIGH RISK
-            if ($riskLevel === 'low') {
+            if ($overrunPercent > 10) {
                 $riskLevel = 'high';
-            }
-            $marginStatus = 'overrun';
-            $recommendation = '🔴 DANGER: Prediction overrun ' . round($overrunPercent, 1) . '% + historical overrun ' . round($historicalOverrunRate, 1) . '%. TIDAK DIREKOMENDASIKAN.';
-        } elseif ($overrunPercent > 10) {
-            // Prediction moderate pessimistic
-            if ($riskLevel === 'low') {
+                $recommendation = '🔴 DANGER: Prediksi biaya aktual (Rp ' . number_format($estimatedActualCost, 0, ',', '.') . ') melebihi nilai penawaran. Potensi kerugian besar sebesar ' . round($overrunPercent, 1) . '%. TIDAK DIREKOMENDASIKAN.';
+            } else {
                 $riskLevel = 'medium';
+                $recommendation = '⚠️ WARNING: Prediksi biaya aktual (Rp ' . number_format($estimatedActualCost, 0, ',', '.') . ') sedikit melebihi nilai penawaran. Potensi overrun ' . round($overrunPercent, 1) . '%. Pertimbangkan revisi.';
             }
-            $marginStatus = 'overrun';
-            if (strpos($recommendation, '🔴') === false && strpos($recommendation, '⚠️') === false) {
-                $recommendation = '⚠️ Prediction overrun ' . round($overrunPercent, 1) . '%. ' . $recommendation;
-            }
-        } elseif ($overrunPercent > 5 && $riskLevel === 'low') {
-            // Prediction slightly pessimistic
-            $riskLevel = 'medium';
-            $recommendation = 'Prediction overrun ' . round($overrunPercent, 1) . '%. Review margin dan scope.';
-        }
-        
-        // STEP 3: Final check - if still low risk but has any positive overrun, upgrade to medium
-        if ($riskLevel === 'low' && $overrunPercent > 0 && ($historicalOverrunRate > 0 || $overrunPercent > 1)) {
-            $riskLevel = 'medium';
-            $marginStatus = 'overrun';
-            $recommendation = 'Ada indikasi potential overrun. Rekomendasi untuk review kembali estimasi.';
+        } else {
+            $marginStatus = 'aman';
+            $riskLevel = 'low';
+            $recommendation = '✅ AMAN: Prediksi biaya aktual (Rp ' . number_format($estimatedActualCost, 0, ',', '.') . ') masih dalam batas nilai penawaran. Risiko rendah, dapat dilanjutkan.';
         }
 
-        $notes = "Analisis DSS: {$data['items_count']} item, historical overrun " . round($historicalOverrunRate, 1) . "%, ";
-        $notes .= "prediksi actual cost Rp " . number_format($estimatedActualCost, 0) . " dengan variance " . round($overrunPercent, 1) . "%.";
+        $notes = "Analisis AI: Prediksi biaya aktual Rp " . number_format($estimatedActualCost, 0, ',', '.') . " (" . ($overrunPercent > 0 ? "+" : "") . round($overrunPercent, 1) . "% variance dari penawaran).";
 
         return [
-            'prediksi_lr' => $prediksiLR,
-            'prediksi_ma' => $prediksiMA,
+            'prediksi' => $prediksi,
             'estimated_actual_cost' => $estimatedActualCost,
             'estimated_overrun_percent' => $overrunPercent,
             'margin_status' => $marginStatus,

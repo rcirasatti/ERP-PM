@@ -37,7 +37,7 @@
 
                         <div>
                             <label for="client_id" class="block text-sm font-medium text-gray-700 mb-2">Client *</label>
-                            <select id="client_id" name="client_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <select id="client_id" name="client_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 searchable-select">
                                 @foreach ($clients as $client)
                                     <option value="{{ $client->id }}" {{ $client->id == $penawaran->client_id ? 'selected' : '' }}>
                                         {{ $client->nama }} ({{ $client->kontak }})
@@ -66,6 +66,32 @@
                                 <option value="dibatalkan" {{ $penawaran->status == 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
                             </select>
                             @error('status')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="wilayah" class="block text-sm font-medium text-gray-700 mb-2">Wilayah *</label>
+                            <select id="wilayah" name="wilayah" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 searchable-select">
+                                <option value="">-- Pilih Wilayah --</option>
+                                @foreach(['Batang', 'Blora', 'Boyolali', 'Brebes', 'Cilacap', 'Demak', 'Karanganyar', 'Kendal', 'Kota Semarang', 'Kudus', 'Pekalongan', 'Pemalang', 'Purworejo', 'Salatiga', 'Solo', 'Tegal', 'Temanggung', 'Wonosobo', 'Yogyakarta'] as $w)
+                                    <option value="{{ $w }}" {{ old('wilayah', $penawaran->wilayah) == $w ? 'selected' : '' }}>{{ $w }}</option>
+                                @endforeach
+                            </select>
+                            @error('wilayah')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="jenis_pekerjaan" class="block text-sm font-medium text-gray-700 mb-2">Jenis Pekerjaan *</label>
+                            <select id="jenis_pekerjaan" name="jenis_pekerjaan" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 searchable-select">
+                                <option value="">-- Pilih Jenis Pekerjaan --</option>
+                                @foreach(['Project / Purchase Order', 'Instalasi Infrastruktur', 'Layanan Aktivasi Internet', 'Layanan Network & VPN', 'Managed Service & Maintenance'] as $jp)
+                                    <option value="{{ $jp }}" {{ old('jenis_pekerjaan', $penawaran->jenis_pekerjaan) == $jp ? 'selected' : '' }}>{{ $jp }}</option>
+                                @endforeach
+                            </select>
+                            @error('jenis_pekerjaan')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
                         </div>
@@ -243,6 +269,21 @@
             }
 
             container.appendChild(clone);
+            
+            // Initialize Choices for the new material select
+            const newSelect = container.querySelector('.item-row:last-child .material-select');
+            if (newSelect) {
+                new Choices(newSelect, {
+                    removeItemButton: true,
+                    searchResultLimit: 6,
+                    shouldSort: false, // Don't sort so it keeps the backend order
+                    placeholder: true,
+                    noResultsText: 'Tidak ada hasil pencarian',
+                    noChoicesText: 'Tidak ada opsi tersedia',
+                    itemSelectText: 'Tekan Enter untuk memilih'
+                });
+            }
+
             if (data) {
                 calculateTotals();
             }
@@ -255,11 +296,18 @@
 
         function updateHargaAsli(selectElement) {
             const row = selectElement.closest('.item-row');
-            const selectedOption = selectElement.options[selectElement.selectedIndex];
-            const hargaAsli = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+            // Check if Choices.js has wrapped it, if so, get the actual select options
+            const originalSelect = selectElement;
+            const selectedOption = originalSelect.options[originalSelect.selectedIndex];
             
-            const hargaAsliInput = row.querySelector('.harga-asli-input');
-            hargaAsliInput.value = hargaAsli;
+            if (selectedOption && selectedOption.value) {
+                const hargaAsli = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+                
+                const hargaAsliInput = row.querySelector('.harga-asli-input');
+                if(hargaAsliInput) {
+                    hargaAsliInput.value = hargaAsli;
+                }
+            }
             
             calculateTotals();
         }
@@ -378,6 +426,8 @@
                     body: JSON.stringify({
                         client_id: parseInt(clientId),
                         tanggal: tanggal,
+                        wilayah: document.getElementById('wilayah').value,
+                        jenis_pekerjaan: document.getElementById('jenis_pekerjaan').value,
                         items: items
                     })
                 });
@@ -415,54 +465,129 @@
         }
 
         function showAnalysisResults(data) {
-            // Create a modal with unique ID for easier removal
             const modalId = 'analysisModal_' + Date.now();
+            
+            const grandTotal = data.data.grand_total;
+            const prediksi = data.predictions?.lr || 0;
+            const selisih = prediksi - grandTotal;
+            const selisihPersen = (selisih / grandTotal * 100).toFixed(1);
+            
+            const isRugi = selisih > 0;
+            const selisihWarna = isRugi ? 'text-red-600' : 'text-green-600';
+            const selisihBg = isRugi ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200';
+            const selisihLabel = isRugi ? 'Potensi Overrun (Rugi)' : 'Potensi Penghematan (Aman)';
+            
+            const wilayahSelect = document.getElementById('wilayah');
+            const wilayah = wilayahSelect.options[wilayahSelect.selectedIndex]?.text || 'wilayah ini';
+            
+            const jenisSelect = document.getElementById('jenis_pekerjaan');
+            const jenisPekerjaan = jenisSelect.options[jenisSelect.selectedIndex]?.text || 'jenis pekerjaan ini';
+
             const analysisHTML = `
-                <div id="${modalId}" class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/50">
-                    <div class="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full mx-4 max-h-96 overflow-y-auto">
-                        <h2 class="text-2xl font-bold text-gray-900 mb-4">Hasil Analisis AI DSS</h2>
+                <div id="${modalId}" class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-gray-900/60 p-4 transition-opacity">
+                    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[90vh] overflow-hidden transform transition-all animate-fade-in-up">
                         
-                        <div class="space-y-4">
-                            <!-- Risk Level -->
-                            <div class="p-4 ${getRiskBgColor(data.risk_level)} rounded-lg">
-                                <label class="text-sm font-medium text-gray-600 block mb-2">Tingkat Risiko</label>
-                                <div class="flex items-center gap-2">
-                                    <span class="${getRiskBadgeClass(data.risk_level)} px-4 py-2 rounded-full text-white font-semibold">
-                                        ${getRiskEmoji(data.risk_level)} ${data.risk_level}
+                        <!-- Header Gradient -->
+                        <div class="bg-gradient-to-r from-purple-600 to-blue-600 p-4 sm:p-5 text-white flex justify-between items-center flex-shrink-0">
+                            <div>
+                                <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2">
+                                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                                    Hasil Analisis Prediksi AI
+                                </h2>
+                                <p class="text-purple-100 text-xs sm:text-sm mt-1 opacity-90">Evaluasi kelayakan penawaran berbasis Machine Learning.</p>
+                            </div>
+                            <button onclick="closeAnalysisModal('${modalId}')" class="text-white hover:text-gray-200 transition">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+
+                        <div class="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
+                            
+                            <!-- Insight Text -->
+                            <div class="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-200 text-gray-700 text-xs sm:text-sm leading-relaxed shadow-sm">
+                                <p>Berdasarkan data historis proyek <strong>\${jenisPekerjaan}</strong> di <strong>\${wilayah}</strong>, model AI memprediksi bahwa total biaya aktual yang sesungguhnya akan dikeluarkan mungkin berbeda dengan nilai estimasi penawaran Anda.</p>
+                            </div>
+
+                            <!-- Comparison Cards -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                                <!-- Nilai Penawaran -->
+                                <div class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm flex flex-col justify-center">
+                                    <span class="text-xs sm:text-sm font-medium text-gray-500 mb-1">Nilai Penawaran (Estimasi Anda)</span>
+                                    <span class="text-xl sm:text-2xl font-bold text-gray-900">Rp \${grandTotal.toLocaleString('id-ID')}</span>
+                                </div>
+                                
+                                <!-- Prediksi AI -->
+                                <div class="p-4 rounded-xl border border-purple-200 bg-purple-50 flex flex-col justify-center relative overflow-hidden shadow-sm">
+                                    <span class="text-xs sm:text-sm font-medium text-purple-800 mb-1">Prediksi Pengeluaran Nyata (AI)</span>
+                                    <span class="text-xl sm:text-2xl font-bold text-purple-900 relative z-10">Rp \${prediksi.toLocaleString('id-ID')}</span>
+                                    <svg class="absolute -bottom-4 -right-4 w-20 h-20 text-purple-200 opacity-50 z-0" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"></path></svg>
+                                </div>
+                            </div>
+
+                            <!-- Variance Indicator -->
+                            <div class="flex items-center p-4 rounded-xl border \${selisihBg} shadow-sm">
+                                <div class="flex-1">
+                                    <p class="text-xs sm:text-sm font-bold text-gray-600 mb-1">\${selisihLabel}</p>
+                                    <div class="flex items-end gap-2">
+                                        <span class="text-xl sm:text-2xl font-bold \${selisihWarna}">Rp \${Math.abs(selisih).toLocaleString('id-ID')}</span>
+                                        <span class="text-xs sm:text-sm font-bold px-2 py-0.5 rounded-full \${isRugi ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'} mb-1">
+                                            \${isRugi ? '+' : ''}\${selisihPersen}%
+                                        </span>
+                                    </div>
+                                    <p class="text-[11px] sm:text-xs text-gray-500 mt-1">Selisih antara pengeluaran nyata dengan penawaran.</p>
+                                </div>
+                                <div class="flex-shrink-0 bg-white p-2.5 rounded-full shadow-sm">
+                                    \${isRugi 
+                                        ? '<svg class="w-6 h-6 sm:w-8 sm:h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path></svg>'
+                                        : '<svg class="w-6 h-6 sm:w-8 sm:h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>'
+                                    }
+                                </div>
+                            </div>
+
+                            <hr class="border-gray-100">
+
+                            <!-- Recommendation Section -->
+                            <div class="flex flex-col md:flex-row gap-4 items-stretch">
+                                <!-- Risk Badge -->
+                                <div class="flex-shrink-0 text-center p-3 rounded-xl \${getRiskBgColor(data.risk_level)} w-full md:w-32 border shadow-sm flex flex-col justify-center items-center">
+                                    <span class="block text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider mb-1 font-bold">Risiko</span>
+                                    <span class="inline-flex items-center justify-center font-black text-lg sm:text-xl text-gray-900 gap-1">
+                                        \${getRiskEmoji(data.risk_level)} \${data.risk_level}
                                     </span>
                                 </div>
-                            </div>
-
-                            <!-- Recommendation -->
-                            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                <label class="text-sm font-medium text-blue-900 block mb-2">Rekomendasi AI</label>
-                                <p class="text-sm text-blue-800">${data.recommendation || 'Silakan tinjau faktor risiko di atas.'}</p>
-                            </div>
-
-                            <!-- Predictions -->
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="p-3 bg-gray-50 rounded">
-                                    <p class="text-xs text-gray-600 mb-1">Prediksi LR</p>
-                                    <p class="text-sm font-bold text-gray-900">Rp ${data.predictions?.lr ? data.predictions.lr.toLocaleString('id-ID') : 0}</p>
+                                
+                                <!-- AI Text -->
+                                <div class="flex-1 flex flex-col justify-center">
+                                    <h4 class="text-xs sm:text-sm font-extrabold text-gray-900 mb-1 uppercase tracking-wide">Kesimpulan & Rekomendasi</h4>
+                                    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-r-lg">
+                                        <p class="text-xs sm:text-sm text-blue-900 leading-relaxed font-medium">\${data.recommendation}</p>
+                                    </div>
                                 </div>
-                                <div class="p-3 bg-gray-50 rounded">
-                                    <p class="text-xs text-gray-600 mb-1">Prediksi MA</p>
-                                    <p class="text-sm font-bold text-gray-900">Rp ${data.predictions?.ma ? data.predictions.ma.toLocaleString('id-ID') : 0}</p>
-                                </div>
-                            </div>
-
-                            <!-- Buttons -->
-                            <div class="flex gap-3 pt-4 border-t border-gray-200">
-                                <button onclick="closeAnalysisModal('${modalId}')" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300">
-                                    Kembali
-                                </button>
-                                <button type="submit" form="penawaranForm" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">
-                                    Simpan
-                                </button>
                             </div>
                         </div>
+
+                        <!-- Footer Actions -->
+                        <div class="bg-gray-50 border-t border-gray-200 p-4 flex flex-col sm:flex-row gap-3 justify-end items-center flex-shrink-0">
+                            <button type="button" onclick="closeAnalysisModal('\${modalId}')" class="w-full sm:w-auto px-5 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-100 transition shadow-sm text-sm">
+                                Kembali ke Form
+                            </button>
+                            <button type="submit" form="penawaranForm" onclick="closeAnalysisModal('\${modalId}')" class="w-full sm:w-auto px-5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition shadow-md flex justify-center items-center gap-2 text-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                Lanjut Perbarui
+                            </button>
+                        </div>
+
                     </div>
                 </div>
+                <style>
+                    @keyframes fadeInUp {
+                        from { opacity: 0; transform: translateY(10px) scale(0.98); }
+                        to { opacity: 1; transform: translateY(0) scale(1); }
+                    }
+                    .animate-fade-in-up {
+                        animation: fadeInUp 0.3s ease-out forwards;
+                    }
+                </style>
             `;
 
             document.body.insertAdjacentHTML('beforeend', analysisHTML);

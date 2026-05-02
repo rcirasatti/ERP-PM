@@ -66,7 +66,6 @@ class HistoricalDataSeeder extends Seeder
             'ppn' => 11000000,
             'grand_total_with_ppn' => 111000000,
             'ai_prediksi_lr' => 105000000,
-            'ai_prediksi_ma' => 104500000,
             'margin_status' => 'overrun',
             'ai_notes' => 'Prediksi overrun 5% berdasarkan data historis proyek serupa'
         ]);
@@ -134,7 +133,6 @@ class HistoricalDataSeeder extends Seeder
             'ppn' => 27500000,
             'grand_total_with_ppn' => 277500000,
             'ai_prediksi_lr' => 248000000,
-            'ai_prediksi_ma' => 250000000,
             'margin_status' => 'aman',
             'ai_notes' => 'Prediksi aman. Proyek ini termasuk kategori standard spec.'
         ]);
@@ -200,7 +198,6 @@ class HistoricalDataSeeder extends Seeder
             'ppn' => 19800000,
             'grand_total_with_ppn' => 199800000,
             'ai_prediksi_lr' => 189000000,
-            'ai_prediksi_ma' => 187000000,
             'margin_status' => 'overrun',
             'ai_notes' => 'PERINGATAN: Proyek kolam renang sering mengalami overrun 6-8% akibat variabilitas tanah.'
         ]);
