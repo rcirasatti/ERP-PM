@@ -123,4 +123,12 @@ class Penawaran extends Model
         };
     }
 
+    /**
+     * Get grand total (total biaya + total margin) dynamically
+     */
+    public function getGrandTotalAttribute(): float
+    {
+        return (float) (($this->total_biaya ?? 0) + ($this->total_margin ?? 0));
+    }
+
 }

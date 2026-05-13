@@ -697,36 +697,15 @@ class PenawaranController extends Controller
         $itemCount = $data['items_count'] ?? 0;
         $grandTotal = $data['grand_total'] ?? 0;
         
-        // Call Python ML Script
-        $pythonScriptPath = storage_path('app/ml/predict_dss.py');
-        $pythonExecutable = storage_path('app/ml/venv/Scripts/python.exe');
-        
-        $inputData = json_encode([
-            'jenis_pekerjaan' => $data['jenis_pekerjaan'] ?? 'Project / Purchase Order',
-            'wilayah' => $data['wilayah'] ?? 'Kota Semarang',
-            'grand_total' => $grandTotal
-        ]);
-        
-        $process = new \Symfony\Component\Process\Process([$pythonExecutable, $pythonScriptPath, $inputData]);
-        $process->run();
-        
-        $outputStr = '';
-        if (!$process->isSuccessful()) {
-            $outputStr = $process->getErrorOutput();
-            \Log::error("Python ML Process Failed: " . $outputStr);
-            $result = ['success' => false, 'error' => $outputStr];
-        } else {
-            $outputStr = $process->getOutput();
-            $result = json_decode($outputStr, true);
-        }
-        
-        // Prediksi Linear Regression (ML Model)
-        if (isset($result['success']) && $result['success']) {
-            $prediksiLR = $result['prediction'];
-        } else {
-            // Fallback
-            $prediksiLR = $grandTotal; // Default to grand total (0% overrun) if model completely fails
-            \Log::error("Python ML Error in PenawaranController: " . ($result['error'] ?? 'Unknown Error'), ['output' => $outputStr]);
+        try {
+            $prediksiLR = \App\Services\DSSPredictionService::predict(
+                $data['jenis_pekerjaan'] ?? 'Project / Purchase Order',
+                $data['wilayah'] ?? 'Kota Semarang',
+                $grandTotal
+            );
+        } catch (\Exception $e) {
+            \Log::error("Native PHP ML Error in PenawaranController: " . $e->getMessage());
+            $prediksiLR = $grandTotal; // Fallback to grand total (0% overrun) if model completely fails
         }
         
         $prediksiMA = 0; // Removing MA completely

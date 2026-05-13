@@ -285,38 +285,15 @@ class DSSController extends Controller
     {
         $quotedCost = $data['grand_total'];
         
-        // Execute Python ML Script
-        $pythonScriptPath = storage_path('app/ml/predict_dss.py');
-        $pythonExecutable = storage_path('app/ml/venv/Scripts/python.exe');
-        
-        // Buat input JSON
-        $inputData = json_encode([
-            'jenis_pekerjaan' => $data['jenis_pekerjaan'] ?? 'Project / Purchase Order',
-            'wilayah' => $data['wilayah'] ?? 'Kota Semarang',
-            'grand_total' => $quotedCost
-        ]);
-        
-        // Eksekusi script menggunakan Symfony Process untuk error handling lebih baik
-        $process = new \Symfony\Component\Process\Process([$pythonExecutable, $pythonScriptPath, $inputData]);
-        $process->run();
-        
-        $outputStr = '';
-        if (!$process->isSuccessful()) {
-            $outputStr = $process->getErrorOutput();
-            \Log::error("Python ML Process Failed in DSSController: " . $outputStr);
-            $result = ['success' => false, 'error' => $outputStr];
-        } else {
-            $outputStr = $process->getOutput();
-            $result = json_decode($outputStr, true);
-        }
-        
-        // Prediksi Machine Learning
-        if (isset($result['success']) && $result['success']) {
-            $prediksi = $result['prediction'];
-        } else {
-            // Fallback ke quotedCost (0% overrun) jika script gagal/error
-            $prediksi = $quotedCost;
-            \Log::error("Python ML Error: " . ($result['error'] ?? 'Unknown Error'), ['output' => $outputStr]);
+        try {
+            $prediksi = \App\Services\DSSPredictionService::predict(
+                $data['jenis_pekerjaan'] ?? 'Project / Purchase Order',
+                $data['wilayah'] ?? 'Kota Semarang',
+                $quotedCost
+            );
+        } catch (\Exception $e) {
+            \Log::error("Native PHP ML Error: " . $e->getMessage());
+            $prediksi = $quotedCost; // Fallback
         }
         
         $estimatedActualCost = $prediksi;
