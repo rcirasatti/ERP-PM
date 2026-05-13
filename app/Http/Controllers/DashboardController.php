@@ -6,6 +6,7 @@ use App\Models\Proyek;
 use App\Models\Tugas;
 use App\Models\Penawaran;
 use App\Models\Pengeluaran;
+use App\Models\Inventory;
 use App\Models\Client;
 use Illuminate\View\View;
 
@@ -55,8 +56,13 @@ class DashboardController extends Controller
         // Calculate total expenses for this period
         $totalPengeluaran = Pengeluaran::sum('jumlah');
         
-        // Get budget statistics (system is budget tracking, not inventory)
-        $lowStockItems = 0; // Placeholder: system doesn't track inventory
+        // Get inventory statistics
+        $lowStockItems = Inventory::with('material')
+            ->get()
+            ->filter(function($item) {
+                return $item->stok <= ($item->material->min_stok ?? 0);
+            })
+            ->count();
         
         // Get pending quotations (draft or not yet approved)
         $pendingPenawaran = Penawaran::where('status', 'draft')

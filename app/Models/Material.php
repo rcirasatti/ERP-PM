@@ -21,6 +21,24 @@ class Material extends Model
         return $this->belongsTo(Supplier::class);
     }
     
+    public function inventory()
+    {
+        return $this->hasOne(Inventory::class);
+    }
+    
+    public function inventories()
+    {
+        return $this->hasMany(Inventory::class);
+    }
+    
+    /**
+     * Check if material needs inventory tracking
+     */
+    public function needsInventoryTracking(): bool
+    {
+        return $this->track_inventory && $this->type === self::TYPE_BARANG;
+    }
+    
     /**
      * Get all material types
      */

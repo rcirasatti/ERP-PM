@@ -157,15 +157,9 @@
 
                 <div class="mt-6 space-y-3">
                     @if($penawaran && $penawaran->id)
-                        <button onclick="changeStatus()" class="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium flex items-center justify-center space-x-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                            </svg>
-                            <span>Ubah Status</span>
+                        <button onclick="changeStatus()" class="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium">
+                            Ubah Status
                         </button>
-                        
-
-                        
                         <button onclick="showConfirm('Apakah Anda yakin ingin menghapus penawaran ini?', 'Hapus Penawaran', () => deletePenawaran())" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
                             Hapus Penawaran
                         </button>
@@ -332,6 +326,5 @@
             form.submit();
         }
     </script>
-
     @endif
 @endsection
