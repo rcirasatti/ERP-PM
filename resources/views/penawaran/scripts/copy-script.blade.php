@@ -11,23 +11,16 @@ function initCopyModal() {
     const clientId = typeof penawaranClientId !== 'undefined' ? penawaranClientId : document.getElementById('clientId')?.value;
     const currentPenawaranId = typeof penawaranId !== 'undefined' ? penawaranId : document.getElementById('targetPenawaranId')?.value;
 
-    console.log('initCopyModal - Looking for:', { clientId, currentPenawaranId, penawaranClientId, penawaranId });
-
     if (!clientId) {
-        console.error('clientId not found!');
-        showToast('Client ID tidak ditemukan', 'error');
+        console.error('clientId not found. penawaranClientId:', penawaranClientId, 'document.getElementById:', document.getElementById('clientId'));
         return;
     }
 
     // Fetch similar penawaran using Phase 1 API
-    const apiUrl = `/api/penawaran/similar?client_id=${clientId}&limit=10&exclude_penawaran_id=${currentPenawaranId}`;
-    console.log('Fetching:', apiUrl);
-    
-    fetch(apiUrl)
+    fetch(`/api/penawaran/similar?client_id=${clientId}&limit=10&exclude_penawaran_id=${currentPenawaranId}`)
         .then(res => res.json())
         .then(data => {
-            console.log('API Response:', data);
-            similarPenawaran = data.penawaran || data.data?.penawaran || [];
+            similarPenawaran = data.penawaran || [];
             const select = document.getElementById('sourcePenawaran');
             
             // Clear existing options
@@ -35,22 +28,17 @@ function initCopyModal() {
             
             // Add penawaran options
             if (similarPenawaran.length === 0) {
-                console.warn('No similar penawaran found for client:', clientId);
                 select.innerHTML = '<option value="" disabled>Tidak ada penawaran sebelumnya</option>';
             } else {
-                console.log('Found penawaran:', similarPenawaran.length);
                 similarPenawaran.forEach(p => {
                     const option = document.createElement('option');
                     option.value = p.id;
-                    option.textContent = `${p.no_penawaran} - Rp ${new Intl.NumberFormat('id-ID').format(p.grand_total_with_ppn)} (${new Date(p.tanggal).toLocaleDateString('id-ID')})`;
+                    option.textContent = `${p.no_penawaran} - Rp ${new Intl.NumberFormat('id-ID').format(p.grand_total_with_ppn)} (${new Date(p.created_at).toLocaleDateString('id-ID')})`;
                     select.appendChild(option);
                 });
             }
         })
-        .catch(err => {
-            console.error('Error loading similar penawaran:', err);
-            showToast('Error loading source penawaran: ' + err.message, 'error');
-        });
+        .catch(err => console.error('Error loading similar penawaran:', err));
 
     // Also load material options for price trend filter
     loadMaterialOptions();
@@ -147,17 +135,11 @@ async function submitCopy() {
     const strategy = document.querySelector('input[name="price_strategy"]:checked')?.value;
 
     if (!sourceId || !targetId || !strategy) {
-        showToast('Lengkapi semua field terlebih dahulu', 'error');
+        showErrorAlert('Lengkapi semua field terlebih dahulu');
         return;
     }
 
-    // Check override strategy
-    if (strategy === 'override') {
-        showToast('⚠️ Fitur "Harga Manual" belum tersedia di MVP. Gunakan strategi lain.', 'warning', 4000);
-        return;
-    }
-
-    // Build override prices if strategy is override (future use)
+    // Build override prices if strategy is override
     let overridePrices = [];
     if (strategy === 'override') {
         // Get user input for each item
