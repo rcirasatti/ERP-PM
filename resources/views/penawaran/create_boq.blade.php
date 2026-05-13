@@ -655,23 +655,49 @@ function displayAnalysisResults(data) {
 
     // Predictions
     const prediksi = Math.round(data.predictions.lr || data.ai_prediksi_lr);
-    const selisih = prediksi - data.grand_total;
-    const isRugi = selisih > 0;
-    const lrVariance = (selisih / data.grand_total * 100).toFixed(1);
+    const selisih = data.grand_total - prediksi; // Positif jika Penawaran > Prediksi AI (Untung)
+    const lrVariance = Math.abs((selisih / data.grand_total) * 100).toFixed(1);
+    
+    let selisihWarna, selisihBg, selisihLabel, badgeBgClass, badgeTextSymbol;
+    let iconHtml;
+    
+    if (selisih < 0) {
+        // Rugi (Merah)
+        selisihWarna = 'text-red-600';
+        selisihBg = 'bg-red-50 border-red-200';
+        selisihLabel = 'Potensi Overrun / Risiko Defisit (Rugi)';
+        badgeBgClass = 'bg-red-100 text-red-700';
+        badgeTextSymbol = `-${lrVariance}% Risiko Rugi`;
+        iconHtml = '<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>';
+    } else if (lrVariance < 10) {
+        // Untung tapi tipis / warning (Kuning)
+        selisihWarna = 'text-amber-600';
+        selisihBg = 'bg-amber-50 border-amber-200';
+        selisihLabel = 'Estimasi Margin Keuntungan Sangat Tipis (Rawan)';
+        badgeBgClass = 'bg-amber-100 text-amber-700';
+        badgeTextSymbol = `+${lrVariance}% Untung (Tipis)`;
+        iconHtml = '<svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
+    } else {
+        // Untung Sehat / Aman (Hijau)
+        selisihWarna = 'text-green-600';
+        selisihBg = 'bg-green-50 border-green-200';
+        selisihLabel = 'Estimasi Margin Keuntungan Sehat (Aman)';
+        badgeBgClass = 'bg-green-100 text-green-700';
+        badgeTextSymbol = `+${lrVariance}% Untung`;
+        iconHtml = '<svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    }
     
     document.getElementById('lrPrediction').textContent = 'Rp ' + prediksi.toLocaleString('id-ID');
     document.getElementById('lrVarianceNominal').textContent = 'Rp ' + Math.abs(selisih).toLocaleString('id-ID');
-    document.getElementById('lrVarianceNominal').className = 'text-xl font-bold ' + (isRugi ? 'text-red-600' : 'text-green-600');
+    document.getElementById('lrVarianceNominal').className = 'text-xl font-bold ' + selisihWarna;
     
-    document.getElementById('lrVariance').textContent = (isRugi ? '+' : '') + lrVariance + '%';
-    document.getElementById('lrVariance').className = 'text-xs font-bold px-2 py-0.5 rounded-full mb-0.5 ' + (isRugi ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700');
+    document.getElementById('lrVariance').textContent = badgeTextSymbol;
+    document.getElementById('lrVariance').className = 'text-xs font-bold px-2 py-0.5 rounded-full mb-0.5 ' + badgeBgClass;
     
-    document.getElementById('varianceLabel').textContent = isRugi ? 'Potensi Overrun (Rugi)' : 'Potensi Penghematan (Aman)';
-    document.getElementById('varianceContainer').className = 'flex items-center p-4 rounded-xl border shadow-sm ' + (isRugi ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200');
+    document.getElementById('varianceLabel').textContent = selisihLabel;
+    document.getElementById('varianceContainer').className = 'flex items-center p-4 rounded-xl border shadow-sm ' + selisihBg;
     
-    document.getElementById('varianceIcon').innerHTML = isRugi 
-        ? '<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path></svg>'
-        : '<svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>';
+    document.getElementById('varianceIcon').innerHTML = iconHtml;
     document.getElementById('varianceIcon').className = 'flex-shrink-0 bg-white p-2.5 rounded-full shadow-sm';
 
     // Multi-Model Comparison rendering
@@ -749,12 +775,12 @@ function displayAnalysisResults(data) {
     `;
 
     modelsData.forEach(m => {
-        const mSelisih = m.pred - grandTotal;
-        const mSelisihPersen = (mSelisih / grandTotal * 100).toFixed(1);
-        const mIsRugi = mSelisih > 0;
+        const mSelisih = grandTotal - m.pred;
+        const mPersen = Math.abs((mSelisih / grandTotal) * 100).toFixed(1);
+        const mIsUntung = mSelisih >= 0;
         
-        const badgeBg = mIsRugi ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200';
-        const badgeText = mIsRugi ? `+${mSelisihPersen}% Overrun` : `${mSelisihPersen}% Hemat`;
+        const badgeBg = mIsUntung ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200';
+        const badgeText = mIsUntung ? `+${mPersen}% Untung` : `-${mPersen}% Risiko Rugi`;
         
         const rankColors = m.rank === 1 ? 'bg-amber-100 text-amber-800 border border-amber-200 font-extrabold'
                          : m.rank === 2 ? 'bg-purple-100 text-purple-800 border border-purple-200 font-bold'
