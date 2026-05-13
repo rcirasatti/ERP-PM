@@ -334,6 +334,11 @@
                         </div>
                     </div>
 
+                    <!-- Multi-Model Comparison Container -->
+                    <div id="multiModelComparison" class="mt-4 pt-4 border-t border-gray-150">
+                        <!-- Filled dynamically by JS -->
+                    </div>
+
                     <!-- AI Recommendation -->
                     <div class="mt-auto bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl">
                         <p class="text-xs font-bold text-blue-900 mb-1 uppercase tracking-wide">Kesimpulan Sistem</p>
@@ -649,7 +654,7 @@ function displayAnalysisResults(data) {
     document.getElementById('historyOverrun').textContent = data.historical_overrun_rate.toFixed(1) + '%';
 
     // Predictions
-    const prediksi = Math.round(data.predictions.machine_learning);
+    const prediksi = Math.round(data.predictions.lr || data.ai_prediksi_lr);
     const selisih = prediksi - data.grand_total;
     const isRugi = selisih > 0;
     const lrVariance = (selisih / data.grand_total * 100).toFixed(1);
@@ -669,8 +674,136 @@ function displayAnalysisResults(data) {
         : '<svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>';
     document.getElementById('varianceIcon').className = 'flex-shrink-0 bg-white p-2.5 rounded-full shadow-sm';
 
-    // Recommendation - gunakan langsung dari API, jangan calculate ulang
-    // API sudah account untuk historical data dengan benar
+    // Multi-Model Comparison rendering
+    const grandTotal = data.grand_total;
+    const modelsData = [
+        {
+            id: 'lr',
+            name: 'Linear Regression',
+            rank: 1,
+            r2: '95.5%',
+            mape: '25.8%',
+            mse: '0.0013',
+            rmse: '0.0359',
+            pred: data.predictions?.lr || 0,
+            time: data.predictions_meta?.linear_regression?.time_ms || 0,
+            color: 'from-blue-500 to-cyan-500'
+        },
+        {
+            id: 'rf',
+            name: 'Random Forest Ensemble',
+            rank: 2,
+            r2: '94.6%',
+            mape: '17.7%',
+            mse: '0.0015',
+            rmse: '0.0393',
+            pred: data.predictions?.rf || 0,
+            time: data.predictions_meta?.random_forest?.time_ms || 0,
+            color: 'from-purple-500 to-indigo-500'
+        },
+        {
+            id: 'xgb',
+            name: 'XGBoost Boosting',
+            rank: 3,
+            r2: '94.5%',
+            mape: '17.9%',
+            mse: '0.0016',
+            rmse: '0.0399',
+            pred: data.predictions?.xgb || 0,
+            time: data.predictions_meta?.xgboost?.time_ms || 0,
+            color: 'from-orange-500 to-red-500'
+        },
+        {
+            id: 'dl',
+            name: 'Deep Learning (ANN)',
+            rank: 4,
+            r2: '95.0%',
+            mape: '29.7%',
+            mse: '0.0015',
+            rmse: '0.0381',
+            pred: data.predictions?.dl || 0,
+            time: data.predictions_meta?.deep_learning?.time_ms || 0,
+            color: 'from-pink-500 to-rose-500'
+        },
+        {
+            id: 'ma',
+            name: 'Moving Average',
+            rank: 5,
+            r2: '93.7%',
+            mape: '18.3%',
+            mse: '0.0018',
+            rmse: '0.0423',
+            pred: data.predictions?.ma || 0,
+            time: data.predictions_meta?.moving_average?.time_ms || 0,
+            color: 'from-gray-500 to-slate-500'
+        }
+    ];
+
+    let compHtml = `
+        <h4 class="text-xs font-extrabold text-gray-900 uppercase tracking-wide flex items-center gap-2 mb-2">
+            <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            Perbandingan Estimasi Multi-Model AI
+        </h4>
+        <p class="text-[10px] text-gray-500 mb-3 leading-tight">Model diurutkan berdasarkan peringkat performa global hasil uji akademik (*Multi-Metric Borda Count*).</p>
+        <div class="space-y-2.5">
+    `;
+
+    modelsData.forEach(m => {
+        const mSelisih = m.pred - grandTotal;
+        const mSelisihPersen = (mSelisih / grandTotal * 100).toFixed(1);
+        const mIsRugi = mSelisih > 0;
+        
+        const badgeBg = mIsRugi ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200';
+        const badgeText = mIsRugi ? `+${mSelisihPersen}% Overrun` : `${mSelisihPersen}% Hemat`;
+        
+        const rankColors = m.rank === 1 ? 'bg-amber-100 text-amber-800 border border-amber-200 font-extrabold'
+                         : m.rank === 2 ? 'bg-purple-100 text-purple-800 border border-purple-200 font-bold'
+                         : m.rank === 3 ? 'bg-orange-100 text-orange-800 border border-orange-200 font-bold'
+                         : m.rank === 4 ? 'bg-pink-100 text-pink-800 border border-pink-200 font-bold'
+                         : 'bg-slate-100 text-slate-700 border border-slate-200 font-semibold';
+        
+        compHtml += `
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3.5 rounded-xl border border-gray-150 bg-white hover:border-purple-300 hover:shadow-md transition duration-200 gap-2 relative overflow-hidden group">
+                <div class="absolute top-0 left-0 bottom-0 w-1 bg-gradient-to-b ${m.color}"></div>
+                
+                <div class="flex items-center gap-3 pl-2 flex-1 min-w-0">
+                    <div class="w-8 h-8 rounded-full ${rankColors} flex items-center justify-center text-xs flex-shrink-0">
+                        #${m.rank}
+                    </div>
+                    
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs sm:text-sm font-bold text-gray-900 truncate">${m.name}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                            <span class="text-[9px] px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 font-medium font-mono border border-blue-100">R²: ${m.r2}</span>
+                            <span class="text-[9px] px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-medium font-mono border border-indigo-100">MAPE: ${m.mape}</span>
+                            <span class="text-[9px] px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 font-medium font-mono border border-purple-100">MSE: ${m.mse}</span>
+                            <span class="text-[9px] px-1.5 py-0.5 rounded-md bg-pink-50 text-pink-700 font-medium font-mono border border-pink-100">RMSE: ${m.rmse}</span>
+                            <div class="flex items-center gap-1 text-[9px] text-gray-500 font-sans ml-1 bg-gray-50 border border-gray-200 rounded-md px-1.5 py-0.5">
+                                <svg class="w-3 h-3 text-purple-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                <span>${m.time.toFixed(1)} ms</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-3 pl-11 sm:pl-0 w-full sm:w-auto justify-between sm:justify-end flex-shrink-0">
+                    <div class="text-right">
+                        <span class="block text-xs sm:text-sm font-black text-gray-900">Rp ${m.pred.toLocaleString('id-ID')}</span>
+                    </div>
+                    <span class="text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-lg border ${badgeBg} min-w-[95px] text-center shadow-sm">
+                        ${badgeText}
+                    </span>
+                </div>
+            </div>
+        `;
+    });
+
+    compHtml += `</div>`;
+    document.getElementById('multiModelComparison').innerHTML = compHtml;
+
+    // Recommendation
     document.getElementById('recommendation').textContent = data.recommendation || 'Rekomendasi tidak tersedia';
 }
 

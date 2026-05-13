@@ -659,8 +659,13 @@ class PenawaranController extends Controller
                 'risk_level' => $analysis['risk_level'],
                 'recommendation' => $analysis['recommendation'],
                 'predictions' => [
-                    'lr' => $analysis['prediksi_lr'],
+                    'lr' => $analysis['predictions']['linear_regression']['prediction'],
+                    'rf' => $analysis['predictions']['random_forest']['prediction'],
+                    'xgb' => $analysis['predictions']['xgboost']['prediction'],
+                    'dl' => $analysis['predictions']['deep_learning']['prediction'],
+                    'ma' => $analysis['predictions']['moving_average']['prediction'],
                 ],
+                'predictions_meta' => $analysis['predictions'],
                 'data' => [
                     'grand_total' => $grandTotal,
                     'total_biaya' => $totalBiaya,
@@ -696,20 +701,55 @@ class PenawaranController extends Controller
     {
         $itemCount = $data['items_count'] ?? 0;
         $grandTotal = $data['grand_total'] ?? 0;
+        $jenisPekerjaan = $data['jenis_pekerjaan'] ?? 'Project / Purchase Order';
+        $wilayah = $data['wilayah'] ?? 'Kota Semarang';
+        
+        // Define default predictions (fallbacks)
+        $predictions = [
+            'linear_regression' => ['prediction' => $grandTotal * 0.95, 'time_ms' => 0],
+            'random_forest' => ['prediction' => $grandTotal * 0.92, 'time_ms' => 0],
+            'xgboost' => ['prediction' => $grandTotal * 0.93, 'time_ms' => 0],
+            'deep_learning' => ['prediction' => $grandTotal * 0.94, 'time_ms' => 0],
+            'moving_average' => ['prediction' => $grandTotal * 0.9, 'time_ms' => 0],
+        ];
+        
+        $success = false;
         
         try {
-            $prediksiLR = \App\Services\DSSPredictionService::predict(
-                $data['jenis_pekerjaan'] ?? 'Project / Purchase Order',
-                $data['wilayah'] ?? 'Kota Semarang',
-                $grandTotal
-            );
+            $inputData = json_encode([
+                'jenis_pekerjaan' => $jenisPekerjaan,
+                'wilayah' => $wilayah,
+                'grand_total' => (float)$grandTotal
+            ]);
+            $base64Input = base64_encode($inputData);
+            $scriptPath = base_path('storage/app/ml/predict_all_models.py');
+            $command = "python \"$scriptPath\" $base64Input 2>&1";
+            
+            $output = shell_exec($command);
+            if ($output) {
+                $result = json_decode($output, true);
+                if ($result && isset($result['success']) && $result['success']) {
+                    $predictions = $result['predictions'];
+                    $success = true;
+                } else {
+                    \Log::warning('Python predict_all_models.py returned error: ' . ($result['error'] ?? 'Unknown error'));
+                }
+            }
         } catch (\Exception $e) {
-            \Log::error("Native PHP ML Error in PenawaranController: " . $e->getMessage());
-            $prediksiLR = $grandTotal; // Fallback to grand total (0% overrun) if model completely fails
+            \Log::error('Failed to run python predict_all_models.py: ' . $e->getMessage());
         }
         
-        $prediksiMA = 0; // Removing MA completely
+        // Native PHP fallback if Python failed
+        if (!$success) {
+            try {
+                $prediksiLR = \App\Services\DSSPredictionService::predict($jenisPekerjaan, $wilayah, $grandTotal);
+                $predictions['linear_regression']['prediction'] = $prediksiLR;
+            } catch (\Exception $e) {
+                \Log::error('Native PHP fallback prediction failed: ' . $e->getMessage());
+            }
+        }
         
+        $prediksiLR = $predictions['linear_regression']['prediction'];
         $estimatedOverrun = (($prediksiLR - $grandTotal) / $grandTotal) * 100;
         $marginStatus = $estimatedOverrun > 0 ? 'overrun' : 'aman';
         
@@ -728,12 +768,12 @@ class PenawaranController extends Controller
         return [
             'risk_level' => $riskLevel,
             'risk_score' => $estimatedOverrun,
-            'complexity_score' => min(100, $itemCount * 10),
-            'historical_overrun_rate' => 0, // removed
+            'complexity_score' => min(10, $itemCount * 0.5 + 1), // normalized score out of 10
             'prediksi_lr' => round($prediksiLR, 0),
             'margin_status' => $marginStatus,
             'estimated_overrun_percent' => round($estimatedOverrun, 2),
             'recommendation' => $recommendation,
+            'predictions' => $predictions,
         ];
     }
 

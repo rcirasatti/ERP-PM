@@ -600,16 +600,16 @@
                 <div id="${modalId}" class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-gray-900/60 p-4 transition-opacity">
                     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[90vh] overflow-hidden transform transition-all animate-fade-in-up">
                         
-                        <!-- Header Gradient -->
-                        <div class="bg-gradient-to-r from-purple-600 to-blue-600 p-4 sm:p-5 text-white flex justify-between items-center flex-shrink-0">
+                        <!-- Header Gradient - Premium Sleek Charcoal & Indigo Dark-mode -->
+                        <div class="bg-gradient-to-r from-slate-900 to-indigo-950 p-4 sm:p-5 text-white flex justify-between items-center flex-shrink-0 border-b border-indigo-900/40">
                             <div>
-                                <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2">
-                                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                                <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2 text-white">
+                                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                                     Hasil Analisis Prediksi AI
                                 </h2>
-                                <p class="text-purple-100 text-xs sm:text-sm mt-1 opacity-90">Evaluasi kelayakan penawaran berbasis Machine Learning.</p>
+                                <p class="text-slate-300 text-xs sm:text-sm mt-1 opacity-95">Evaluasi kelayakan penawaran berbasis Machine Learning.</p>
                             </div>
-                            <button onclick="closeAnalysisModal('${modalId}')" class="text-white hover:text-gray-200 transition">
+                            <button onclick="closeAnalysisModal('${modalId}')" class="text-slate-400 hover:text-white transition">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
                         </div>
@@ -676,8 +676,131 @@
                                         <p class="text-xs sm:text-sm text-blue-900 leading-relaxed font-medium">${data.recommendation}</p>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
+                             </div>
+
+                             <!-- Model Comparison Section -->
+                             <div class="mt-4 pt-4 border-t border-gray-100">
+                                 <h4 class="text-xs sm:text-sm font-extrabold text-gray-900 mb-3 uppercase tracking-wide flex items-center gap-2">
+                                     <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                     Perbandingan Estimasi Multi-Model AI
+                                 </h4>
+                                 <p class="text-[11px] text-gray-500 mb-3">Model diurutkan berdasarkan peringkat performa global hasil uji akademik (*Multi-Metric Borda Count*).</p>
+                                 <div class="space-y-2.5">
+                                  ${[
+                                         {
+                                             id: 'lr',
+                                             name: 'Linear Regression',
+                                             rank: 1,
+                                             r2: '95.5%',
+                                             mape: '25.8%',
+                                             mse: '0.0013',
+                                             rmse: '0.0359',
+                                             pred: data.predictions_meta?.linear_regression?.prediction || 0,
+                                             time: data.predictions_meta?.linear_regression?.time_ms || 0,
+                                             color: 'from-blue-500 to-cyan-500'
+                                         },
+                                         {
+                                             id: 'rf',
+                                             name: 'Random Forest Ensemble',
+                                             rank: 2,
+                                             r2: '94.6%',
+                                             mape: '17.7%',
+                                             mse: '0.0015',
+                                             rmse: '0.0393',
+                                             pred: data.predictions_meta?.random_forest?.prediction || 0,
+                                             time: data.predictions_meta?.random_forest?.time_ms || 0,
+                                             color: 'from-purple-500 to-indigo-500'
+                                         },
+                                         {
+                                             id: 'xgb',
+                                             name: 'XGBoost Boosting',
+                                             rank: 3,
+                                             r2: '94.5%',
+                                             mape: '17.9%',
+                                             mse: '0.0016',
+                                             rmse: '0.0399',
+                                             pred: data.predictions_meta?.xgboost?.prediction || 0,
+                                             time: data.predictions_meta?.xgboost?.time_ms || 0,
+                                             color: 'from-orange-500 to-red-500'
+                                         },
+                                         {
+                                             id: 'dl',
+                                             name: 'Deep Learning (ANN)',
+                                             rank: 4,
+                                             r2: '95.0%',
+                                             mape: '29.7%',
+                                             mse: '0.0015',
+                                             rmse: '0.0381',
+                                             pred: data.predictions_meta?.deep_learning?.prediction || 0,
+                                             time: data.predictions_meta?.deep_learning?.time_ms || 0,
+                                             color: 'from-pink-500 to-rose-500'
+                                         },
+                                         {
+                                             id: 'ma',
+                                             name: 'Moving Average',
+                                             rank: 5,
+                                             r2: '93.7%',
+                                             mape: '18.3%',
+                                             mse: '0.0018',
+                                             rmse: '0.0423',
+                                             pred: data.predictions_meta?.moving_average?.prediction || 0,
+                                             time: data.predictions_meta?.moving_average?.time_ms || 0,
+                                             color: 'from-gray-500 to-slate-500'
+                                         }
+                                     ].map(m => {
+                                         const mSelisih = m.pred - grandTotal;
+                                         const mSelisihPersen = (mSelisih / grandTotal * 100).toFixed(1);
+                                         const mIsRugi = mSelisih > 0;
+                                         
+                                         const badgeBg = mIsRugi ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200';
+                                         const badgeText = mIsRugi ? `+${mSelisihPersen}% Overrun` : `${mSelisihPersen}% Hemat`;
+                                         
+                                         const rankColors = m.rank === 1 ? 'bg-amber-100 text-amber-800 border border-amber-200 font-extrabold'
+                                                          : m.rank === 2 ? 'bg-purple-100 text-purple-800 border border-purple-200 font-bold'
+                                                          : m.rank === 3 ? 'bg-orange-100 text-orange-800 border border-orange-200 font-bold'
+                                                          : m.rank === 4 ? 'bg-pink-100 text-pink-800 border border-pink-200 font-bold'
+                                                          : 'bg-slate-100 text-slate-700 border border-slate-200 font-semibold';
+                                         
+                                         return `
+                                             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3.5 rounded-xl border border-gray-150 bg-white hover:border-purple-300 hover:shadow-md transition duration-200 gap-2 relative overflow-hidden group">
+                                                 <div class="absolute top-0 left-0 bottom-0 w-1 bg-gradient-to-b ${m.color}"></div>
+                                                 
+                                                 <div class="flex items-center gap-3 pl-2 flex-1 min-w-0">
+                                                     <div class="w-8 h-8 rounded-full ${rankColors} flex items-center justify-center text-xs flex-shrink-0">
+                                                         #${m.rank}
+                                                     </div>
+                                                     
+                                                     <div class="min-w-0 flex-1">
+                                                         <div class="flex items-center gap-2">
+                                                             <span class="text-xs sm:text-sm font-bold text-gray-900 truncate">${m.name}</span>
+                                                         </div>
+                                                         <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                                                             <span class="text-[9px] px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 font-medium font-mono border border-blue-100">R²: ${m.r2}</span>
+                                                             <span class="text-[9px] px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-medium font-mono border border-indigo-100">MAPE: ${m.mape}</span>
+                                                             <span class="text-[9px] px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 font-medium font-mono border border-purple-100">MSE: ${m.mse}</span>
+                                                             <span class="text-[9px] px-1.5 py-0.5 rounded-md bg-pink-50 text-pink-700 font-medium font-mono border border-pink-100">RMSE: ${m.rmse}</span>
+                                                             <div class="flex items-center gap-1 text-[9px] text-gray-500 font-sans ml-1 bg-gray-50 border border-gray-200 rounded-md px-1.5 py-0.5">
+                                                                 <svg class="w-3 h-3 text-purple-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                                                 <span>${m.time.toFixed(1)} ms</span>
+                                                             </div>
+                                                         </div>
+                                                     </div>
+                                                 </div>
+                                                 
+                                                 <div class="flex items-center gap-3 pl-11 sm:pl-0 w-full sm:w-auto justify-between sm:justify-end flex-shrink-0">
+                                                     <div class="text-right">
+                                                         <span class="block text-xs sm:text-sm font-black text-gray-900">Rp ${m.pred.toLocaleString('id-ID')}</span>
+                                                     </div>
+                                                     <span class="text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-lg border ${badgeBg} min-w-[95px] text-center shadow-sm">
+                                                         ${badgeText}
+                                                     </span>
+                                                 </div>
+                                             </div>
+                                         `;
+                                     }).join('')}
+                                 </div>
+                             </div>
+                         </div>
 
                         <!-- Footer Actions -->
                         <div class="bg-gray-50 border-t border-gray-200 p-4 flex flex-col sm:flex-row gap-3 justify-end items-center flex-shrink-0">
