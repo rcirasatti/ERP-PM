@@ -13,7 +13,11 @@ return new class extends Migration
     public function up(): void
     {
         // Disable foreign key checks
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement('PRAGMA foreign_keys = OFF;');
+        } else {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        }
         
         // Drop tables in reverse order of creation
         Schema::dropIfExists('perawatan_aset');
@@ -34,7 +38,11 @@ return new class extends Migration
         Schema::dropIfExists('profil');
         
         // Re-enable foreign key checks
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement('PRAGMA foreign_keys = ON;');
+        } else {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        }
     }
 
     /**

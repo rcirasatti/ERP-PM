@@ -26,7 +26,7 @@ class PenawaranControllerTest extends TestCase
         parent::setUp();
 
         // Create test user
-        $this->user = User::factory()->create();
+        $this->user = User::factory()->create(['role' => 'admin']);
 
         // Create test client
         $this->client = Client::create([
@@ -55,6 +55,7 @@ class PenawaranControllerTest extends TestCase
         ]);
 
         $this->actingAs($this->user);
+        $this->withoutMiddleware();
     }
 
     // ================================
@@ -332,7 +333,7 @@ class PenawaranControllerTest extends TestCase
             ]
         ];
 
-        $response = $this->postJson(route('penawaran.storeFromBoq'), $payload);
+        $response = $this->postJson(route('penawaran.boq-store'), $payload);
 
         $response->assertStatus(200);
         $response->assertJson([
@@ -376,7 +377,7 @@ class PenawaranControllerTest extends TestCase
             ]
         ];
 
-        $response = $this->postJson(route('penawaran.storeFromBoq'), $payload);
+        $response = $this->postJson(route('penawaran.boq-store'), $payload);
 
         $response->assertStatus(200);
 
@@ -407,7 +408,7 @@ class PenawaranControllerTest extends TestCase
             ]
         ];
 
-        $response = $this->postJson(route('penawaran.storeFromBoq'), $payload);
+        $response = $this->postJson(route('penawaran.boq-store'), $payload);
 
         $response->assertStatus(200);
 
@@ -445,10 +446,10 @@ class PenawaranControllerTest extends TestCase
             ]
         ];
 
-        $response1 = $this->postJson(route('penawaran.storeFromBoq'), $payload1);
+        $response1 = $this->postJson(route('penawaran.boq-store'), $payload1);
         $noPenawaran1 = $response1->json('data.no_penawaran');
 
-        $response2 = $this->postJson(route('penawaran.storeFromBoq'), $payload1);
+        $response2 = $this->postJson(route('penawaran.boq-store'), $payload1);
         $noPenawaran2 = $response2->json('data.no_penawaran');
 
         // Verify different penawaran numbers
@@ -475,7 +476,7 @@ class PenawaranControllerTest extends TestCase
             ]
         ];
 
-        $response = $this->postJson(route('penawaran.storeFromBoq'), $payload);
+        $response = $this->postJson(route('penawaran.boq-store'), $payload);
 
         $response->assertStatus(422);
     }
@@ -491,7 +492,7 @@ class PenawaranControllerTest extends TestCase
             'items' => []
         ];
 
-        $response = $this->postJson(route('penawaran.storeFromBoq'), $payload);
+        $response = $this->postJson(route('penawaran.boq-store'), $payload);
 
         $response->assertStatus(422);
     }
@@ -505,7 +506,7 @@ class PenawaranControllerTest extends TestCase
      */
     public function test_upload_boq_preview_failing_empty_file()
     {
-        $response = $this->post(route('penawaran.uploadBoqPreview'), [
+        $response = $this->postJson(route('penawaran.boq-preview'), [
             'boq_file' => UploadedFile::fake()->create('empty.xlsx', 0)
         ]);
 
@@ -517,7 +518,7 @@ class PenawaranControllerTest extends TestCase
      */
     public function test_upload_boq_preview_fails_with_invalid_type()
     {
-        $response = $this->post(route('penawaran.uploadBoqPreview'), [
+        $response = $this->postJson(route('penawaran.boq-preview'), [
             'boq_file' => UploadedFile::fake()->create('file.txt', 100)
         ]);
 
@@ -530,7 +531,7 @@ class PenawaranControllerTest extends TestCase
     public function test_upload_boq_preview_fails_file_too_large()
     {
         // Create a file larger than 5MB
-        $response = $this->post(route('penawaran.uploadBoqPreview'), [
+        $response = $this->postJson(route('penawaran.boq-preview'), [
             'boq_file' => UploadedFile::fake()->create('large.xlsx', 6000) // 6MB in KB
         ]);
 

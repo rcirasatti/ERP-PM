@@ -16,12 +16,20 @@ class TestDataSeeder extends Seeder
     public function run(): void
     {
         // Clear existing data - disable foreign key checks
-        \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        if (\DB::getDriverName() === 'sqlite') {
+            \DB::statement('PRAGMA foreign_keys = OFF;');
+        } else {
+            \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        }
         ItemPenawaran::truncate();
         Penawaran::truncate();
         Material::truncate();
         Client::truncate();
-        \DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        if (\DB::getDriverName() === 'sqlite') {
+            \DB::statement('PRAGMA foreign_keys = ON;');
+        } else {
+            \DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        }
 
         // Create test client
         $client = Client::create([

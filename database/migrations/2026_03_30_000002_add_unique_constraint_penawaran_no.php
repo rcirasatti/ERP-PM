@@ -19,8 +19,9 @@ return new class extends Migration
                 $table->unique('no_penawaran');
             });
         } catch (\Exception $e) {
-            // Constraint might already exist, that's OK
-            if (strpos($e->getMessage(), 'Duplicate key name') === false) {
+            // Constraint might already exist, that's OK (supports both MySQL and SQLite)
+            if (strpos($e->getMessage(), 'Duplicate key name') === false && 
+                strpos($e->getMessage(), 'already exists') === false) {
                 throw $e;
             }
         }

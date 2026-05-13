@@ -25,7 +25,7 @@ class PengeluaranControllerTest extends TestCase
         parent::setUp();
 
         // Create test user
-        $this->user = User::factory()->create();
+        $this->user = User::factory()->create(['role' => 'admin']);
 
         // Create client
         $client = Client::create([
@@ -33,15 +33,19 @@ class PengeluaranControllerTest extends TestCase
             'email' => 'client@test.com',
             'telepon' => '081234567890',
             'alamat' => 'Jl. Test No. 1',
+            'kontak' => 'John Doe',
         ]);
 
         // Create penawaran
         $penawaran = Penawaran::create([
-            'nama' => 'Test Penawaran',
-            'deskripsi' => 'Test Description',
-            'harga' => 1000000,
-            'tanggal_terima' => now(),
-            'status' => 'approved',
+            'no_penawaran' => 'OFF-2026-001',
+            'client_id' => $client->id,
+            'tanggal' => now(),
+            'status' => 'disetujui',
+            'total_biaya' => 1000000,
+            'total_margin' => 100000,
+            'grand_total_with_ppn' => 1221000,
+            'ai_status' => 'analyzed',
         ]);
 
         // Create proyek
@@ -96,12 +100,16 @@ class PengeluaranControllerTest extends TestCase
      */
     public function test_pengeluaran_can_be_stored()
     {
+        Storage::fake('public');
+        $file = UploadedFile::fake()->create('bukti.pdf', 100);
+
         $data = [
             'proyek_id' => $this->proyek->id,
             'tanggal' => now()->format('Y-m-d'),
             'kategori' => 'gaji',
             'deskripsi' => 'Pembayaran gaji karyawan bulan ini',
             'jumlah' => 2000000,
+            'bukti_file' => $file,
         ];
 
         $response = $this->post('/pengeluaran', $data);

@@ -77,11 +77,19 @@ class DashboardController extends Controller
         // Get total clients
         $totalClients = Client::count();
         
-        // Calculate average project duration
-        $avgProjectDuration = Proyek::whereNotNull('tanggal_selesai')
-            ->selectRaw('AVG(DATEDIFF(tanggal_selesai, tanggal_mulai)) as avg_days')
-            ->first()
-            ->avg_days ?? 0;
+        // Calculate average project duration (dynamic driver support for SQLite testing and MySQL production)
+        $driverName = \DB::connection()->getDriverName();
+        if ($driverName === 'sqlite') {
+            $avgProjectDuration = Proyek::whereNotNull('tanggal_selesai')
+                ->selectRaw('AVG(julianday(tanggal_selesai) - julianday(tanggal_mulai)) as avg_days')
+                ->first()
+                ->avg_days ?? 0;
+        } else {
+            $avgProjectDuration = Proyek::whereNotNull('tanggal_selesai')
+                ->selectRaw('AVG(DATEDIFF(tanggal_selesai, tanggal_mulai)) as avg_days')
+                ->first()
+                ->avg_days ?? 0;
+        }
         
         // Get budget variance (comparing budget vs actual expenses)
         $budgetData = $this->calculateBudgetVariance();
