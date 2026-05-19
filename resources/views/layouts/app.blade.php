@@ -164,6 +164,13 @@
                 itemSelectText: 'Tekan Enter untuk memilih'
             });
         });
+
+        // Prevent mouse wheel from changing values in number inputs globally
+        document.addEventListener('wheel', function(e) {
+            if (document.activeElement && document.activeElement.type === 'number') {
+                document.activeElement.blur();
+            }
+        });
     </script>
 
     <style>

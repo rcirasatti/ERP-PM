@@ -15,11 +15,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.role' => \App\Http\Middleware\CheckRole::class,
             'check.any.role' => \App\Http\Middleware\CheckAnyRole::class,
         ]);
-        
-        // Throttle middleware configuration for BoQ upload endpoints
-        $middleware->throttleWithRedis('boq_upload', '60,5');    // 5 requests per 60 seconds
-        $middleware->throttleWithRedis('boq_store', '60,3');     // 3 requests per 60 seconds
-        $middleware->throttleWithRedis('boq_analyze', '60,2');   // 2 requests per 60 seconds
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
